@@ -214,6 +214,9 @@
                                 <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="4">
                                     <i class="fa-solid fa-fire-flame-curved text-red-400"></i> Heatmap Waterfall
                                 </button>
+                                <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="5">
+                                    <i class="fa-solid fa-cubes-stacked text-teal-400"></i> WhiteCap 3D Wireframe
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -646,7 +649,7 @@
                     e.preventDefault();
                     togglePlay();
                 } else if (e.code === 'KeyV') {
-                    setVizMode((state.vizMode + 1) % 5);
+                    setVizMode((state.vizMode + 1) % 6);
                 } else if (e.code === 'KeyN') {
                     nextTrack();
                 } else if (e.code === 'KeyP') {
@@ -727,7 +730,7 @@
         // --- Visualizer Rendering Engines ---
         function setVizMode(mode) {
             state.vizMode = mode;
-            const names = ["Cyber Spectrum", "Oscilloscope", "Holo Pulse Ring", "Particle Supernova", "Heatmap Waterfall"];
+            const names = ["Cyber Spectrum", "Oscilloscope", "Holo Pulse Ring", "Particle Supernova", "Heatmap Waterfall", "WhiteCap 3D Wireframe"];
             els.vizModeName.textContent = names[mode];
 
             document.querySelectorAll('.viz-opt-btn').forEach(btn => {
@@ -928,6 +931,74 @@
 
                 // Render heatmap scaled to full canvas
                 ctx.drawImage(state.heatmapCanvas, 0, 0, w, h);
+
+            } else if (state.vizMode === 5) {
+                // MODE 5: WhiteCap 3D Wireframe Mesh & Tunnel
+                const cols = 28;
+                const rows = 20;
+                const cellW = w * 0.07;
+                const cellD = 40;
+                const fov = 340;
+
+                state.whitecapZ = (state.whitecapZ || 0) + 0.8 + (state.beatIntensity * 4.0);
+                const time = Date.now() * 0.0018;
+
+                const grid = [];
+                for (let r = 0; r < rows; r++) {
+                    const rowGrid = [];
+                    const zWorld = (r * cellD) + (state.whitecapZ % cellD) + 30;
+                    const zOpacity = Math.max(0, 1 - (zWorld / (rows * cellD)));
+
+                    for (let c = 0; c < cols; c++) {
+                        const xWorld = (c - cols / 2) * cellW;
+                        
+                        // Map audio frequency to grid column
+                        const freqIdx = Math.floor((c / cols) * (bufferLen / 2));
+                        const audioVal = (freqArray[freqIdx] || 0) / 255;
+                        
+                        // Undulating landscape equations + audio frequency displacement
+                        const wave1 = Math.sin(c * 0.35 + time * 3) * 22;
+                        const wave2 = Math.cos(r * 0.25 + time * 2) * 18;
+                        const audioHeight = audioVal * 150 * (1 + state.beatIntensity);
+                        const yWorld = wave1 + wave2 - audioHeight + (h * 0.16);
+
+                        // 3D Perspective Projection
+                        const projScale = fov / (zWorld + 100);
+                        const screenX = w / 2 + xWorld * projScale;
+                        const screenY = h / 2 + yWorld * projScale;
+
+                        rowGrid.push({ x: screenX, y: screenY, z: zWorld, alpha: zOpacity, val: audioVal });
+                    }
+                    grid.push(rowGrid);
+                }
+
+                // Render 3D Wireframe Mesh Ribbons
+                ctx.lineWidth = 1.5 * (window.devicePixelRatio || 1);
+                
+                for (let r = 0; r < rows - 1; r++) {
+                    for (let c = 0; c < cols - 1; c++) {
+                        const p1 = grid[r][c];
+                        const p2 = grid[r][c + 1];
+                        const p3 = grid[r + 1][c];
+
+                        if (p1.z > 0 && p2.z > 0 && p3.z > 0) {
+                            // Dynamic WhiteCap HSL Neon Color Shift
+                            const hue = (time * 60 + r * 12 + c * 5) % 360;
+                            const alpha = p1.alpha * 0.85;
+
+                            ctx.strokeStyle = `hsla(${hue}, 95%, 65%, ${alpha})`;
+                            ctx.fillStyle = `hsla(${hue}, 90%, 45%, ${alpha * 0.12})`;
+
+                            ctx.beginPath();
+                            ctx.moveTo(p1.x, p1.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.lineTo(p3.x, p3.y);
+                            ctx.closePath();
+                            ctx.stroke();
+                            ctx.fill();
+                        }
+                    }
+                }
             }
         }
 
