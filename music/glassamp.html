@@ -129,15 +129,6 @@
             pointer-events: auto !important;
         }
 
-        /* Suno Modal Active */
-        #sunoModal.active {
-            opacity: 1 !important;
-            pointer-events: auto !important;
-        }
-        #sunoModal.active > div {
-            transform: scale(1) !important;
-        }
-
         /* Immersion Mode Fullscreen Styling */
         #canvasViewport:fullscreen {
             width: 100vw !important;
@@ -233,10 +224,6 @@
 
                 <!-- Mode Selectors -->
                 <div class="flex items-center gap-2">
-                    <button id="sunoImportBtn" class="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-semibold text-amber-300 transition-all flex items-center gap-1.5" title="Import Suno AI Song">
-                        <i class="fa-solid fa-bolt text-amber-400"></i> <span class="hidden sm:inline">Suno AI</span>
-                    </button>
-
                     <button id="eqToggleBtn" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-medium text-white/80 transition-all flex items-center gap-1.5" title="Toggle Equalizer Panel">
                         <i class="fa-solid fa-sliders text-cyan-400"></i> <span class="hidden sm:inline">EQ</span>
                     </button>
@@ -465,53 +452,6 @@
 
     </div>
 
-    <!-- Suno Import Modal -->
-    <div id="sunoModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
-        <div class="glass-panel w-full max-w-md rounded-2xl p-6 border border-amber-500/30 shadow-2xl relative transform scale-95 transition-transform duration-300">
-            <button id="sunoCloseBtn" class="absolute top-4 right-4 text-white/50 hover:text-white text-lg">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg shadow-lg shadow-amber-500/20">
-                    <i class="fa-solid fa-bolt"></i>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-white font-['Outfit']">Import Suno AI Song</h3>
-                    <p class="text-[11px] text-white/60">Paste any Suno song link or ID to stream & visualize</p>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-amber-300 mb-1">Suno Song URL or UUID</label>
-                    <input type="text" id="sunoUrlInput" placeholder="https://suno.com/song/b0348705-5fb9-4f36-a193-4a1d82136e05" class="w-full bg-black/40 border border-white/15 rounded-xl px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-amber-400 font-mono transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-white/70 mb-1">Track Title (Optional)</label>
-                    <input type="text" id="sunoTitleInput" placeholder="My Suno Creation" class="w-full bg-black/40 border border-white/15 rounded-xl px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-cyan-400 transition-all">
-                </div>
-
-                <!-- Sample Presets -->
-                <div>
-                    <label class="block text-[10px] uppercase font-bold text-white/40 mb-1.5">Quick Demo Links:</label>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="suno-demo-btn text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 transition-colors" data-url="https://suno.com/song/b0348705-5fb9-4f36-a193-4a1d82136e05" data-title="Cyberpunk Anthem">Cyberpunk Anthem 🎵</button>
-                        <button class="suno-demo-btn text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 transition-colors" data-url="https://suno.com/song/389a9f24-2c06-4447-b248-18e31a1005a9" data-title="Electric Horizons">Electric Horizons ⚡</button>
-                    </div>
-                </div>
-
-                <div class="pt-2 flex justify-end gap-3">
-                    <button id="sunoCancelBtn" class="px-4 py-2 text-xs rounded-xl bg-white/5 hover:bg-white/15 text-white/70">Cancel</button>
-                    <button id="sunoLoadBtn" class="px-5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-black hover:scale-105 active:scale-95 transition-all shadow-lg shadow-amber-500/20">
-                        <i class="fa-solid fa-play mr-1"></i> Stream Track
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         /**
          * GlassAmp 2.0 - Synthesizer & Audio Engine
@@ -649,31 +589,12 @@
                 els.progressBar.max = audio.duration;
             });
 
-            // Stream Error & Fallback Retry Handler
+            // Stream Error Handler
             audio.addEventListener('error', (e) => {
                 console.warn("Audio error encountered:", e, audio.src);
-                const track = state.playlist[state.currentIndex];
-
-                if (track && track.type === 'suno') {
-                    track.sunoRetry = (track.sunoRetry || 0) + 1;
-                    const uuid = track.uuid;
-
-                    if (uuid && track.sunoRetry === 1) {
-                        const newUrl = `https://audiopipe.suno.ai/v1/cdn/${uuid}.mp3`;
-                        audio.src = newUrl;
-                        playAudio();
-                        return;
-                    } else if (uuid && track.sunoRetry === 2) {
-                        const newUrl = `https://corsproxy.io/?https://cdn1.suno.ai/${uuid}.mp3`;
-                        audio.src = newUrl;
-                        playAudio();
-                        return;
-                    }
-                }
-
                 showToast(
                     "Stream Loading Error",
-                    "Suno CDN blocked direct web streaming (CORS/Cloudflare protection). Download the .mp3 file and drag it into GlassAmp to visualize!",
+                    "Unable to stream audio resource. Drag and drop audio files (.mp3, .wav, .flac) directly into GlassAmp to play!",
                     true
                 );
             });
@@ -793,74 +714,6 @@
                 if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                     handleFiles(Array.from(e.dataTransfer.files));
                 }
-            });
-
-            // Suno AI Import Modal Logic
-            const sunoModal = document.getElementById('sunoModal');
-            const sunoImportBtn = document.getElementById('sunoImportBtn');
-            const sunoCloseBtn = document.getElementById('sunoCloseBtn');
-            const sunoCancelBtn = document.getElementById('sunoCancelBtn');
-            const sunoLoadBtn = document.getElementById('sunoLoadBtn');
-            const sunoUrlInput = document.getElementById('sunoUrlInput');
-            const sunoTitleInput = document.getElementById('sunoTitleInput');
-
-            sunoImportBtn.addEventListener('click', () => {
-                sunoModal.classList.add('active');
-                sunoUrlInput.focus();
-            });
-
-            const closeSunoModal = () => sunoModal.classList.remove('active');
-            sunoCloseBtn.addEventListener('click', closeSunoModal);
-            sunoCancelBtn.addEventListener('click', closeSunoModal);
-
-            sunoModal.addEventListener('click', (e) => {
-                if (e.target === sunoModal) closeSunoModal();
-            });
-
-            document.querySelectorAll('.suno-demo-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    sunoUrlInput.value = btn.getAttribute('data-url');
-                    sunoTitleInput.value = btn.getAttribute('data-title');
-                });
-            });
-
-            sunoLoadBtn.addEventListener('click', () => {
-                const rawUrl = sunoUrlInput.value.trim();
-                if (!rawUrl) return;
-
-                let cdnUrl = rawUrl;
-                let trackTitle = sunoTitleInput.value.trim();
-                let extractedUuid = null;
-
-                // Extract UUID using regex pattern
-                const uuidMatch = rawUrl.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
-
-                if (uuidMatch) {
-                    extractedUuid = uuidMatch[0];
-                    cdnUrl = `https://cdn1.suno.ai/${extractedUuid}.mp3`;
-                    if (!trackTitle) {
-                        trackTitle = `Suno Track (${extractedUuid.substring(0, 8)})`;
-                    }
-                } else if (!trackTitle) {
-                    trackTitle = "Suno Stream";
-                }
-
-                const sunoTrack = {
-                    title: trackTitle,
-                    url: cdnUrl,
-                    uuid: extractedUuid,
-                    type: 'suno'
-                };
-
-                state.playlist.unshift(sunoTrack);
-                renderPlaylist();
-                loadTrack(0, true);
-
-                showToast("Suno Track Added", `Streaming "${trackTitle}" through GlassAmp visualizers.`, false);
-
-                sunoUrlInput.value = '';
-                sunoTitleInput.value = '';
-                closeSunoModal();
             });
 
             // Immersion Mode Fullscreen Logic
@@ -1303,12 +1156,9 @@
                 const item = document.createElement('div');
                 item.className = `playlist-item p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-all flex items-center justify-between group ${index === state.currentIndex ? 'active' : ''}`;
 
-                let typeIcon = '<i class="fa-solid fa-cloud text-purple-400 text-xs mr-2"></i>';
-                if (track.type === 'local') {
-                    typeIcon = '<i class="fa-solid fa-file-audio text-cyan-400 text-xs mr-2"></i>';
-                } else if (track.type === 'suno') {
-                    typeIcon = '<i class="fa-solid fa-bolt text-amber-400 text-xs mr-2"></i>';
-                }
+                const typeIcon = track.type === 'local' 
+                    ? '<i class="fa-solid fa-file-audio text-cyan-400 text-xs mr-2"></i>' 
+                    : '<i class="fa-solid fa-cloud text-purple-400 text-xs mr-2"></i>';
 
                 item.innerHTML = `
                     <div class="truncate text-xs flex items-center flex-1 pr-2">
@@ -1364,10 +1214,6 @@
                 els.trackArtist.textContent = 'Local Audio File';
                 els.trackBadge.textContent = 'LOCAL FILE';
                 els.trackBadge.className = "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 mb-1 inline-block";
-            } else if (track.type === 'suno') {
-                els.trackArtist.textContent = 'Suno AI Stream';
-                els.trackBadge.textContent = 'SUNO AI';
-                els.trackBadge.className = "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-1 inline-block";
             } else {
                 els.trackArtist.textContent = 'Dream AI Music Library';
                 els.trackBadge.textContent = 'SERVER AUDIO';
