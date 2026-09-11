@@ -253,7 +253,16 @@
                                     <i class="fa-solid fa-fire-flame-curved text-red-400"></i> Heatmap Waterfall
                                 </button>
                                 <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="5">
-                                    <i class="fa-solid fa-cubes-stacked text-teal-400"></i> WhiteCap 3D Wireframe
+                                    <i class="fa-solid fa-cubes-stacked text-teal-400"></i> 3D Wireframe
+                                </button>
+                                <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="6">
+                                    <i class="fa-solid fa-circle-nodes text-emerald-400"></i> Wireframe Tunnel
+                                </button>
+                                <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="7">
+                                    <i class="fa-solid fa-water text-indigo-400"></i> Morphing Ribbon Mesh
+                                </button>
+                                <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="8">
+                                    <i class="fa-solid fa-dna text-rose-400"></i> Vector Helix Field
                                 </button>
                             </div>
                         </div>
@@ -290,7 +299,10 @@
                         <button class="viz-opt-btn text-[11px] px-2.5 py-1 rounded-lg text-white/70 hover:text-white" data-mode="2">Holo Pulse</button>
                         <button class="viz-opt-btn text-[11px] px-2.5 py-1 rounded-lg text-white/70 hover:text-white" data-mode="3">Supernova</button>
                         <button class="viz-opt-btn text-[11px] px-2.5 py-1 rounded-lg text-white/70 hover:text-white" data-mode="4">Heatmap</button>
-                        <button class="viz-opt-btn text-[11px] px-2.5 py-1 rounded-lg text-white/70 hover:text-white" data-mode="5">WhiteCap 3D</button>
+                        <button class="viz-opt-btn text-[11px] px-2 py-1 rounded-lg text-white/70 hover:text-white" data-mode="5">3D Wireframe</button>
+                        <button class="viz-opt-btn text-[11px] px-2 py-1 rounded-lg text-white/70 hover:text-white" data-mode="6">3D Tunnel</button>
+                        <button class="viz-opt-btn text-[11px] px-2 py-1 rounded-lg text-white/70 hover:text-white" data-mode="7">Ribbon Mesh</button>
+                        <button class="viz-opt-btn text-[11px] px-2 py-1 rounded-lg text-white/70 hover:text-white" data-mode="8">Helix Field</button>
                     </div>
                 </div>
 
@@ -775,7 +787,9 @@
                 } else if (e.code === 'KeyF') {
                     toggleImmersionMode();
                 } else if (e.code === 'KeyV') {
-                    setVizMode((state.vizMode + 1) % 6);
+                    setVizMode((state.vizMode + 1) % 9);
+                } else if (e.code >= 'Digit1' && e.code <= 'Digit9') {
+                    setVizMode(parseInt(e.key) - 1);
                 } else if (e.code === 'KeyN') {
                     nextTrack();
                 } else if (e.code === 'KeyP') {
@@ -856,8 +870,18 @@
         // --- Visualizer Rendering Engines ---
         function setVizMode(mode) {
             state.vizMode = mode;
-            const names = ["Cyber Spectrum", "Oscilloscope", "Holo Pulse Ring", "Particle Supernova", "Heatmap Waterfall", "WhiteCap 3D Wireframe"];
-            els.vizModeName.textContent = names[mode];
+            const names = [
+                "Cyber Spectrum",
+                "Oscilloscope",
+                "Holo Pulse Ring",
+                "Particle Supernova",
+                "Heatmap Waterfall",
+                "3D Wireframe",
+                "Wireframe Tunnel",
+                "Morphing Ribbon Mesh",
+                "Vector Helix Field"
+            ];
+            els.vizModeName.textContent = names[mode] || "Visualizer";
 
             document.querySelectorAll('.viz-opt-btn').forEach(btn => {
                 btn.classList.toggle('active', parseInt(btn.getAttribute('data-mode')) === mode);
@@ -1059,7 +1083,7 @@
                 ctx.drawImage(state.heatmapCanvas, 0, 0, w, h);
 
             } else if (state.vizMode === 5) {
-                // MODE 5: WhiteCap 3D Wireframe Mesh & Tunnel
+                // MODE 5: 3D Wireframe Mesh & Terrain Grid
                 const cols = 28;
                 const rows = 20;
                 const cellW = w * 0.07;
@@ -1108,7 +1132,7 @@
                         const p3 = grid[r + 1][c];
 
                         if (p1.z > 0 && p2.z > 0 && p3.z > 0) {
-                            // Dynamic WhiteCap HSL Neon Color Shift
+                            // Dynamic HSL Neon Color Shift
                             const hue = (time * 60 + r * 12 + c * 5) % 360;
                             const alpha = p1.alpha * 0.85;
 
@@ -1125,6 +1149,202 @@
                         }
                     }
                 }
+
+            } else if (state.vizMode === 6) {
+                // MODE 6: Wireframe Tunnel (Classic WhiteCap Cyber Octagon Zoom)
+                const numRings = 18;
+                const sides = 10;
+                const fov = 360;
+                const maxZ = 650;
+                
+                state.tunnelZ = (state.tunnelZ || 0) + 2.5 + (state.beatIntensity * 12.0);
+                const time = Date.now() * 0.0015;
+                const rotBase = time * 0.5;
+
+                const ringPoints = [];
+                for (let r = 0; r < numRings; r++) {
+                    const zWorld = maxZ - ((r * 38 + state.tunnelZ) % maxZ);
+                    const alpha = Math.sin((zWorld / maxZ) * Math.PI); // Smooth z-fade
+                    const ringRot = rotBase + (r * 0.08);
+
+                    const pts = [];
+                    for (let s = 0; s < sides; s++) {
+                        const angle = (s / sides) * Math.PI * 2 + ringRot;
+                        const freqIdx = Math.floor((s / sides) * (bufferLen / 4));
+                        const audioVal = (freqArray[freqIdx] || 0) / 255;
+                        
+                        const radius = 170 + audioVal * 130 * (1 + state.beatIntensity);
+                        const xWorld = Math.cos(angle) * radius;
+                        const yWorld = Math.sin(angle) * radius;
+
+                        const projScale = fov / (zWorld + 10);
+                        const screenX = w / 2 + xWorld * projScale;
+                        const screenY = h / 2 + yWorld * projScale;
+
+                        pts.push({ x: screenX, y: screenY, z: zWorld, alpha, val: audioVal });
+                    }
+                    ringPoints.push(pts);
+                }
+
+                // Render Wireframe Tunnel Rings & Connecting Ribs
+                ctx.lineWidth = 1.5 * (window.devicePixelRatio || 1);
+                for (let r = 0; r < numRings; r++) {
+                    const pts = ringPoints[r];
+                    const nextPts = ringPoints[(r + 1) % numRings];
+                    const hue = (time * 50 + r * 18) % 360;
+                    ctx.strokeStyle = `hsla(${hue}, 100%, 65%, ${pts[0].alpha * 0.8})`;
+
+                    ctx.beginPath();
+                    for (let s = 0; s < sides; s++) {
+                        if (s === 0) ctx.moveTo(pts[s].x, pts[s].y);
+                        else ctx.lineTo(pts[s].x, pts[s].y);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+
+                    if (nextPts && Math.abs(pts[0].z - nextPts[0].z) < 80) {
+                        ctx.beginPath();
+                        for (let s = 0; s < sides; s++) {
+                            ctx.moveTo(pts[s].x, pts[s].y);
+                            ctx.lineTo(nextPts[s].x, nextPts[s].y);
+                        }
+                        ctx.strokeStyle = `hsla(${(hue + 40) % 360}, 90%, 50%, ${pts[0].alpha * 0.35})`;
+                        ctx.stroke();
+                    }
+                }
+
+            } else if (state.vizMode === 7) {
+                // MODE 7: Morphing Ribbon Mesh (WhiteCap 3D Surface Folds)
+                const gridX = 24;
+                const gridY = 22;
+                const fov = 380;
+                const time = Date.now() * 0.0014;
+
+                const nodes = [];
+                for (let i = 0; i < gridY; i++) {
+                    const row = [];
+                    const v = (i / (gridY - 1)) - 0.5;
+                    const zWorld = (i * 26) + 80;
+
+                    for (let j = 0; j < gridX; j++) {
+                        const u = (j / (gridX - 1)) - 0.5;
+                        const freqIdx = Math.floor((Math.abs(u) * 2) * (bufferLen / 4));
+                        const audioVal = (freqArray[freqIdx] || 0) / 255;
+
+                        const xRaw = u * w * 0.85;
+                        const yWave = Math.sin(u * 6 + time * 2.5) * 55 + Math.cos(v * 6 + time * 1.8) * 40;
+                        const yAudio = -audioVal * 160 * (1 + state.beatIntensity);
+                        const yRaw = yWave + yAudio;
+
+                        const projScale = fov / (zWorld + 100);
+                        const screenX = w / 2 + xRaw * projScale;
+                        const screenY = h / 2 + yRaw * projScale;
+
+                        row.push({ x: screenX, y: screenY, z: zWorld, audioVal });
+                    }
+                    nodes.push(row);
+                }
+
+                ctx.lineWidth = 1.2 * (window.devicePixelRatio || 1);
+                for (let i = 0; i < gridY - 1; i++) {
+                    for (let j = 0; j < gridX - 1; j++) {
+                        const p1 = nodes[i][j];
+                        const p2 = nodes[i][j + 1];
+                        const p3 = nodes[i + 1][j];
+
+                        const hue = (time * 70 + i * 14 + j * 8) % 360;
+                        const alpha = Math.max(0.1, 1 - (p1.z / 700));
+
+                        ctx.strokeStyle = `hsla(${hue}, 90%, 65%, ${alpha * 0.85})`;
+                        ctx.fillStyle = `hsla(${(hue + 60) % 360}, 85%, 45%, ${alpha * 0.15})`;
+
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.lineTo(p3.x, p3.y);
+                        ctx.closePath();
+                        ctx.stroke();
+                        ctx.fill();
+                    }
+                }
+
+            } else if (state.vizMode === 8) {
+                // MODE 8: Vector Helix Field (WhiteCap 3D DNA Helix & Core)
+                const cx = w / 2;
+                const cy = h / 2;
+                const time = Date.now() * 0.002;
+                const nodesCount = 38;
+                const fov = 400;
+
+                const strand1 = [];
+                const strand2 = [];
+
+                for (let i = 0; i < nodesCount; i++) {
+                    const progress = i / nodesCount;
+                    const yWorld = (progress - 0.5) * h * 0.9;
+                    const angle = progress * Math.PI * 6 + time * 2;
+                    const freqIdx = Math.floor(progress * (bufferLen / 4));
+                    const audioVal = (freqArray[freqIdx] || 0) / 255;
+
+                    const radius = 120 + audioVal * 140 + state.beatIntensity * 60;
+                    
+                    const x1 = Math.cos(angle) * radius;
+                    const z1 = Math.sin(angle) * radius + 300;
+                    const scale1 = fov / z1;
+                    const sx1 = cx + x1 * scale1;
+                    const sy1 = cy + yWorld * scale1;
+
+                    const x2 = Math.cos(angle + Math.PI) * radius;
+                    const z2 = Math.sin(angle + Math.PI) * radius + 300;
+                    const scale2 = fov / z2;
+                    const sx2 = cx + x2 * scale2;
+                    const sy2 = cy + yWorld * scale2;
+
+                    strand1.push({ x: sx1, y: sy1, z: z1, val: audioVal });
+                    strand2.push({ x: sx2, y: sy2, z: z2, val: audioVal });
+                }
+
+                ctx.lineWidth = 1.5 * (window.devicePixelRatio || 1);
+                for (let i = 0; i < nodesCount; i++) {
+                    const p1 = strand1[i];
+                    const p2 = strand2[i];
+                    const hue = (time * 80 + i * 10) % 360;
+
+                    ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.6)`;
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+
+                    const nodeR1 = Math.max(2, (400 / p1.z) * (3 + p1.val * 5));
+                    ctx.fillStyle = `hsl(${hue}, 100%, 65%)`;
+                    ctx.beginPath();
+                    ctx.arc(p1.x, p1.y, nodeR1, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    const nodeR2 = Math.max(2, (400 / p2.z) * (3 + p2.val * 5));
+                    ctx.fillStyle = `hsl(${(hue + 120) % 360}, 100%, 65%)`;
+                    ctx.beginPath();
+                    ctx.arc(p2.x, p2.y, nodeR2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.lineWidth = 2.5 * (window.devicePixelRatio || 1);
+                ctx.strokeStyle = '#06b6d4';
+                ctx.beginPath();
+                for (let i = 0; i < nodesCount; i++) {
+                    if (i === 0) ctx.moveTo(strand1[i].x, strand1[i].y);
+                    else ctx.lineTo(strand1[i].x, strand1[i].y);
+                }
+                ctx.stroke();
+
+                ctx.strokeStyle = '#a855f7';
+                ctx.beginPath();
+                for (let i = 0; i < nodesCount; i++) {
+                    if (i === 0) ctx.moveTo(strand2[i].x, strand2[i].y);
+                    else ctx.lineTo(strand2[i].x, strand2[i].y);
+                }
+                ctx.stroke();
             }
         }
 
