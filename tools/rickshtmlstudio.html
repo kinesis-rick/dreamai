@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rick's HTML Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #111827;
+      --bg-alt: #020617;
+      --panel: #020617;
+      --border: #1f2937;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --text: #e5e7eb;
+      --text-muted: #9ca3af;
+      --danger: #f97373;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --toolbar-bg: rgba(15, 23, 42, 0.96);
+      --toolbar-border: rgba(31, 41, 55, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 40%, #020617 100%);
+      color: var(--text);
+      font-family: var(--font-sans);
+      overflow: hidden;
+    }
+
+    header {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, #020617, #020617 50%, #020617);
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.9);
+      gap: 0.5rem;
+    }
+
+    header .title {
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    header .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
+    }
+
+    header .subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      opacity: 0.9;
+    }
+
+    header .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text);
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--font-sans);
+      transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease, box-shadow 0.12s ease;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: rgba(15, 23, 42, 1);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
+      transform: translateY(-0.5px);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      border: none;
+      color: #0b1120;
+      font-weight: 600;
+      box-shadow: 0 0 0 1px rgba(8, 47, 73, 0.7), 0 12px 30px rgba(8, 47, 73, 0.7);
+    }
+
+    button.primary:hover {
+      box-shadow: 0 0 0 1px rgba(8, 47, 73, 1), 0 16px 40px rgba(8, 47, 73, 0.9);
+      transform: translateY(-1px);
+    }
+
+    button.danger {
+      border-color: rgba(239, 68, 68, 0.6);
+      color: #fecaca;
+      background: rgba(127, 29, 29, 0.4);
+    }
+
+    button.danger:hover {
+      border-color: #f97373;
+      background: rgba(127, 29, 29, 0.7);
+      box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.5);
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.8);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .badge .dot-badge {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .pane-header {
+      padding: 0.45rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.7));
+    }
+
+    .pane-header span.label {
+      opacity: 0.7;
+    }
+
+    .pane-header .pill {
+      font-size: 0.7rem;
+      padding: 0.05rem 0.4rem;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-muted);
+    }
+
+    .editor-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at top left, #0f172a 0, #020617 55%, #020617 100%);
+    }
+
+    #html-source {
+      flex: 1;
+      width: 100%;
+      padding: 0.75rem 0.8rem;
+      background: transparent;
+      color: var(--text);
+      border: none;
+      resize: none;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.5;
+      outline: none;
+      caret-color: var(--accent);
+      tab-size: 2;
+      overflow: auto;
+    }
+
+    #html-source::selection {
+      background: rgba(56, 189, 248, 0.25);
+    }
+
+    .editor-container::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-right: 1px solid rgba(15, 23, 42, 0.9);
+      box-shadow: inset -1px 0 0 rgba(15, 23, 42, 1);
+    }
+
+    .preview-container {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at top right, #0b1120 0, #020617 55%, #020617 100%);
+      border-left: 1px solid rgba(15, 23, 42, 1);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .wysiwyg-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-bottom: 1px solid var(--toolbar-border);
+      background: var(--toolbar-bg);
+      align-items: center;
+      font-size: 0.75rem;
+    }
+
+    .wysiwyg-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding-right: 0.25rem;
+      margin-right: 0.25rem;
+      border-right: 1px solid rgba(31, 41, 55, 0.8);
+    }
+
+    .wysiwyg-group:last-child {
+      border-right: none;
+      margin-right: 0;
+      padding-right: 0;
+    }
+
+    .toolbar-btn {
+      border-radius: 4px;
+      border: 1px solid rgba(31, 41, 55, 1);
+      background: rgba(15, 23, 42, 0.95);
+      padding: 0.1rem 0.3rem;
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      min-width: 1.4rem;
+    }
+
+    .toolbar-btn:hover {
+      border-color: var(--accent);
+      color: var(--text);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
+      background: rgba(15, 23, 42, 1);
+    }
+
+    .toolbar-select {
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 4px;
+      border: 1px solid rgba(31, 41, 55, 1);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      padding: 0.1rem 0.3rem;
+      outline: none;
+    }
+
+    .toolbar-select:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .toolbar-color {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 1.5rem;
+      height: 1rem;
+      border-radius: 4px;
+      border: 1px solid rgba(31, 41, 55, 1);
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .toolbar-color::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+
+    .toolbar-color::-moz-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+
+    .preview-frame-wrapper {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+
+    #preview-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: white;
+    }
+
+    .status-bar {
+      position: absolute;
+      bottom: 0.35rem;
+      right: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+    }
+
+    .status-error {
+      color: #fecaca;
+    }
+
+    .drag-divider {
+      width: 5px;
+      background: linear-gradient(to bottom, rgba(15, 23, 42, 0.1), rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.1));
+      cursor: col-resize;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .drag-divider::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 2px;
+      height: 46px;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      background: rgba(31, 41, 55, 0.7);
+      box-shadow: 0 0 0 1px rgba(31, 41, 55, 0.7);
+    }
+
+    .drag-divider:hover::before {
+      background: rgba(56, 189, 248, 0.85);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.75), 0 0 30px rgba(56, 189, 248, 0.7);
+    }
+
+    .footer {
+      padding: 0.3rem 0.8rem;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: radial-gradient(circle at bottom, #020617 0, #020617 40%, #020617 100%);
+    }
+
+    .footer span {
+      opacity: 0.9;
+    }
+
+    .footer-kbd {
+      font-size: 0.65rem;
+      border-radius: 4px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      padding: 0.1rem 0.35rem;
+      margin-left: 0.15rem;
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    @media (max-width: 800px) {
+      main {
+        flex-direction: column;
+      }
+
+      .drag-divider {
+        height: 6px;
+        width: 100%;
+        cursor: row-resize;
+      }
+
+      .drag-divider::before {
+        width: 46px;
+        height: 2px;
+      }
+
+      .editor-container::before {
+        border-right: none;
+        border-bottom: 1px solid rgba(15, 23, 42, 1);
+        box-shadow: inset 0 -1px 0 rgba(15, 23, 42, 1);
+      }
+    }
+
+    @media (max-width: 480px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      header .actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .wysiwyg-toolbar {
+        font-size: 0.7rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <span class="dot"></span>
+      <span>Rick's HTML Studio</span>
+      <span class="subtitle">Bi-directional WYSIWYG / Source Editor</span>
+    </div>
+    <div class="actions">
+      <span class="badge">
+        <span class="dot-badge"></span>
+        Local only · No network, no tracking
+      </span>
+      <button id="btn-format" title="Format HTML (simple, client-side)">
+        ⬒ Format
+      </button>
+      <button id="btn-download" class="primary" title="Download current HTML as a file">
+        ⬇ Download HTML
+      </button>
+      <button id="btn-reset" class="danger" title="Reset to starter template">
+        ✕ Reset
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="pane">
+      <div class="pane-header">
+        <span class="label">Source</span>
+        <span class="pill">HTML</span>
+      </div>
+      <div class="editor-container">
+        <textarea id="html-source" spellcheck="false"></textarea>
+      </div>
+    </section>
+
+    <div class="drag-divider" id="divider"></div>
+
+    <section class="pane">
+      <div class="pane-header">
+        <span class="label">Preview</span>
+        <span class="pill">WYSIWYG</span>
+      </div>
+      <div class="preview-container">
+        <div class="wysiwyg-toolbar" id="toolbar">
+          <div class="wysiwyg-group">
+            <select id="block-format" class="toolbar-select" title="Block type">
+              <option value="p">Paragraph</option>
+              <option value="h1">Heading 1</option>
+              <option value="h2">Heading 2</option>
+              <option value="h3">Heading 3</option>
+            </select>
+          </div>
+          <div class="wysiwyg-group">
+            <button class="toolbar-btn" data-cmd="bold" title="Bold (Ctrl+B)">B</button>
+            <button class="toolbar-btn" data-cmd="italic" title="Italic (Ctrl+I)"><span style="font-style:italic;">I</span></button>
+            <button class="toolbar-btn" data-cmd="underline" title="Underline (Ctrl+U)"><span style="text-decoration:underline;">U</span></button>
+            <button class="toolbar-btn" data-cmd="strikeThrough" title="Strikethrough"><span style="text-decoration:line-through;">S</span></button>
+          </div>
+          <div class="wysiwyg-group">
+            <button class="toolbar-btn" data-cmd="insertUnorderedList" title="Bulleted list">• ●</button>
+            <button class="toolbar-btn" data-cmd="insertOrderedList" title="Numbered list">1.</button>
+            <button class="toolbar-btn" data-cmd="outdent" title="Decrease indent">«</button>
+            <button class="toolbar-btn" data-cmd="indent" title="Increase indent">»</button>
+          </div>
+          <div class="wysiwyg-group">
+            <label style="display:inline-flex;align-items:center;gap:0.2rem;">
+              <span style="color:var(--text-muted);">Text</span>
+              <input type="color" id="color-fore" class="toolbar-color" title="Text color" value="#111827" />
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:0.2rem;">
+              <span style="color:var(--text-muted);">Bg</span>
+              <input type="color" id="color-back" class="toolbar-color" title="Background color" value="#fef9c3" />
+            </label>
+          </div>
+          <div class="wysiwyg-group">
+            <button class="toolbar-btn" id="btn-insert-table" title="Insert table">Tbl</button>
+            <button class="toolbar-btn" id="btn-add-row" title="Add row">+Row</button>
+            <button class="toolbar-btn" id="btn-add-col" title="Add column">+Col</button>
+            <button class="toolbar-btn" id="btn-del-row" title="Remove row">-Row</button>
+            <button class="toolbar-btn" id="btn-del-col" title="Remove column">-Col</button>
+          </div>
+        </div>
+
+        <div class="preview-frame-wrapper">
+          <!-- allow-same-origin so parent can access DOM, allow-scripts so editing works reliably -->
+          <iframe id="preview-frame" sandbox="allow-same-origin allow-scripts"></iframe>
+          <div class="status-bar" id="status-bar">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text">Live: edit either side · toolbar formats WYSIWYG · table tools active</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="footer">
+    <div>
+      <span>Edit source (left) or WYSIWYG (right). Toolbar affects the right pane.</span>
+    </div>
+    <div>
+      <span>Force refresh</span>
+      <span class="footer-kbd">Ctrl</span>+
+      <span class="footer-kbd">Enter</span>
+      <span style="margin-left:0.4rem;">•</span>
+      <span>Save output</span>
+      <span class="footer-kbd">Ctrl</span>+
+      <span class="footer-kbd">S</span>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    (function () {
+      const sourceEl = document.getElementById("html-source");
+      const previewFrame = document.getElementById("preview-frame");
+      const statusText = document.getElementById("status-text");
+      const statusDot = document.getElementById("status-dot");
+      const btnDownload = document.getElementById("btn-download");
+      const btnReset = document.getElementById("btn-reset");
+      const btnFormat = document.getElementById("btn-format");
+      const divider = document.getElementById("divider");
+      const main = document.querySelector("main");
+
+      const toolbarEl = document.getElementById("toolbar");
+      const blockFormatSelect = document.getElementById("block-format");
+      const colorForeInput = document.getElementById("color-fore");
+      const colorBackInput = document.getElementById("color-back");
+      const btnInsertTable = document.getElementById("btn-insert-table");
+      const btnAddRow = document.getElementById("btn-add-row");
+      const btnAddCol = document.getElementById("btn-add-col");
+      const btnDelRow = document.getElementById("btn-del-row");
+      const btnDelCol = document.getElementById("btn-del-col");
+
+      const STARTER_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hello from the Split HTML Editor</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 2rem;
+      background: radial-gradient(circle at top, #e0f2fe 0, #eff6ff 40%, #ffffff 100%);
+      color: #0f172a;
+      line-height: 1.6;
+    }
+    h1 {
+      font-size: 2.1rem;
+      margin-bottom: 0.25em;
+    }
+    .tag {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.1);
+      color: #1d4ed8;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-bottom: 1rem;
+    }
+    .card {
+      border-radius: 1rem;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
+      max-width: 700px;
+    }
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 0.25rem;
+      font-size: 1.4rem;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    .btn-row {
+      margin-top: 1.2rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: #0b1120;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn.secondary {
+      background: rgba(15, 23, 42, 0.03);
+      color: #1f2937;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+    }
+    table.demo {
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+      width: 100%;
+      max-width: 600px;
+      font-size: 0.9rem;
+    }
+    table.demo th,
+    table.demo td {
+      border: 1px solid #d1d5db;
+      padding: 0.4rem 0.6rem;
+      text-align: left;
+    }
+    table.demo thead th {
+      background: #eff6ff;
+    }
+    code {
+      background: rgba(15, 23, 42, 0.05);
+      padding: 0.1rem 0.25rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+  <div class="tag">Try editing this HTML</div>
+  <h1>Welcome to Rick's offline HTML Studio playground</h1>
+  <p>
+    Edit the HTML on the left <em>or</em> edit directly here on the right.
+    Use the toolbar above to format text, create tables, and tweak layout.
+  </p>
+  <div class="card">
+    <h2>What can you do here?</h2>
+    <p class="muted">
+      • Prototype small pages<br />
+      • Experiment with CSS<br />
+      • Keep everything local and private
+    </p>
+    <div class="btn-row">
+      <button class="btn">Primary button</button>
+      <button class="btn secondary">Secondary button</button>
+    </div>
+  </div>
+
+  <table class="demo">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Bi-directional editing</td>
+        <td>✓</td>
+      </tr>
+      <tr>
+        <td>Toolbar formatting</td>
+        <td>✓</td>
+      </tr>
+      <tr>
+        <td>Table tools</td>
+        <td>✓</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top: 1.5rem; font-size: 0.9rem; color: #6b7280;">
+    Tip: Put the caret in this table and try +Row / +Col / -Row / -Col.
+  </p>
+</body>
+</html>
+`;
+
+      let activeSide = null; // "source", "preview", or null
+      let updateTimeout = null;
+      let mutationObserver = null;
+
+      function setStatus(message, isError = false) {
+        statusText.textContent = message;
+        if (isError) {
+          statusDot.style.background = "#f97373";
+          statusDot.style.boxShadow = "0 0 10px rgba(248, 113, 113, 0.7)";
+          statusText.classList.add("status-error");
+        } else {
+          statusDot.style.background = "#38bdf8";
+          statusDot.style.boxShadow = "0 0 10px rgba(56, 189, 248, 0.7)";
+          statusText.classList.remove("status-error");
+        }
+      }
+
+      function getPreviewDoc() {
+        return previewFrame.contentDocument || previewFrame.contentWindow.document;
+      }
+
+      // --- Preview: editable + events ---
+      function makePreviewEditable(doc) {
+        if (!doc || !doc.body) return;
+        doc.body.setAttribute("contenteditable", "true");
+        doc.body.style.outline = "none";
+
+        doc.body.addEventListener("focus", () => {
+          activeSide = "preview";
+        }, true);
+        doc.body.addEventListener("blur", () => {
+          setTimeout(() => {
+            if (document.activeElement === sourceEl) activeSide = "source";
+            else activeSide = null;
+          }, 0);
+        }, true);
+      }
+
+      function attachPreviewInteraction(doc) {
+        if (!doc) return;
+
+        makePreviewEditable(doc);
+
+        if (mutationObserver) mutationObserver.disconnect();
+        mutationObserver = new MutationObserver(() => {
+          activeSide = "preview";
+          scheduleSourceUpdateFromPreview();
+        });
+        mutationObserver.observe(doc.body, {
+          childList: true,
+          characterData: true,
+          subtree: true,
+          attributes: true,
+        });
+
+        doc.addEventListener("click", (e) => {
+          activeSide = "preview";
+          const target = e.target;
+          tryJumpToSource(target);
+        });
+
+        const win = previewFrame.contentWindow;
+        win.addEventListener("keydown", (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault();
+            activeSide = null;
+            updatePreviewFromSource();
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+            e.preventDefault();
+            downloadHTML();
+          }
+        });
+      }
+
+      // --- Source → Preview ---
+      function updatePreviewFromSource() {
+        const html = sourceEl.value;
+        try {
+          const doc = getPreviewDoc();
+          doc.open();
+          doc.write(html);
+          doc.close();
+
+          attachPreviewInteraction(doc);
+          setStatus("Preview updated from source");
+        } catch (e) {
+          console.error("Preview error:", e);
+          setStatus("Error rendering preview (check console)", true);
+        }
+
+        try {
+          localStorage.setItem("offline-html-editor-content", html);
+        } catch {
+          // ignore
+        }
+      }
+
+      function schedulePreviewUpdateFromSource() {
+        if (activeSide === "preview") return;
+        setStatus("Typing in source… syncing to preview");
+        if (updateTimeout) clearTimeout(updateTimeout);
+        updateTimeout = setTimeout(updatePreviewFromSource, 250);
+      }
+
+      // --- Preview → Source ---
+      function updateSourceFromPreview() {
+        const doc = getPreviewDoc();
+        if (!doc || !doc.documentElement) return;
+        const serialized = "<!DOCTYPE html>\n" + (doc.documentElement.outerHTML || doc.documentElement.innerHTML);
+        sourceEl.value = serialized;
+        try {
+          localStorage.setItem("offline-html-editor-content", serialized);
+        } catch {
+          // ignore
+        }
+        setStatus("Source updated from WYSIWYG");
+      }
+
+      function scheduleSourceUpdateFromPreview() {
+        if (activeSide === "source") return;
+        setStatus("Typing in preview… syncing to source");
+        if (updateTimeout) clearTimeout(updateTimeout);
+        updateTimeout = setTimeout(updateSourceFromPreview, 300);
+      }
+
+      // --- Toolbar exec ---
+      function execInPreview(command, value = null) {
+        const doc = getPreviewDoc();
+        if (!doc) return;
+        const win = previewFrame.contentWindow;
+
+        win.focus();
+        doc.execCommand(command, false, value);
+        activeSide = "preview";
+        scheduleSourceUpdateFromPreview();
+      }
+
+      function insertTable() {
+        const rowsStr = prompt("Number of rows (excluding header)?", "3");
+        if (!rowsStr) return;
+        const colsStr = prompt("Number of columns?", "3");
+        if (!colsStr) return;
+        const rows = Math.max(1, parseInt(rowsStr, 10) || 1);
+        const cols = Math.max(1, parseInt(colsStr, 10) || 1);
+
+        let html = '<table style="border-collapse:collapse;width:100%;max-width:800px;font-size:0.9rem;">\n';
+        html += "<thead><tr>";
+        for (let c = 0; c < cols; c++) {
+          html += '<th style="border:1px solid #d1d5db;padding:0.4rem 0.6rem;background:#eff6ff;text-align:left;">Header ' + (c + 1) + "</th>";
+        }
+        html += "</tr></thead>\n<tbody>\n";
+        for (let r = 0; r < rows; r++) {
+          html += "<tr>";
+          for (let c = 0; c < cols; c++) {
+            html += '<td style="border:1px solid #d1d5db;padding:0.4rem 0.6rem;text-align:left;">Cell</td>';
+          }
+          html += "</tr>\n";
+        }
+        html += "</tbody>\n</table><p><br /></p>";
+
+        execInPreview("insertHTML", html);
+        setStatus("Inserted table");
+      }
+
+      // --- Locate cell / row / table for table tools ---
+      function getCurrentCell() {
+        const doc = getPreviewDoc();
+        if (!doc) return null;
+        const sel = doc.getSelection();
+        if (!sel || sel.rangeCount === 0) return null;
+        let node = sel.anchorNode;
+        while (node && node !== doc.body && node.nodeName !== "TD" && node.nodeName !== "TH") {
+          node = node.parentNode;
+        }
+        if (!node || (node.nodeName !== "TD" && node.nodeName !== "TH")) return null;
+        return node;
+      }
+
+      function addRowToCurrentTable() {
+        const cell = getCurrentCell();
+        if (!cell) {
+          setStatus("Place the caret inside a table cell to add a row");
+          return;
+        }
+        let tr = cell.parentNode;
+        while (tr && tr.nodeName !== "TR") {
+          tr = tr.parentNode;
+        }
+        if (!tr || tr.nodeName !== "TR") {
+          setStatus("Could not find row");
+          return;
+        }
+        const table = tr.closest("table");
+        if (!table) {
+          setStatus("Could not find table");
+          return;
+        }
+
+        const newRow = tr.cloneNode(true);
+        const cells = newRow.querySelectorAll("td,th");
+        cells.forEach((c) => {
+          c.textContent = "Cell";
+        });
+
+        tr.parentNode.insertBefore(newRow, tr.nextSibling);
+        activeSide = "preview";
+        scheduleSourceUpdateFromPreview();
+        setStatus("Added row to table");
+      }
+
+      function addColToCurrentTable() {
+        const cell = getCurrentCell();
+        if (!cell) {
+          setStatus("Place the caret inside a table cell to add a column");
+          return;
+        }
+        const table = cell.closest("table");
+        if (!table) {
+          setStatus("Could not find table");
+          return;
+        }
+
+        // Determine column index
+        const row = cell.parentNode;
+        const cellsInRow = Array.from(row.children).filter(n => n.nodeName === "TD" || n.nodeName === "TH");
+        const colIndex = cellsInRow.indexOf(cell);
+        if (colIndex === -1) {
+          setStatus("Could not determine column index");
+          return;
+        }
+
+        const rows = table.querySelectorAll("tr");
+        rows.forEach((tr) => {
+          const cells = Array.from(tr.children).filter(n => n.nodeName === "TD" || n.nodeName === "TH");
+          const refCell = cells[colIndex] || cells[cells.length - 1];
+          const newCell = refCell.cloneNode(true);
+          newCell.textContent = "Cell";
+          refCell.insertAdjacentElement("afterend", newCell);
+        });
+
+        activeSide = "preview";
+        scheduleSourceUpdateFromPreview();
+        setStatus("Added column to table");
+      }
+
+      function deleteRow() {
+        const cell = getCurrentCell();
+        if (!cell) {
+          setStatus("Place the caret inside a table cell to remove a row");
+          return;
+        }
+        let tr = cell.parentNode;
+        while (tr && tr.nodeName !== "TR") {
+          tr = tr.parentNode;
+        }
+        if (!tr || tr.nodeName !== "TR") {
+          setStatus("Could not find row");
+          return;
+        }
+        const tbodyOrThead = tr.parentNode;
+        tbodyOrThead.removeChild(tr);
+        activeSide = "preview";
+        scheduleSourceUpdateFromPreview();
+        setStatus("Removed row");
+      }
+
+      function deleteCol() {
+        const cell = getCurrentCell();
+        if (!cell) {
+          setStatus("Place the caret inside a table cell to remove a column");
+          return;
+        }
+        const table = cell.closest("table");
+        if (!table) {
+          setStatus("Could not find table");
+          return;
+        }
+
+        const row = cell.parentNode;
+        const cellsInRow = Array.from(row.children).filter(n => n.nodeName === "TD" || n.nodeName === "TH");
+        const colIndex = cellsInRow.indexOf(cell);
+        if (colIndex === -1) {
+          setStatus("Could not determine column index");
+          return;
+        }
+
+        const rows = table.querySelectorAll("tr");
+        rows.forEach((tr) => {
+          const cells = Array.from(tr.children).filter(n => n.nodeName === "TD" || n.nodeName === "TH");
+          if (cells[colIndex]) {
+            cells[colIndex].remove();
+          }
+        });
+
+        activeSide = "preview";
+        scheduleSourceUpdateFromPreview();
+        setStatus("Removed column");
+      }
+
+      // --- Click-to-jump: preview → source (no focus steal) ---
+      function tryJumpToSource(target) {
+        if (!target) return;
+        const htmlText = sourceEl.value;
+        let idx = -1;
+
+        let snippet = target.outerHTML || "";
+        snippet = snippet.replace(/\s+/g, " ").trim();
+        if (snippet.length > 0) {
+          const shortSnippet = snippet.slice(0, 120);
+          idx = htmlText.indexOf(shortSnippet);
+        }
+
+        if (idx === -1) {
+          const text = (target.textContent || "").replace(/\s+/g, " ").trim();
+          if (text.length > 0) {
+            const shortText = text.slice(0, 40);
+            idx = htmlText.indexOf(shortText);
+          }
+        }
+
+        if (idx !== -1) {
+          sourceEl.selectionStart = idx;
+          sourceEl.selectionEnd = idx;
+
+          const beforeText = htmlText.slice(0, idx);
+          const lines = beforeText.split(/\r\n|\r|\n/).length;
+          const lineHeight = 18;
+          sourceEl.scrollTop = Math.max(0, (lines - 5) * lineHeight);
+
+          setStatus("Synced source view to clicked element");
+        } else {
+          setStatus("Could not locate clicked element in source (structure changed?)");
+        }
+      }
+
+      // --- Source caret → preview scroll ---
+      function syncPreviewToSourceCaret() {
+        const doc = getPreviewDoc();
+        if (!doc || !doc.body) return;
+
+        const pos = sourceEl.selectionStart || 0;
+        const htmlText = sourceEl.value;
+        const radius = 40;
+        const start = Math.max(0, pos - radius);
+        const end = Math.min(htmlText.length, pos + radius);
+        let snippet = htmlText.slice(start, end);
+        snippet = snippet.replace(/<[^>]*>/g, "");
+        snippet = snippet.replace(/\s+/g, " ").trim();
+        if (!snippet) return;
+
+        const short = snippet.slice(0, 40);
+
+        let bestMatchEl = null;
+        let walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT, null);
+        while (walker.nextNode()) {
+          const el = walker.currentNode;
+          const text = (el.textContent || "").replace(/\s+/g, " ");
+          if (text.includes(short)) {
+            bestMatchEl = el;
+            break;
+          }
+        }
+
+        if (bestMatchEl && bestMatchEl.scrollIntoView) {
+          bestMatchEl.scrollIntoView({ block: "center", behavior: "smooth" });
+          setStatus("Synced preview view to source caret");
+        }
+      }
+
+      // --- Init ---
+      function init() {
+        const existing = localStorage.getItem("offline-html-editor-content");
+        sourceEl.value = existing || STARTER_HTML;
+        activeSide = "source";
+        updatePreviewFromSource();
+
+        sourceEl.addEventListener("focus", () => {
+          activeSide = "source";
+        });
+        sourceEl.addEventListener("blur", () => {
+          setTimeout(() => {
+            const doc = getPreviewDoc();
+            if (doc && doc.activeElement && doc.body.contains(doc.activeElement)) {
+              activeSide = "preview";
+            } else {
+              activeSide = null;
+            }
+          }, 0);
+        });
+      }
+
+      // --- Source events ---
+      sourceEl.addEventListener("input", () => {
+        activeSide = "source";
+        schedulePreviewUpdateFromSource();
+      });
+
+      sourceEl.addEventListener("click", () => {
+        activeSide = "source";
+        syncPreviewToSourceCaret();
+      });
+
+      sourceEl.addEventListener("keyup", (e) => {
+        const navKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"];
+        if (navKeys.includes(e.key)) {
+          activeSide = "source";
+          syncPreviewToSourceCaret();
+        }
+      });
+
+      sourceEl.addEventListener("keydown", (e) => {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          const start = sourceEl.selectionStart;
+          const end = sourceEl.selectionEnd;
+          const value = sourceEl.value;
+          const TAB = "  ";
+          sourceEl.value = value.slice(0, start) + TAB + value.slice(end);
+          sourceEl.selectionStart = sourceEl.selectionEnd = start + TAB.length;
+          schedulePreviewUpdateFromSource();
+        }
+
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          activeSide = null;
+          updatePreviewFromSource();
+        }
+
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+          e.preventDefault();
+          downloadHTML();
+        }
+      });
+
+      // --- Download ---
+      function downloadHTML() {
+        const blob = new Blob([sourceEl.value], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "document.html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setStatus("HTML downloaded");
+      }
+
+      btnDownload.addEventListener("click", downloadHTML);
+
+      // --- Reset ---
+      btnReset.addEventListener("click", () => {
+        const confirmReset = confirm(
+          "Reset editor to starter template?\n\nYour current HTML will be lost (unless you've downloaded it)."
+        );
+        if (!confirmReset) return;
+        sourceEl.value = STARTER_HTML;
+        activeSide = "source";
+        updatePreviewFromSource();
+        setStatus("Reset to starter template");
+      });
+
+      // --- Simple formatter ---
+      function simpleFormat(html) {
+        const lines = html
+          .replace(/>\s+</g, "><")
+          .replace(/></g, ">\n<")
+          .split("\n");
+
+        let indent = 0;
+        const INDENT_STR = "  ";
+        return lines
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .map((line) => {
+            const isClosing = /^<\/.+>/.test(line);
+            const isSelfClosing =
+              /\/>$/.test(line) ||
+              /^<!/.test(line) ||
+              /^<meta/.test(line) ||
+              /^<link/.test(line);
+
+            if (isClosing) {
+              indent = Math.max(indent - 1, 0);
+            }
+
+            const formatted = INDENT_STR.repeat(indent) + line;
+
+            if (!isClosing && !isSelfClosing && /^<[^!/?]+>/.test(line)) {
+              indent++;
+            }
+
+            return formatted;
+          })
+          .join("\n");
+      }
+
+      btnFormat.addEventListener("click", () => {
+        try {
+          const formatted = simpleFormat(sourceEl.value);
+          sourceEl.value = formatted;
+          activeSide = "source";
+          updatePreviewFromSource();
+          setStatus("Formatted HTML");
+        } catch (e) {
+          console.error("Format error:", e);
+          setStatus("Could not format HTML (see console)", true);
+        }
+      });
+
+      // --- Toolbar wiring ---
+      toolbarEl.addEventListener("click", (e) => {
+        const btn = e.target.closest(".toolbar-btn");
+        if (!btn) return;
+        const cmd = btn.dataset.cmd;
+        if (!cmd) return;
+
+        if (cmd === "insertTable") return; // handled separately
+
+        if (cmd === "insertUnorderedList" ||
+            cmd === "insertOrderedList" ||
+            cmd === "bold" ||
+            cmd === "italic" ||
+            cmd === "underline" ||
+            cmd === "strikeThrough" ||
+            cmd === "outdent" ||
+            cmd === "indent") {
+          execInPreview(cmd);
+        }
+      });
+
+      blockFormatSelect.addEventListener("change", () => {
+        const value = blockFormatSelect.value.toUpperCase();
+        execInPreview("formatBlock", value === "P" ? "P" : value);
+      });
+
+      colorForeInput.addEventListener("input", () => {
+        execInPreview("foreColor", colorForeInput.value);
+      });
+
+      colorBackInput.addEventListener("input", () => {
+        execInPreview("hiliteColor", colorBackInput.value);
+      });
+
+      btnInsertTable.addEventListener("click", insertTable);
+      btnAddRow.addEventListener("click", addRowToCurrentTable);
+      btnAddCol.addEventListener("click", addColToCurrentTable);
+      btnDelRow.addEventListener("click", deleteRow);
+      btnDelCol.addEventListener("click", deleteCol);
+
+      // --- Resizable split view ---
+      let isDragging = false;
+      let verticalMode = window.innerWidth > 800;
+
+      function updateLayoutMode() {
+        verticalMode = window.innerWidth > 800;
+      }
+
+      window.addEventListener("resize", updateLayoutMode);
+
+      divider.addEventListener("mousedown", () => {
+        isDragging = true;
+        document.body.style.userSelect = "none";
+      });
+
+      window.addEventListener("mouseup", () => {
+        isDragging = false;
+        document.body.style.userSelect = "";
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+
+        const rect = main.getBoundingClientRect();
+        if (verticalMode) {
+          let x = e.clientX - rect.left;
+          const min = rect.width * 0.15;
+          const max = rect.width * 0.85;
+          x = Math.max(min, Math.min(max, x));
+          const leftPercent = (x / rect.width) * 100;
+          main.children[0].style.flex = `0 0 ${leftPercent}%`;
+          main.children[2].style.flex = `1 1 auto`;
+        } else {
+          let y = e.clientY - rect.top;
+          const min = rect.height * 0.15;
+          const max = rect.height * 0.85;
+          y = Math.max(min, Math.min(max, y));
+          const topPercent = (y / rect.height) * 100;
+          main.children[0].style.flex = `0 0 ${topPercent}%`;
+          main.children[2].style.flex = `1 1 auto`;
+        }
+      });
+
+      console.info("Offline HTML Studio (toolbar + table tools): fully local, no network calls are made.");
+
+      init();
+    })();
+  </script>
+</body>
+</html>

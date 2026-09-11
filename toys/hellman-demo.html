@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Color of Security: How Encryption Works</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .color-well {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+            user-select: none;
+            position: relative;
+            z-index: 20;
+        }
+        .color-well:active { cursor: grabbing; transform: scale(1.1); }
+        
+        .drop-zone {
+            width: 90px;
+            height: 90px;
+            border: 3px dashed #cbd5e1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        .drop-zone.active { border-color: #3b82f6; background-color: #eff6ff; transform: scale(1.05); }
+        
+        .step-card { transition: opacity 0.4s ease, transform 0.4s ease; }
+        .hidden-step { opacity: 0; pointer-events: none; transform: translateY(20px); position: absolute; width: 100%; top: 120px; left: 0;}
+        
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .guide-pulse { animation: pulse-blue 2s infinite; border-color: #3b82f6; border-style: solid; }
+
+        .hacker-area {
+            background: repeating-linear-gradient(45deg, #fef2f2, #fef2f2 10px, #fee2e2 10px, #fee2e2 20px);
+            border: 2px solid #fee2e2;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-3xl w-full">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-extrabold text-slate-900">Secret Color Exchange</h1>
+            <p class="text-slate-600">The Diffie-Hellman Key Exchange Challenge</p>
+        </header>
+
+        <main class="bg-white rounded-3xl shadow-2xl p-6 md:p-10 relative overflow-hidden min-h-[580px]">
+            
+            <!-- Progress Bar -->
+            <div class="flex items-center gap-2 mb-10">
+                <div id="prog-1" class="h-2 flex-1 rounded-full bg-blue-500"></div>
+                <div id="prog-2" class="h-2 flex-1 rounded-full bg-slate-200"></div>
+                <div id="prog-3" class="h-2 flex-1 rounded-full bg-slate-200"></div>
+                <div id="prog-4" class="h-2 flex-1 rounded-full bg-slate-200"></div>
+            </div>
+
+            <!-- STEP 1: Private Mix -->
+            <div id="step-1" class="step-card">
+                <div class="text-center mb-10">
+                    <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Step 1: The Secret Mix</span>
+                    <h2 class="text-2xl font-bold mt-3">Mix your Secret with the Public Base</h2>
+                    <p class="text-slate-500 mt-2">Drag <b>Alice's Red</b> and <b>Bob's Blue</b> into the yellow mix zones.</p>
+                </div>
+
+                <div class="flex justify-between items-center px-4">
+                    <div class="flex flex-col items-center gap-6">
+                        <span class="font-bold text-slate-400 uppercase text-xs">Alice</span>
+                        <div id="alice-secret" draggable="true" ondragstart="drag(event, 'red')" class="color-well bg-red-500">SECRET</div>
+                        <div id="alice-mix-zone" class="drop-zone guide-pulse" ondrop="dropMix(event, 'alice')" ondragover="allowDrop(event)">
+                            <div class="w-12 h-12 rounded-full bg-yellow-400 border-2 border-white shadow-inner flex items-center justify-center text-[10px] text-yellow-800 font-bold">BASE</div>
+                        </div>
+                    </div>
+
+                    <div class="text-4xl text-slate-200 font-light">+</div>
+
+                    <div class="flex flex-col items-center gap-6">
+                        <span class="font-bold text-slate-400 uppercase text-xs">Bob</span>
+                        <div id="bob-secret" draggable="true" ondragstart="drag(event, 'blue')" class="color-well bg-blue-600">SECRET</div>
+                        <div id="bob-mix-zone" class="drop-zone guide-pulse" ondrop="dropMix(event, 'bob')" ondragover="allowDrop(event)">
+                             <div class="w-12 h-12 rounded-full bg-yellow-400 border-2 border-white shadow-inner flex items-center justify-center text-[10px] text-yellow-800 font-bold">BASE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="btn-next-1" class="hidden mt-10 text-center animate-bounce">
+                    <button onclick="nextStep(2)" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition">Mixes ready! Swap them &rarr;</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: The Swap (Exchange) -->
+            <div id="step-2" class="step-card hidden-step">
+                <div class="text-center mb-6">
+                    <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Step 2: The Public Swap</span>
+                    <h2 class="text-2xl font-bold mt-3">Swap the Mixed Colors</h2>
+                    <p class="text-slate-500 mt-2">Drag <b>Alice's Orange</b> to Bob, and <b>Bob's Green</b> to Alice.</p>
+                </div>
+
+                <div class="hacker-area rounded-2xl p-6 relative">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-white px-4 border-2 border-red-200 rounded-full text-xs font-black text-red-500 flex items-center gap-1">
+                        🕵️‍♀️ HACKER EVE CAN SEE THIS AREA
+                    </div>
+
+                    <div class="flex justify-between items-center py-8">
+                        <div id="swap-alice-zone" class="drop-zone border-slate-300" ondrop="dropSwap(event, 'toAlice')" ondragover="allowDrop(event)">
+                            <span class="text-[10px] text-slate-400 uppercase font-bold text-center">Alice's<br>Inbox</span>
+                        </div>
+
+                        <div id="alice-mix-src" draggable="true" ondragstart="drag(event, 'orange')" class="color-well bg-orange-500">A's MIX</div>
+                        <div id="bob-mix-src" draggable="true" ondragstart="drag(event, 'green')" class="color-well bg-green-500">B's MIX</div>
+
+                        <div id="swap-bob-zone" class="drop-zone border-slate-300" ondrop="dropSwap(event, 'toBob')" ondragover="allowDrop(event)">
+                            <span class="text-[10px] text-slate-400 uppercase font-bold text-center">Bob's<br>Inbox</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="btn-next-2" class="hidden mt-8 text-center animate-bounce">
+                    <button onclick="nextStep(3)" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition">Swap Complete &rarr;</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Final Combination -->
+            <div id="step-3" class="step-card hidden-step">
+                <div class="text-center mb-8">
+                    <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Step 3: The Final Key</span>
+                    <h2 class="text-2xl font-bold mt-3">Combine with your Secret</h2>
+                    <p class="text-slate-500 mt-2">Drag your original secret onto the mix you received!</p>
+                </div>
+
+                <div class="flex justify-around items-start">
+                    <!-- Alice's side -->
+                    <div class="flex flex-col items-center gap-4">
+                        <span class="font-bold text-slate-400 uppercase text-xs">Alice's Side</span>
+                        <div id="alice-secret-final" draggable="true" ondragstart="drag(event, 'red-final')" class="color-well bg-red-500">SECRET</div>
+                        <div class="text-xl text-slate-400 font-bold">↓</div>
+                        <div id="final-alice-zone" class="drop-zone guide-pulse bg-green-500 border-none shadow-inner" ondrop="dropFinal(event, 'alice')" ondragover="allowDrop(event)">
+                             <span class="text-white text-[10px] font-bold text-center">Mix From<br>Bob</span>
+                        </div>
+                    </div>
+
+                    <div class="text-4xl text-slate-200 mt-32">?</div>
+
+                    <!-- Bob's side -->
+                    <div class="flex flex-col items-center gap-4">
+                        <span class="font-bold text-slate-400 uppercase text-xs">Bob's Side</span>
+                        <div id="bob-secret-final" draggable="true" ondragstart="drag(event, 'blue-final')" class="color-well bg-blue-600">SECRET</div>
+                        <div class="text-xl text-slate-400 font-bold">↓</div>
+                        <div id="final-bob-zone" class="drop-zone guide-pulse bg-orange-500 border-none shadow-inner" ondrop="dropFinal(event, 'bob')" ondragover="allowDrop(event)">
+                             <span class="text-white text-[10px] font-bold text-center">Mix From<br>Alice</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="btn-next-3" class="hidden mt-10 text-center animate-bounce">
+                    <button onclick="nextStep(4)" class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition">Compare results! &rarr;</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: Success -->
+            <div id="step-4" class="step-card hidden-step text-center">
+                <div class="mb-8">
+                    <div class="inline-block p-4 bg-green-50 rounded-full mb-4">
+                        <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    </div>
+                    <h2 class="text-3xl font-black text-slate-900">Encryption Success!</h2>
+                    <p class="text-slate-600 mt-4 max-w-md mx-auto">Both ends created the <b>exact same color</b> without ever sending their secrets!</p>
+                </div>
+
+                <div class="flex justify-center items-center gap-12 bg-slate-50 p-8 rounded-2xl border-2 border-dashed border-slate-200">
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="text-xs font-black text-slate-400">ALICE'S KEY</span>
+                        <div id="final-key-a" class="w-20 h-20 rounded-full border-4 border-white shadow-lg" style="background-color: #78350f"></div>
+                    </div>
+                    <div class="text-4xl text-green-500 font-bold">=</div>
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="text-xs font-black text-slate-400">BOB'S KEY</span>
+                        <div id="final-key-b" class="w-20 h-20 rounded-full border-4 border-white shadow-lg" style="background-color: #78350f"></div>
+                    </div>
+                </div>
+
+                <button onclick="location.reload()" class="mt-8 text-blue-500 font-bold hover:underline">Restart Simulation</button>
+            </div>
+
+        </main>
+
+        <footer class="mt-6 text-center text-slate-400 text-xs">
+            Diffie-Hellman Color Exchange • Secure Communication Lab
+        </footer>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let state = {
+            step1Alice: false,
+            step1Bob: false,
+            step2Alice: false,
+            step2Bob: false,
+            step3Alice: false,
+            step3Bob: false
+        };
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.add('active');
+        }
+
+        function drag(ev, type) {
+            ev.dataTransfer.setData("type", type);
+            // Ensure visual dragging feedback
+            ev.dataTransfer.effectAllowed = "move";
+        }
+
+        function nextStep(n) {
+            document.getElementById(`step-${currentStep}`).classList.add('hidden-step');
+            document.getElementById(`prog-${n}`).classList.replace('bg-slate-200', 'bg-blue-500');
+            
+            setTimeout(() => {
+                document.getElementById(`step-${n}`).classList.remove('hidden-step');
+                currentStep = n;
+                
+                if(n === 2) {
+                    document.getElementById('swap-alice-zone').classList.add('guide-pulse');
+                    document.getElementById('swap-bob-zone').classList.add('guide-pulse');
+                }
+            }, 400);
+        }
+
+        function dropMix(ev, person) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('active');
+            const type = ev.dataTransfer.getData("type");
+
+            if ((person === 'alice' && type === 'red') || (person === 'bob' && type === 'blue')) {
+                const color = person === 'alice' ? '#f97316' : '#22c55e';
+                ev.currentTarget.style.backgroundColor = color;
+                ev.currentTarget.classList.remove('guide-pulse');
+                ev.currentTarget.innerHTML = `<div class="color-well" style="background-color:${color}; border:none; box-shadow:none;">MIXED</div>`;
+                
+                if (person === 'alice') {
+                    state.step1Alice = true;
+                    document.getElementById('alice-secret').style.visibility = 'hidden';
+                } else {
+                    state.step1Bob = true;
+                    document.getElementById('bob-secret').style.visibility = 'hidden';
+                }
+                checkStep1();
+            }
+        }
+
+        function checkStep1() {
+            if (state.step1Alice && state.step1Bob) {
+                document.getElementById('btn-next-1').classList.remove('hidden');
+            }
+        }
+
+        function dropSwap(ev, target) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('active');
+            const type = ev.dataTransfer.getData("type");
+
+            if (target === 'toAlice' && type === 'green') {
+                ev.currentTarget.style.backgroundColor = '#22c55e';
+                ev.currentTarget.innerHTML = '<span class="text-white text-[10px] font-bold">RCVD</span>';
+                ev.currentTarget.classList.remove('guide-pulse');
+                document.getElementById('bob-mix-src').style.visibility = 'hidden';
+                state.step2Alice = true;
+            } else if (target === 'toBob' && type === 'orange') {
+                ev.currentTarget.style.backgroundColor = '#f97316';
+                ev.currentTarget.innerHTML = '<span class="text-white text-[10px] font-bold">RCVD</span>';
+                ev.currentTarget.classList.remove('guide-pulse');
+                document.getElementById('alice-mix-src').style.visibility = 'hidden';
+                state.step2Bob = true;
+            }
+            checkStep2();
+        }
+
+        function checkStep2() {
+            if (state.step2Alice && state.step2Bob) {
+                document.getElementById('btn-next-2').classList.remove('hidden');
+            }
+        }
+
+        function dropFinal(ev, person) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('active');
+            const type = ev.dataTransfer.getData("type");
+            const sharedSecret = '#78350f';
+
+            if ((person === 'alice' && type === 'red-final')) {
+                ev.currentTarget.style.backgroundColor = sharedSecret;
+                ev.currentTarget.innerHTML = '<span class="text-white text-[10px] font-bold">DONE</span>';
+                ev.currentTarget.classList.remove('guide-pulse');
+                document.getElementById('alice-secret-final').style.visibility = 'hidden';
+                state.step3Alice = true;
+            } else if (person === 'bob' && type === 'blue-final') {
+                ev.currentTarget.style.backgroundColor = sharedSecret;
+                ev.currentTarget.innerHTML = '<span class="text-white text-[10px] font-bold">DONE</span>';
+                ev.currentTarget.classList.remove('guide-pulse');
+                document.getElementById('bob-secret-final').style.visibility = 'hidden';
+                state.step3Bob = true;
+            }
+            checkStep3();
+        }
+
+        function checkStep3() {
+            if (state.step3Alice && state.step3Bob) {
+                document.getElementById('btn-next-3').classList.remove('hidden');
+            }
+        }
+
+        document.addEventListener('dragleave', (e) => {
+            if (e.target.classList.contains('drop-zone')) {
+                e.target.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

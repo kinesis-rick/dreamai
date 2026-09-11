@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Ninja - Slow Start</title>
+
+    <!-- MediaPipe Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .input_video {
+            display: none;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Top HUD Area */
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            z-index: 10;
+        }
+
+        #score-board {
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        #level-display {
+            color: #f8b500;
+            font-size: 40px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+            text-transform: uppercase;
+        }
+
+        #lives {
+            color: #ff4444;
+            font-size: 30px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+            z-index: 10;
+        }
+
+        /* Level Up Notification */
+        #level-up-popup {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 80px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px #f8b500, 4px 4px 0 #000;
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
+            z-index: 15;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        #level-up-popup.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            pointer-events: auto;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 60px;
+            margin: 0 0 20px 0;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #f8b500, #fceabb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            color: #ddd;
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            width: 350px;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 24px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            color: white;
+            font-size: 16px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-sizing: border-box;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider-toggle {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider-toggle:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider-toggle {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider-toggle:before {
+            transform: translateX(22px);
+        }
+
+        input[type=range] {
+            width: 120px;
+            cursor: pointer;
+        }
+
+        #loading-text {
+            color: #aaa;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <video class="input_video"></video>
+        <canvas class="output_canvas"></canvas>
+
+        <div id="ui-layer">
+            <div class="hud-top">
+                <div id="score-board">Score: 0</div>
+                <div id="level-display">Level 1</div>
+            </div>
+            <div id="lives">Lives: 3</div>
+        </div>
+
+        <div id="level-up-popup">LEVEL UP!</div>
+
+        <div id="overlay">
+            <h1>Emoji Ninja</h1>
+            <p>Use your <strong>Index Finger</strong> to slice fruits!<br>Turn up your volume!</p>
+
+            <div class="controls">
+                <div class="control-group">
+                    <span>Mirror Camera</span>
+                    <label class="switch">
+                        <input type="checkbox" id="mirror-toggle" checked>
+                        <span class="slider-toggle"></span>
+                    </label>
+                </div>
+
+                <div class="control-group">
+                    <span>Fruit Opacity</span>
+                    <input type="range" id="opacity-slider" min="0.1" max="1" step="0.1" value="1">
+                </div>
+
+                <button id="start-btn" disabled>Loading Camera...</button>
+            </div>
+
+            <div id="loading-text">Please allow camera access and wait for AI model...</div>
+        </div>
+    </div>
+
+    <script>
+        // --- SOUND SYSTEM (Web Audio API) ---
+        class SoundSynthesizer {
+            constructor() {
+                this.ctx = null;
+                this.masterGain = null;
+                this.noiseBuffer = null;
+                this.lastSwooshTime = 0;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                    this.masterGain = this.ctx.createGain();
+                    this.masterGain.gain.value = 0.3;
+                    this.masterGain.connect(this.ctx.destination);
+
+                    const bufferSize = this.ctx.sampleRate * 2;
+                    this.noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = this.noiseBuffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playLaunch() {
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, t);
+                osc.frequency.exponentialRampToValueAtTime(40, t + 0.3);
+                gain.gain.setValueAtTime(0.5, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(t);
+                osc.stop(t + 0.3);
+            }
+
+            playBombHiss() {
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                const src = this.ctx.createBufferSource();
+                src.buffer = this.noiseBuffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 1000;
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.3, t);
+                gain.gain.linearRampToValueAtTime(0, t + 1.0);
+                src.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                src.start(t);
+                src.stop(t + 1.0);
+            }
+
+            playSlice() {
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.frequency.setValueAtTime(800, t);
+                osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
+                gain.gain.setValueAtTime(0.8, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(t);
+                osc.stop(t + 0.1);
+            }
+
+            playExplosion() {
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                const noiseSrc = this.ctx.createBufferSource();
+                noiseSrc.buffer = this.noiseBuffer;
+                const noiseFilter = this.ctx.createBiquadFilter();
+                noiseFilter.type = 'lowpass';
+                noiseFilter.frequency.setValueAtTime(800, t);
+                noiseFilter.frequency.exponentialRampToValueAtTime(100, t + 0.5);
+                const noiseGain = this.ctx.createGain();
+                noiseGain.gain.setValueAtTime(1, t);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+                noiseSrc.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(this.masterGain);
+                noiseSrc.start(t);
+                const osc = this.ctx.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, t);
+                osc.frequency.exponentialRampToValueAtTime(10, t + 0.5);
+                const oscGain = this.ctx.createGain();
+                oscGain.gain.setValueAtTime(1, t);
+                oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+                osc.connect(oscGain);
+                oscGain.connect(this.masterGain);
+                osc.start(t);
+                osc.stop(t + 0.5);
+            }
+
+            playSwoosh() {
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                if (t - this.lastSwooshTime < 0.2) return;
+                this.lastSwooshTime = t;
+                const src = this.ctx.createBufferSource();
+                src.buffer = this.noiseBuffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.Q.value = 1;
+                filter.frequency.setValueAtTime(400, t);
+                filter.frequency.exponentialRampToValueAtTime(1200, t + 0.15);
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.3, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.15);
+                src.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                src.start(t);
+                src.stop(t + 0.15);
+            }
+
+            playLevelUp() {
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                // Simple Arpeggio
+                const notes = [440, 554, 659, 880]; // A Major
+                notes.forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+
+                    gain.gain.setValueAtTime(0, t + i * 0.1);
+                    gain.gain.linearRampToValueAtTime(0.3, t + i * 0.1 + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + i * 0.1 + 0.4);
+
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start(t + i * 0.1);
+                    osc.stop(t + i * 0.1 + 0.5);
+                });
+            }
+        }
+
+        const sound = new SoundSynthesizer();
+
+        // --- Game Configuration ---
+        const GRAVITY = 0.15;
+        const TRAIL_LENGTH = 10;
+        const SLICE_RADIUS = 30;
+
+        // --- DOM Elements ---
+        const videoElement = document.getElementsByClassName('input_video')[0];
+        const canvasElement = document.getElementsByClassName('output_canvas')[0];
+        const canvasCtx = canvasElement.getContext('2d');
+        const scoreEl = document.getElementById('score-board');
+        const levelEl = document.getElementById('level-display');
+        const livesEl = document.getElementById('lives');
+        const overlay = document.getElementById('overlay');
+        const startBtn = document.getElementById('start-btn');
+        const loadingText = document.getElementById('loading-text');
+        const mirrorToggle = document.getElementById('mirror-toggle');
+        const opacitySlider = document.getElementById('opacity-slider');
+        const levelUpPopup = document.getElementById('level-up-popup');
+
+        // --- Game State ---
+        let gameState = 'MENU';
+        let score = 0;
+        let lives = 3;
+        let frameCount = 0;
+        let level = 1;
+
+        // Dynamic Settings (Modified by Level)
+        let currentSpawnRate = 100; // Slower spawn rate for slow speed
+        let currentBombChance = 0.05;
+        let currentGameSpeed = 0.2; // Start very slow
+
+        let isMirrored = true;
+        let fruitOpacity = 1.0;
+
+        let fruits = [];
+        let particles = [];
+        let handTrail = [];
+        let fingerPos = { x: 0, y: 0 };
+        let prevFingerPos = { x: 0, y: 0 };
+        let isHandDetected = false;
+
+        // --- Fruit Types ---
+        const FRUIT_TYPES = [
+            { emoji: '🍎', color: '#ff4444' },
+            { emoji: '🍌', color: '#ffe135' },
+            { emoji: '🍇', color: '#800080' },
+            { emoji: '🍊', color: '#ffa500' },
+            { emoji: '🍉', color: '#ff6b6b' },
+            { emoji: '🍍', color: '#ffff00' },
+            { emoji: '🥝', color: '#90EE90' },
+            { emoji: '🍓', color: '#ff0000' },
+            { emoji: '🍑', color: '#ffdab9' },
+            { emoji: '🥥', color: '#f0f0f0' }
+        ];
+
+        // --- Resize Handling ---
+        function resize() {
+            canvasElement.width = window.innerWidth;
+            canvasElement.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- UI Event Listeners ---
+        mirrorToggle.addEventListener('change', (e) => {
+            isMirrored = e.target.checked;
+        });
+
+        opacitySlider.addEventListener('input', (e) => {
+            fruitOpacity = parseFloat(e.target.value);
+        });
+
+        // --- Level Logic ---
+        function updateDifficulty() {
+            // Level Formula: Every 50 points is a new level
+            const newLevel = Math.floor(score / 50) + 1;
+
+            if (newLevel > level) {
+                level = newLevel;
+                showLevelUp();
+            }
+
+            // Set stats based on level
+            if (level === 1) {
+                currentGameSpeed = 0.2; // Very slow
+                currentSpawnRate = 100; // Very spaced out
+                currentBombChance = 0.0; // No bombs
+            } else if (level === 2) {
+                currentGameSpeed = 0.4;
+                currentSpawnRate = 90;
+                currentBombChance = 0.0;
+            } else if (level === 3) {
+                currentGameSpeed = 0.6;
+                currentSpawnRate = 80;
+                currentBombChance = 0.05;
+            } else if (level === 4) {
+                currentGameSpeed = 0.8;
+                currentSpawnRate = 70;
+                currentBombChance = 0.10;
+            } else {
+                // Level 5+: Scale linearly
+                currentGameSpeed = 1.0 + (level - 5) * 0.15;
+                currentSpawnRate = Math.max(20, 60 - (level - 5) * 4);
+                currentBombChance = Math.min(0.4, 0.15 + (level - 5) * 0.03);
+            }
+
+            levelEl.innerText = `LEVEL ${level}`;
+        }
+
+        function showLevelUp() {
+            sound.playLevelUp();
+            levelUpPopup.classList.add('active');
+            setTimeout(() => {
+                levelUpPopup.classList.remove('active');
+            }, 2000);
+        }
+
+        // --- Classes ---
+
+        class Fruit {
+            constructor() {
+                this.size = 70 + Math.random() * 20;
+                this.radius = this.size / 2.2;
+
+                this.x = Math.random() * (canvasElement.width - 100) + 50;
+                this.y = canvasElement.height + this.radius;
+
+                const centerX = canvasElement.width / 2;
+                const direction = this.x < centerX ? 1 : -1;
+
+                // Base velocities affected by Game Speed
+                this.vxBase = (Math.random() * 2 + 1) * direction;
+                this.vyBase = -(Math.random() * 8 + 11);
+
+                this.vx = this.vxBase;
+                this.vy = this.vyBase;
+
+                this.rotation = 0;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.15;
+
+                // Determine if Bomb based on current level chance
+                this.isBomb = Math.random() < currentBombChance;
+
+                if (gameState === 'PLAYING') {
+                    if (this.isBomb) {
+                        sound.playBombHiss();
+                        this.emoji = '💣';
+                        this.color = '#555';
+                    } else {
+                        sound.playLaunch();
+                        const type = FRUIT_TYPES[Math.floor(Math.random() * FRUIT_TYPES.length)];
+                        this.emoji = type.emoji;
+                        this.color = type.color;
+                    }
+                } else {
+                     if (this.isBomb) {
+                        this.emoji = '💣';
+                        this.color = '#555';
+                    } else {
+                        const type = FRUIT_TYPES[Math.floor(Math.random() * FRUIT_TYPES.length)];
+                        this.emoji = type.emoji;
+                        this.color = type.color;
+                    }
+                }
+
+                this.active = true;
+            }
+
+            update() {
+                this.x += this.vx * currentGameSpeed;
+                this.y += this.vy * currentGameSpeed;
+                this.vy += GRAVITY * currentGameSpeed;
+                this.rotation += this.rotationSpeed * currentGameSpeed;
+
+                if (this.y > canvasElement.height + this.radius + 50) {
+                    this.active = false;
+                    if (!this.isBomb && gameState === 'PLAYING') {
+                        lives--;
+                        updateUI();
+                        if (lives <= 0) gameOver();
+                    }
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                ctx.globalAlpha = fruitOpacity;
+
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius * 0.7, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+
+                ctx.font = `${this.size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+
+                ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+                ctx.shadowBlur = 5;
+                ctx.fillText(this.emoji, 0, 5);
+
+                ctx.shadowBlur = 0;
+                ctx.fillText(this.emoji, 0, 5);
+                ctx.fillText(this.emoji, 0, 5);
+
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = Math.random() * 8 + 3;
+                this.vx = (Math.random() - 0.5) * 15;
+                this.vy = (Math.random() - 0.5) * 15;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.03 + 0.01;
+            }
+
+            update() {
+                this.x += this.vx * currentGameSpeed;
+                this.y += this.vy * currentGameSpeed;
+                this.vy += GRAVITY * currentGameSpeed;
+                this.life -= this.decay * currentGameSpeed;
+            }
+
+            draw(ctx) {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // --- Game Logic ---
+
+        function spawnFruit() {
+            // High levels might spawn multiple fruits at once
+            let spawnCount = 1;
+            if (level >= 5 && Math.random() < 0.3) spawnCount = 2;
+            if (level >= 10 && Math.random() < 0.4) spawnCount = 3;
+
+            // Spawn rate logic
+            if (frameCount % currentSpawnRate === 0) {
+                for(let i=0; i<spawnCount; i++) {
+                    // Stagger simultaneous spawns slightly
+                    setTimeout(() => {
+                        if (gameState === 'PLAYING') fruits.push(new Fruit());
+                    }, i * 100);
+                }
+            }
+        }
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 20; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function checkCollisions() {
+            if (!isHandDetected) return;
+
+            for (let i = fruits.length - 1; i >= 0; i--) {
+                const f = fruits[i];
+                const dx = fingerPos.x - f.x;
+                const dy = fingerPos.y - f.y;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+
+                if (distance < f.radius + SLICE_RADIUS) {
+                    if (f.isBomb) {
+                        sound.playExplosion();
+                        createExplosion(f.x, f.y, '#fff');
+                        gameOver();
+                    } else {
+                        sound.playSlice();
+                        score += 10;
+                        createExplosion(f.x, f.y, f.color);
+                        fruits.splice(i, 1);
+                        updateDifficulty(); // Check for level up
+                        updateUI();
+                    }
+                }
+            }
+        }
+
+        function update() {
+            if (gameState !== 'PLAYING') return;
+
+            frameCount++;
+            spawnFruit();
+
+            fruits.forEach(f => f.update());
+            fruits = fruits.filter(f => f.active);
+
+            particles.forEach(p => p.update());
+            particles = particles.filter(p => p.life > 0);
+
+            checkCollisions();
+        }
+
+        function draw() {
+            canvasCtx.save();
+
+            if (isMirrored) {
+                canvasCtx.translate(canvasElement.width, 0);
+                canvasCtx.scale(-1, 1);
+            }
+
+            canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.restore();
+
+            canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+
+            fruits.forEach(f => f.draw(canvasCtx));
+            particles.forEach(p => p.draw(canvasCtx));
+
+            if (isHandDetected && handTrail.length > 1) {
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(handTrail[0].x, handTrail[0].y);
+                for (let i = 1; i < handTrail.length; i++) {
+                    const xc = (handTrail[i].x + handTrail[i-1].x) / 2;
+                    const yc = (handTrail[i].y + handTrail[i-1].y) / 2;
+                    canvasCtx.quadraticCurveTo(handTrail[i-1].x, handTrail[i-1].y, xc, yc);
+                }
+                canvasCtx.lineCap = 'round';
+                canvasCtx.lineJoin = 'round';
+                canvasCtx.lineWidth = 10;
+                canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                canvasCtx.shadowBlur = 15;
+                canvasCtx.shadowColor = '#0ff';
+                canvasCtx.stroke();
+                canvasCtx.shadowBlur = 0;
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- Game Control ---
+
+        function startGame() {
+            sound.init();
+
+            score = 0;
+            level = 1;
+            lives = 3;
+            fruits = [];
+            particles = [];
+            gameState = 'PLAYING';
+            overlay.style.display = 'none';
+
+            updateDifficulty(); // Reset difficulty
+            updateUI();
+        }
+
+        function gameOver() {
+            gameState = 'GAMEOVER';
+            overlay.style.display = 'flex';
+            document.querySelector('#overlay h1').innerText = "Game Over";
+            document.querySelector('#overlay p').innerHTML = `Final Score: ${score}<br>Level Reached: ${level}<br>Click Play Again to restart.`;
+            startBtn.innerText = "Play Again";
+        }
+
+        function updateUI() {
+            scoreEl.innerText = `Score: ${score}`;
+            livesEl.innerText = `Lives: ${lives}`;
+        }
+
+        startBtn.addEventListener('click', startGame);
+
+        // --- MediaPipe Setup ---
+
+        function onResults(results) {
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                isHandDetected = true;
+                const landmarks = results.multiHandLandmarks[0];
+
+                let x = landmarks[8].x;
+
+                if (isMirrored) {
+                    x = 1 - x;
+                }
+
+                const screenX = x * canvasElement.width;
+                const screenY = landmarks[8].y * canvasElement.height;
+
+                prevFingerPos = { ...fingerPos };
+                fingerPos = { x: screenX, y: screenY };
+
+                if (gameState === 'PLAYING') {
+                    const dx = fingerPos.x - prevFingerPos.x;
+                    const dy = fingerPos.y - prevFingerPos.y;
+                    const speed = Math.sqrt(dx*dx + dy*dy);
+
+                    if (speed > 40) {
+                        sound.playSwoosh();
+                    }
+                }
+
+                handTrail.push({ x: screenX, y: screenY });
+                if (handTrail.length > TRAIL_LENGTH) {
+                    handTrail.shift();
+                }
+            } else {
+                isHandDetected = false;
+                handTrail = [];
+            }
+        }
+
+        const hands = new Hands({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }});
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(onResults);
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({image: videoElement});
+            },
+            width: 1280,
+            height: 720
+        });
+
+        camera.start()
+            .then(() => {
+                startBtn.disabled = false;
+                startBtn.innerText = "Start Game";
+                loadingText.style.display = 'none';
+                gameLoop();
+            })
+            .catch(err => {
+                console.error(err);
+                loadingText.innerText = "Error: Could not access camera.";
+            });
+
+    </script>
+</body>
+</html>

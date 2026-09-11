@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>City Fireworks Playground (Stability Fix, No Bloom)</title>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    background: #020312;
+    height: 100%;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    color: #dce6ff;
+  }
+  #wrap { position: fixed; inset: 0; display: grid; }
+  canvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    image-rendering: optimizeQuality;
+    touch-action: none;
+  }
+  #ui {
+    position: absolute; left: 12px; bottom: 12px;
+    background: rgba(0,0,0,.35);
+    padding: 10px 12px;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    user-select: none;
+    pointer-events: none;
+    line-height: 1.35;
+    font-size: 14px;
+  }
+  #ui b { color: #fff; }
+  #ui .dim { color: #9fb0ff; }
+  #topbar {
+    position: absolute; right: 12px; top: 12px;
+    display: flex; gap: 8px; align-items: center;
+    pointer-events: auto;
+  }
+  .btn {
+    appearance: none; border: 0; border-radius: 8px;
+    padding: 8px 10px; font-weight: 700;
+    background: rgba(0,0,0,.35); color: #dce6ff;
+    cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,.3);
+  }
+  .btn:hover { background: rgba(0,0,0,.5); }
+  .btn:active { transform: translateY(1px); }
+  #hud {
+    position: absolute; left: 12px; top: 12px;
+    background: rgba(0,0,0,.35);
+    padding: 6px 10px; border-radius: 8px;
+    font-size: 12px; pointer-events: none;
+  }
+  #credits {
+    position: absolute; right: 12px; bottom: 12px;
+    font-size: 12px; color: #9fb0ff; opacity: .8;
+    pointer-events: none;
+  }
+  #warn {
+    position: absolute; left: 50%; top: 16px; transform: translateX(-50%);
+    background: rgba(255,60,60,.15); color:#ffdede;
+    padding: 6px 10px; border-radius: 6px; font-size: 12px;
+    display: none; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="bg"></canvas>
+  <canvas id="city"></canvas>
+  <canvas id="fx"></canvas>
+  <div id="ui">
+    <div><b>Fireworks Playground</b></div>
+    <div class="dim">Left Click</div>
+    <div>• Launch one random firework</div>
+    <div class="dim">Right Click + Drag</div>
+    <div>• Launch many as you move (auto-throttled)</div>
+    <div class="dim">Space</div>
+    <div>• Change night scene (5)</div>
+    <div class="dim">M</div>
+    <div>• Toggle sound</div>
+  </div>
+  <div id="topbar">
+    <button id="btnScene" class="btn" title="Change Background (Space)">Scene ▷</button>
+    <button id="btnMute" class="btn" title="Toggle Sound (M)">🔊</button>
+    <button id="btnClear" class="btn" title="Clear Sky">Clear</button>
+  </div>
+  <div id="hud">0 fireworks</div>
+  <div id="credits">Click or right-drag to launch. Audio starts after first interaction.</div>
+  <div id="warn">Render recovered after an error. If this repeats, try disabling spray.</div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // Helpers
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const rand = (a=1, b) => (b===undefined ? Math.random()*a : a + Math.random()*(b-a));
+  const randi = (a, b) => Math.floor(rand(a, b+1));
+  const pick = arr => arr[(Math.random()*arr.length)|0];
+  const lerp = (a,b,t) => a + (b-a)*t;
+  const TAU = Math.PI*2;
+  const isFiniteNum = n => Number.isFinite(n);
+
+  // Robust HSLA helpers (space-separated CSS Color 4)
+  function hslStr(h, s, l, a=1) { return `hsla(${(h%360+360)%360} ${s}% ${l}% / ${clamp(a,0,1)})`; }
+  function withAlpha(hsl, a) {
+    // Replace the alpha section after a slash; if not present, append it
+    if (typeof hsl !== 'string') return hsl;
+    return hsl.includes('/')
+      ? hsl.replace(/\/\s*[^)]+\)/, `/ ${clamp(a,0,1)})`)
+      : hsl.replace(/\)$/, ` / ${clamp(a,0,1)})`);
+  }
+
+  // Performance budgets
+  const MAX_PARTICLES = 6500;
+  const MAX_SMOKES = 1200;
+
+  // Canvases
+  const DPR = () => Math.min(2, window.devicePixelRatio || 1);
+  const canvases = {};
+  ['bg','city','fx'].forEach(id=>{
+    const c = document.getElementById(id);
+    const g = c.getContext('2d', { alpha: id!=='bg' });
+    g.imageSmoothingEnabled = true;
+    canvases[id] = { c, g };
+  });
+
+  const state = {
+    w: 0, h: 0, dpr: DPR(),
+    fireworks: [],
+    particles: [],
+    smokes: [],
+    rightDown: false,
+    lastSpray: 0,
+    sceneIndex: 0,
+    launchCount: 0,
+    muted: false,
+    startedAudio: false,
+    enableSpray: true
+  };
+
+  function resize() {
+    state.dpr = DPR();
+    state.w = window.innerWidth | 0;
+    state.h = window.innerHeight | 0;
+    for (const {c,g} of Object.values(canvases)) {
+      c.width = Math.round(state.w*state.dpr);
+      c.height = Math.round(state.h*state.dpr);
+      c.style.width = state.w+'px';
+      c.style.height = state.h+'px';
+      g.setTransform(state.dpr,0,0,state.dpr,0,0);
+    }
+    drawScene(); drawCity();
+  }
+  window.addEventListener('resize', resize);
+
+  // Audio (unchanged)
+  class AudioEngine {
+    constructor(){
+      this.ctx = null; this.master = null; this.limiter = null; this.muted = false;
+    }
+    ensure() {
+      if (this.ctx) return;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const master = ctx.createGain();
+      const limiter = ctx.createDynamicsCompressor();
+      limiter.threshold.value = -10; limiter.knee.value = 10; limiter.ratio.value = 12;
+      limiter.attack.value = 0.003; limiter.release.value = 0.2;
+      master.gain.value = 0.8;
+      master.connect(limiter); limiter.connect(ctx.destination);
+      this.ctx = ctx; this.master = master; this.limiter = limiter;
+      this.noiseBuffer = this._makeNoiseBuffer();
+    }
+    resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); }
+    setMuted(m) { this.muted = m; if (this.master) this.master.gain.value = m?0:0.8; }
+    _makeNoiseBuffer() {
+      const sr = 44100, len = sr*2;
+      const buf = (this.ctx || {createBuffer:()=>null}).createBuffer(1, len, sr);
+      const data = buf ? buf.getChannelData(0) : null;
+      if (!data) return null;
+      for (let i=0;i<len;i++) data[i] = (Math.random()*2-1) * (1 - i/len);
+      return buf;
+    }
+    _panNode(x) {
+      const pan = this.ctx.createStereoPanner();
+      const px = clamp((x/state.w)*2-1, -1, 1);
+      pan.pan.value = px*0.8;
+      return pan;
+    }
+    launchFizz(x, tone='whoosh') {
+      if (!this.ctx || this.muted) return;
+      const t0 = this.ctx.currentTime;
+      const dur = rand(.25,.6);
+      const pan = this._panNode(x);
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(.0001, t0);
+      g.gain.exponentialRampToValueAtTime(.3, t0+0.05);
+      g.gain.exponentialRampToValueAtTime(.0001, t0+dur);
+      const src = this.ctx.createBufferSource();
+      src.buffer = this.noiseBuffer;
+      const lp = this.ctx.createBiquadFilter();
+      lp.type='lowpass'; lp.frequency.setValueAtTime(rand(1200,2500), t0);
+      lp.frequency.exponentialRampToValueAtTime(500, t0+dur);
+      src.connect(lp); lp.connect(g); g.connect(pan); pan.connect(this.master);
+      src.start(t0); src.stop(t0+dur);
+      if (tone==='whistle' || Math.random()<0.25){
+        const osc = this.ctx.createOscillator();
+        const og = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(rand(700,1200), t0);
+        osc.frequency.exponentialRampToValueAtTime(rand(1600,2200), t0+dur*0.6);
+        og.gain.setValueAtTime(.0001, t0);
+        og.gain.exponentialRampToValueAtTime(.15, t0+0.05);
+        og.gain.exponentialRampToValueAtTime(.0001, t0+dur*0.8);
+        osc.connect(og); og.connect(pan);
+        osc.start(t0); osc.stop(t0+dur*0.9);
+      }
+    }
+    explosionBang(x, altitudeFactor=1) {
+      if (!this.ctx || this.muted) return;
+      const t0 = this.ctx.currentTime;
+      const pan = this._panNode(x);
+      const osc = this.ctx.createOscillator();
+      osc.type='sine';
+      const g = this.ctx.createGain();
+      const vol = lerp(.5, .9, altitudeFactor);
+      g.gain.setValueAtTime(vol, t0);
+      g.gain.exponentialRampToValueAtTime(.0001, t0+0.12);
+      osc.frequency.setValueAtTime(rand(180,260), t0);
+      osc.frequency.exponentialRampToValueAtTime(60, t0+0.12);
+      osc.connect(g); g.connect(pan); pan.connect(this.master);
+      osc.start(t0); osc.stop(t0+0.13);
+      const src = this.ctx.createBufferSource(); src.buffer = this.noiseBuffer;
+      const bp = this.ctx.createBiquadFilter(); bp.type='bandpass';
+      bp.frequency.setValueAtTime(rand(800,1400), t0);
+      const ng = this.ctx.createGain();
+      ng.gain.setValueAtTime(vol*0.8, t0);
+      ng.gain.exponentialRampToValueAtTime(.0001, t0+0.6);
+      src.connect(bp); bp.connect(ng); ng.connect(pan); pan.connect(this.master);
+      src.start(t0); src.stop(t0+0.6);
+    }
+    crackle(x) {
+      if (!this.ctx || this.muted) return;
+      const t0 = this.ctx.currentTime;
+      const pan = this._panNode(x);
+      for (let i=0;i<randi(10,18);i++){
+        const tt = t0 + rand(0, .35);
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'square';
+        const f = rand(700,1800);
+        osc.frequency.setValueAtTime(f, tt);
+        g.gain.setValueAtTime(.12, tt);
+        g.gain.exponentialRampToValueAtTime(.0001, tt+0.05);
+        const bp = this.ctx.createBiquadFilter();
+        bp.type='highpass'; bp.frequency.value=600;
+        osc.connect(bp); bp.connect(g); g.connect(pan); pan.connect(this.master);
+        osc.start(tt); osc.stop(tt+0.06);
+      }
+    }
+    fizzTail(x) {
+      if (!this.ctx || this.muted) return;
+      const t0 = this.ctx.currentTime;
+      const pan = this._panNode(x);
+      const src = this.ctx.createBufferSource(); src.buffer = this.noiseBuffer;
+      const lp = this.ctx.createBiquadFilter(); lp.type='lowpass';
+      lp.frequency.setValueAtTime(1800, t0);
+      lp.frequency.exponentialRampToValueAtTime(700, t0+0.5);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(.2, t0);
+      g.gain.exponentialRampToValueAtTime(.0001, t0+0.5);
+      src.connect(lp); lp.connect(g); g.connect(pan); pan.connect(this.master);
+      src.start(t0); src.stop(t0+0.5);
+    }
+    screech(x) {
+      if (!this.ctx || this.muted) return;
+      const t0 = this.ctx.currentTime;
+      const pan = this._panNode(x);
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type='sawtooth';
+      osc.frequency.setValueAtTime(rand(900,1400), t0);
+      osc.frequency.linearRampToValueAtTime(rand(300,500), t0+0.6);
+      const mod = this.ctx.createOscillator();
+      const mg = this.ctx.createGain(); mg.gain.value = 80;
+      mod.frequency.value = rand(20,40);
+      mod.connect(mg); mg.connect(osc.frequency);
+      g.gain.setValueAtTime(.15, t0);
+      g.gain.linearRampToValueAtTime(0.0001, t0+0.6);
+      osc.connect(g); g.connect(pan); pan.connect(this.master);
+      osc.start(t0); mod.start(t0);
+      osc.stop(t0+0.62); mod.stop(t0+0.62);
+    }
+  }
+  const audio = new AudioEngine();
+
+  // Background scenes
+  const starFields = Array.from({length:5},()=>[]);
+  function seedStars(i) {
+    const s = starFields[i]; s.length=0;
+    const count = randi(120, 220);
+    for (let k=0;k<count;k++){
+      s.push({ x: Math.random(), y: Math.random()*0.7, b: Math.random()*0.8+0.2, r: Math.random()*1.2+0.3, tw: Math.random()*0.8+0.2 });
+    }
+  }
+  for (let i=0;i<5;i++) seedStars(i);
+
+  function drawStars(g, idx) {
+    const s = starFields[idx];
+    const t = performance.now()*0.001;
+    for (const st of s) {
+      const x = st.x*state.w, y = st.y*state.h;
+      const tw = 0.6 + 0.4*Math.sin(t*st.tw*2 + st.x*10 + st.y*10);
+      g.fillStyle = `rgba(255,255,255,${(st.b*tw).toFixed(3)})`;
+      g.beginPath(); g.arc(x, y, st.r, 0, TAU); g.fill();
+    }
+  }
+
+  function drawScene() {
+    const { g } = canvases.bg;
+    g.clearRect(0,0,state.w,state.h);
+
+    const idx = state.sceneIndex % 5;
+    const sky = g.createLinearGradient(0,0,0,state.h);
+    const skySets = [
+      ['#0a0f2e','#0b1a3a','#0a0d1b'],
+      ['#05101c','#0b1e3d','#163255'],
+      ['#0c0818','#1a0e2f','#2c194a'],
+      ['#091322','#0e2040','#1a3d5a'],
+      ['#0a0a16','#121a2c','#1f2f4f'],
+    ];
+    const s = skySets[idx];
+    sky.addColorStop(0, s[0]); sky.addColorStop(0.6, s[1]); sky.addColorStop(1, s[2]);
+    g.fillStyle = sky; g.fillRect(0,0,state.w,state.h);
+    drawStars(g, idx);
+
+    switch(idx){
+      case 0: {
+        const hg = g.createLinearGradient(0,state.h*0.65,0,state.h);
+        hg.addColorStop(0,'rgba(255,170,60,.08)');
+        hg.addColorStop(1,'rgba(255,120,20,0)');
+        g.fillStyle = hg; g.fillRect(0,state.h*0.6,state.w,state.h*0.4);
+        break;
+      }
+      case 1:
+        aurora(g, 0.18);
+        mountains(g, 0.72, '#0b1730');
+        mountains(g, 0.78, '#0c1d3a');
+        break;
+      case 2: dunes(g); break;
+      case 3: drawBridge(g); waterReflection(g); break;
+      case 4: moon(g); pagoda(g); treeLine(g); break;
+    }
+  }
+
+  function moon(g) {
+    const r = Math.min(state.w,state.h)*0.05;
+    const x = state.w*0.82, y = state.h*0.18;
+    const grad = g.createRadialGradient(x,y,0,x,y,r);
+    grad.addColorStop(0,'rgba(255,255,240,.95)');
+    grad.addColorStop(0.6,'rgba(255,255,210,.6)');
+    grad.addColorStop(1,'rgba(255,255,180,0)');
+    g.fillStyle = grad; g.beginPath(); g.arc(x,y,r,0,TAU); g.fill();
+  }
+  function aurora(g, yNorm) {
+    const y = state.h*yNorm;
+    for (let i=0;i<3;i++){
+      const grad = g.createLinearGradient(0,y-i*40, state.w, y+200+i*60);
+      grad.addColorStop(0, 'rgba(90,255,200,0.08)');
+      grad.addColorStop(1, 'rgba(80,140,255,0.04)');
+      g.fillStyle = grad; g.beginPath();
+      g.moveTo(0, y + Math.sin(i*1.3)*20);
+      for (let x=0;x<=state.w;x+=40){
+        const yy = y + Math.sin((x*0.004)+i)*30 + Math.cos((x*0.0032)-i)*10;
+        g.lineTo(x, yy);
+      }
+      g.lineTo(state.w, y+300); g.lineTo(0, y+300); g.closePath(); g.fill();
+    }
+  }
+  function mountains(g, baseNorm, color) {
+    const baseY = state.h*baseNorm;
+    g.fillStyle = color;
+    g.beginPath();
+    g.moveTo(0, baseY+60);
+    let x = 0;
+    while (x<=state.w) {
+      const peak = baseY - rand(40, 140);
+      g.lineTo(x, peak);
+      x += rand(60, 140);
+      g.lineTo(x, baseY + rand(-20, 40));
+    }
+    g.lineTo(state.w, baseY+60);
+    g.closePath(); g.fill();
+  }
+  function dunes(g) {
+    for (let i=0;i<4;i++){
+      const y = lerp(state.h*0.55, state.h*0.95, i/4);
+      const grad = g.createLinearGradient(0,y-50,0,y+120);
+      grad.addColorStop(0, `rgba(190,150,90,${0.07*(4-i)})`);
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = grad;
+      g.beginPath(); g.moveTo(0,y);
+      for (let x=0;x<=state.w;x+=40){
+        const yy = y + Math.sin((x*0.003)+i)*20 + Math.cos((x*0.0018)+i)*15;
+        g.lineTo(x, yy);
+      }
+      g.lineTo(state.w, state.h); g.lineTo(0,state.h); g.closePath(); g.fill();
+    }
+  }
+  function drawBridge(g) {
+    const y = state.h*0.7;
+    g.strokeStyle='rgba(180,200,255,0.25)'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(0,y); g.lineTo(state.w,y); g.stroke();
+    const span = state.w/6;
+    for (let i=0;i<=6;i++){
+      const cx = i*span;
+      g.beginPath();
+      g.arc(cx, y, span*0.9, Math.PI, 0);
+      g.globalAlpha = 0.25; g.stroke(); g.globalAlpha=1;
+    }
+    for (let i=0;i<30;i++){
+      const x = i/29*state.w;
+      g.fillStyle='rgba(255,220,140,0.6)';
+      g.beginPath(); g.arc(x, y-4, 2, 0, TAU); g.fill();
+    }
+  }
+  function waterReflection(g) {
+    const y = state.h*0.72;
+    const grad = g.createLinearGradient(0,y,0,state.h);
+    grad.addColorStop(0,'rgba(40,80,140,0.12)');
+    grad.addColorStop(1,'rgba(20,30,60,0.02)');
+    g.fillStyle = grad; g.fillRect(0,y,state.w,state.h-y);
+    g.strokeStyle='rgba(180,200,255,0.06)'; g.lineWidth=1;
+    for (let i=0;i<40;i++){
+      const yy = lerp(y+10, state.h-10, i/40);
+      g.beginPath();
+      for (let x=0;x<=state.w;x+=20){
+        const yyy = yy + Math.sin(x*0.02+i)*1.2;
+        g.lineTo(x, yyy);
+      }
+      g.stroke();
+    }
+  }
+  function pagoda(g) {
+    const baseY = state.h*0.8;
+    const x = state.w*0.18;
+    g.fillStyle='rgba(20,30,60,0.9)';
+    for (let i=0;i<5;i++){
+      const w = 160 + i*40;
+      const y = baseY - i*40;
+      g.beginPath();
+      g.moveTo(x-w/2, y);
+      g.lineTo(x+w/2, y);
+      g.lineTo(x+w*0.4, y-16);
+      g.lineTo(x-w*0.4, y-16);
+      g.closePath(); g.fill();
+    }
+    g.fillRect(x-10, baseY-200, 20, 200);
+    for (let i=0;i<4;i++){
+      const ly = baseY - i*40 - 18;
+      g.fillStyle='rgba(255,200,120,0.18)';
+      g.beginPath(); g.arc(x-70+i*40, ly, 6, 0, TAU); g.fill();
+    }
+  }
+  function treeLine(g) {
+    const y = state.h*0.86;
+    g.fillStyle='rgba(8,14,32,0.9)';
+    g.beginPath(); g.moveTo(0,y+20);
+    let x=0;
+    while (x<=state.w){
+      const h = rand(16,42);
+      g.lineTo(x, y - h);
+      x += rand(8,18);
+      g.lineTo(x, y + rand(6,16));
+    }
+    g.lineTo(state.w,y+20); g.closePath(); g.fill();
+  }
+
+  // City silhouette layer
+  function drawCity() {
+    const { g } = canvases.city;
+    g.clearRect(0,0,state.w,state.h);
+    g.fillStyle='rgba(5,8,18,0.95)';
+    g.fillRect(0, state.h*0.86, state.w, state.h);
+
+    const baseY = state.h*0.86;
+    const cols = randi(14, 20);
+    const bw = state.w/cols;
+    for (let i=0;i<cols;i++){
+      const x = i*bw + rand(-8,8);
+      const h = rand(state.h*0.18, state.h*0.36);
+      g.fillStyle='rgba(10,14,30,0.95)';
+      g.fillRect(x, baseY-h, bw*rand(0.6,0.95), h);
+
+      const ww = 6, wh = 8, gapx=4, gapy=6;
+      g.fillStyle='rgba(255,230,180,0.15)';
+      for (let yy=baseY-h+14; yy<baseY-10; yy += wh+gapy) {
+        for (let xx=x+6; xx<x+bw*0.8; xx += ww+gapx) {
+          if (Math.random()<0.18) g.fillRect(xx, yy, ww, wh);
+        }
+      }
+    }
+  }
+
+  // Firework, Particles, Smoke
+  function particleColor(h, sat=90, lit=60, a=1){ return hslStr(h, sat, lit, a); }
+
+  class Particle {
+    constructor(x,y,vx,vy,color,size,life=1, type='spark'){
+      this.x=x; this.y=y; this.vx=vx; this.vy=vy;
+      this.ax=0; this.ay=0.06;
+      this.drag=0.996;
+      this.size=size;
+      this.life=Math.max(0.05, life); this.t=0;
+      this.color=color;
+      this.type = type;
+      this.strobe = false;
+      this.splitAfter = -1;
+      this.wiggle = 0;
+      this.angle = Math.atan2(vy,vx);
+      this.angularVel = 0;
+      this.trail = [];
+      this.trailLen = 6;
+      this.dead = false;
+    }
+    update(dt){
+      if (this.dead) return;
+
+      if (this.wiggle!==0){
+        const a = Math.sin((this.t*10)+this.x*0.02+this.y*0.02)*this.wiggle;
+        this.vx += Math.cos(this.angle+Math.PI/2)*a*dt*60;
+        this.vy += Math.sin(this.angle+Math.PI/2)*a*dt*60;
+      }
+      if (this.angularVel!==0){
+        this.angle += this.angularVel*dt;
+        const speed = Math.hypot(this.vx, this.vy);
+        this.vx = Math.cos(this.angle)*speed;
+        this.vy = Math.sin(this.angle)*speed;
+      }
+
+      this.vx += this.ax*dt*60;
+      this.vy += this.ay*dt*60;
+      this.vx *= this.drag;
+      this.vy *= this.drag;
+      this.x += this.vx*dt*60;
+      this.y += this.vy*dt*60;
+
+      this.trail.push([this.x,this.y, this.size]);
+      if (this.trail.length>this.trailLen) this.trail.shift();
+
+      this.t += dt;
+      if (this.t >= this.life) {
+        this.dead = true;
+        if (this.type!=='smoke' && Math.random()<0.6) spawnSmoke(this.x, this.y, rand(6,10), rand(0.6, 1.4));
+      }
+    }
+    draw(g){
+      if (!isFiniteNum(this.x) || !isFiniteNum(this.y) || !isFiniteNum(this.size)) return;
+
+      g.save();
+      g.globalCompositeOperation = 'lighter';
+      if (this.trail.length){
+        for (let i=0;i<this.trail.length;i++){
+          const [tx,ty,ts] = this.trail[i];
+          if (!isFiniteNum(tx) || !isFiniteNum(ty) || !isFiniteNum(ts)) continue;
+          const a = i/this.trail.length;
+          g.fillStyle = withAlpha(this.color, 0.06*a);
+          g.beginPath(); g.arc(tx,ty, ts*0.5*(1-a), 0, TAU); g.fill();
+        }
+      }
+      let vis = 1;
+      if (this.strobe) vis = (Math.sin(this.t*80)+1)/2;
+      const alphaCore = clamp((1 - this.t/this.life)*0.9 + 0.1, 0, 1) * vis;
+      g.fillStyle = withAlpha(this.color, alphaCore);
+      g.beginPath(); g.arc(this.x, this.y, this.size, 0, TAU); g.fill();
+      g.restore();
+    }
+  }
+
+  class Smoke {
+    constructor(x,y,r,life){
+      this.x=x; this.y=y; this.r=r;
+      this.life=life; this.t=0; this.dead=false;
+      this.vx = rand(-0.2,0.2);
+      this.vy = rand(-0.4,-0.1);
+      this.alpha = rand(0.06, 0.12);
+      this.hue = randi(200,240);
+    }
+    update(dt){
+      this.x += this.vx*dt*60;
+      this.y += this.vy*dt*60;
+      this.t += dt;
+      if (this.t>=this.life) this.dead=true;
+    }
+    draw(g){
+      if (!isFiniteNum(this.x) || !isFiniteNum(this.y) || !isFiniteNum(this.r)) return;
+      const a = this.alpha * (1 - this.t/this.life);
+      const grad = g.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r);
+      grad.addColorStop(0, hslStr(this.hue, 10, 70, a));
+      grad.addColorStop(1, hslStr(this.hue, 10, 10, 0));
+      g.fillStyle = grad; g.beginPath();
+      g.arc(this.x, this.y, this.r, 0, TAU); g.fill();
+    }
+  }
+
+  class Rocket {
+    constructor(x, targetX, targetY, effect, isSpray=false) {
+      this.x = x; this.y = state.h*0.86;
+      this.vx = (targetX - x) * rand(0.015, 0.025);
+      this.vy = -rand(10, 13);
+      this.ax = 0; this.ay = 0.1;
+      this.drag = 0.995;
+      this.colorHue = randi(0, 359);
+      this.colorSat = randi(70,100);
+      this.colorLit = randi(55,70);
+      this.trailTimer = 0;
+      this.dead = false;
+      this.exploded = false;
+      this.targetY = targetY;
+      this.effect = effect;
+      this.isSpray = isSpray;
+      this.soundWhistle = Math.random()<0.2;
+      audio.launchFizz(this.x, this.soundWhistle ? 'whistle' : 'whoosh');
+      if (Math.random()<0.06) audio.screech(this.x);
+    }
+    update(dt){
+      if (this.dead) return;
+      this.vy += this.ay*dt*60;
+      this.vx *= this.drag; this.vy *= this.drag;
+      this.x += this.vx*dt*60; this.y += this.vy*dt*60;
+
+      this.trailTimer += dt;
+      if (this.trailTimer> (this.isSpray ? 0.028 : 0.02)){
+        this.trailTimer=0;
+        const c = hslStr(this.colorHue, this.colorSat, this.colorLit, 1);
+        const p = new Particle(this.x, this.y, rand(-0.35,0.35), rand(0.2,0.9), c, rand(1.2,2.0), rand(0.28,0.45));
+        p.ay = -0.02; p.drag = 0.9; p.trailLen=3;
+        state.particles.push(p);
+        if (Math.random() < (this.isSpray ? 0.35 : 0.8)) spawnSmoke(this.x, this.y, rand(8,14), rand(0.6,1.2));
+      }
+
+      if (!this.exploded && (this.y <= this.targetY || this.vy > -1)) {
+        this.exploded = true;
+        this.explode();
+        this.dead = true;
+      }
+    }
+    explode(){
+      const x=this.x, y=this.y;
+      const hue = this.colorHue;
+      const altFactor = 1 - (y/state.h);
+      audio.explosionBang(x, altFactor);
+      if (Math.random()<0.3) audio.crackle(x);
+      if (Math.random()<0.55) audio.fizzTail(x);
+      if (this.isSpray) {
+        const e = pick(MINI_EFFECTS);
+        MINI_IMPL[e](x,y,hue);
+      } else {
+        const e = this.effect || pick(EFFECTS);
+        EFFECT_IMPL[e](x,y,hue);
+      }
+    }
+  }
+
+  function spawnSmoke(x,y,r,life){
+    if (state.smokes.length > MAX_SMOKES) {
+      state.smokes.splice(0, state.smokes.length - Math.floor(MAX_SMOKES*0.9));
+    }
+    state.smokes.push(new Smoke(x,y,r,life));
+  }
+
+  // Effects
+  const EFFECTS = [
+    'peony','chrysanthemum','willow','palm','ring','doubleRing','heart','star',
+    'smiley','saturn','butterfly','crossette','fish','ghost','pistil','strobe',
+    'crackle','spiral','jellyfish','serpentine'
+  ];
+
+  const EFFECT_IMPL = {
+    peony(x,y,h){ radialBurst(x,y,h, 120, 3.5, {tails:false}); },
+    chrysanthemum(x,y,h){ radialBurst(x,y,h, 140, 3.8, {tails:true}); },
+    willow(x,y,h){ radialBurst(x,y, 60, 2.8, {gold:true, gravity:0.12, long:true}); },
+    palm(x,y,h){ palmBurst(x,y,h); },
+    ring(x,y,h){ ringBurst(x,y,h, 1, false); },
+    doubleRing(x,y,h){ ringBurst(x,y,h, 2, true); },
+    heart(x,y,h){ shapeBurst(x,y,h, SHAPES.heart, {scale:1.4}); },
+    star(x,y,h){ shapeBurst(x,y,h, SHAPES.star, {scale:1.1}); },
+    smiley(x,y,h){ shapeBurst(x,y,h, SHAPES.smiley, {scale:1.4}); },
+    saturn(x,y,h){ saturnBurst(x,y,h); },
+    butterfly(x,y,h){ butterflyBurst(x,y,h); },
+    crossette(x,y,h){ crossetteBurst(x,y,h); },
+    fish(x,y,h){ fishBurst(x,y,h); },
+    ghost(x,y,h){ ghostBurst(x,y,h); },
+    pistil(x,y,h){ pistilBurst(x,y,h); },
+    strobe(x,y,h){ strobeBurst(x,y,h); },
+    crackle(x,y,h){ crackleBurst(x,y,h); },
+    spiral(x,y,h){ spiralBurst(x,y,h); },
+    jellyfish(x,y,h){ jellyfishBurst(x,y,h); },
+    serpentine(x,y,h){ serpentineBurst(x,y,h); },
+  };
+
+  const MINI_EFFECTS = [
+    'miniPeony','miniRing','miniSerpentine','miniFish',
+    'miniPalm','miniStrobe','miniSpiral','miniWillow'
+  ];
+
+  const MINI_IMPL = {
+    miniPeony(x,y,h){ radialBurst(x,y,h, 42, 3.2, {tails:false}); },
+    miniRing(x,y,h){ ringBurst(x,y,h, 1, false, 56); },
+    miniSerpentine(x,y,h){
+      for (let i=0;i<50;i++){
+        const ang = rand(0,TAU), sp = rand(2.4,3.0);
+        const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+rand(-30,30),90,55), 1.7, 1.4);
+        p.wiggle = rand(0.8,1.4); p.trailLen=6; p.ay=0.06;
+        state.particles.push(p);
+      }
+    },
+    miniFish(x,y,h){
+      for (let i=0;i<48;i++){
+        const ang = rand(0,TAU), sp = rand(2.3,3.0);
+        const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+rand(-25,25),90,60), 1.6, 1.3);
+        p.wiggle = rand(0.6,1.2); p.trailLen=6; p.ay=0.06;
+        state.particles.push(p);
+      }
+    },
+    miniPalm(x,y,h){
+      const fronds = randi(5,6);
+      for (let i=0;i<fronds;i++){
+        const ang = i/fronds*TAU + rand(-0.1,0.1);
+        const sp = rand(3.2,4.2);
+        for (let j=0;j<10;j++){
+          const p = new Particle(x,y, Math.cos(ang)*sp+rand(-0.18,0.18), Math.sin(ang)*sp+rand(-0.18,0.18), particleColor(h+rand(-10,10),80,60), 1.6, 1.2);
+          p.ay=0.08; p.trailLen=7;
+          state.particles.push(p);
+        }
+      }
+    },
+    miniStrobe(x,y,h){
+      for (let i=0;i<52;i++){
+        const ang = rand(0,TAU), sp = rand(2.6,3.2);
+        const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+rand(-5,5),90,80), 1.8, 1.2);
+        p.strobe = true; p.ay=0.06; p.trailLen=7;
+        state.particles.push(p);
+      }
+    },
+    miniSpiral(x,y,h){
+      const arms=2;
+      for (let i=0;i<40;i++){
+        const t = i/40*6.28;
+        for (let arm=0;arm<arms;arm++){
+          const a = t + arm*Math.PI;
+          const sp = 3.2;
+          const p = new Particle(x,y, Math.cos(a)*sp, Math.sin(a)*sp, particleColor(h+arm*30,90,60), 1.8, 1.3);
+          p.angularVel = 0.15*(arm?1:-1); p.trailLen=8; p.ay=0.06;
+          state.particles.push(p);
+        }
+      }
+    },
+    miniWillow(x,y,h){ radialBurst(x,y, 45, 2.4, {gold:true, gravity:0.11, long:true}); },
+  };
+
+  function radialBurst(x,y,h, count=120, speed=3.5, opts={}){
+    const gold = !!opts.gold;
+    const gravity = opts.gravity ?? 0.06;
+    const long = !!opts.long;
+    const tails = !!opts.tails;
+    for (let i=0;i<count;i++){
+      const ang = (i/count)*TAU + rand(-0.01,0.01);
+      const sp = speed*rand(0.8,1.2);
+      const vx = Math.cos(ang)*sp, vy = Math.sin(ang)*sp;
+      const hue = gold ? 45+rand(-5,5) : h+rand(-10,10);
+      const c = particleColor(hue, gold?80:90, gold?65:60);
+      const p = new Particle(x,y,vx,vy,c, rand(1.6,2.4), rand(long?2.2:1.1, long?3.0:1.7));
+      p.ay = gravity;
+      if (tails) { p.trailLen = 9; p.drag=0.994; }
+      state.particles.push(p);
+    }
+  }
+  function ringBurst(x,y,h, rings=1, inner=false, perRing=120){
+    for (let r=0;r<rings;r++){
+      const rad = (r+1)*3.2;
+      for (let i=0;i<perRing;i++){
+        const ang = i/perRing*TAU;
+        const vx = Math.cos(ang)*rad*0.3, vy = Math.sin(ang)*rad*0.3;
+        const hue = h + r*20 + rand(-4,4);
+        const p = new Particle(x,y,vx,vy, particleColor(hue), 1.9, 1.5);
+        p.ay=0.06; p.trailLen=7;
+        state.particles.push(p);
+      }
+    }
+    if (inner) radialBurst(x,y,h+40, 36, 2.4, {});
+  }
+  const SHAPES = {
+    heart: (function(){
+      const pts=[]; for (let a=0;a<TAU;a+=0.03){
+        const x = 16*Math.pow(Math.sin(a),3);
+        const y = -(13*Math.cos(a)-5*Math.cos(2*a)-2*Math.cos(3*a)-Math.cos(4*a));
+        pts.push([x,y]);
+      } return pts;
+    })(),
+    star: (function(){
+      const pts=[]; const spikes=5, outer=10, inner=4;
+      for(let i=0;i<spikes;i++){
+        const a = i*2*Math.PI/spikes;
+        pts.push([Math.cos(a)*outer, -Math.sin(a)*outer]);
+        pts.push([Math.cos(a+Math.PI/spikes)*inner, -Math.sin(a+Math.PI/spikes)*inner]);
+      } return pts;
+    })(),
+    smiley: (function(){
+      const pts=[];
+      for (let a=0;a<TAU;a+=0.05) pts.push([Math.cos(a)*10, Math.sin(a)*10]);
+      for (let a=0;a<TAU;a+=0.2) pts.push([ -4 + Math.cos(a)*1.2, -2 + Math.sin(a)*1.2 ]);
+      for (let a=0;a<TAU;a+=0.2) pts.push([  4 + Math.cos(a)*1.2, -2 + Math.sin(a)*1.2 ]);
+      for (let a=0;a<Math.PI;a+=0.08) pts.push([ Math.cos(a)*6, 2 + Math.sin(a)*3 ]);
+      return pts;
+    })()
+  };
+  function shapeBurst(x,y,h, pts, opts={}){
+    const scale = (opts.scale||1) * 1.3;
+    const hueShift = rand(-10,10);
+    const count = pts.length;
+    for (let i=0;i<count;i++){
+      const [sx, sy] = pts[i];
+      const dir = Math.atan2(sy, sx);
+      const sp = Math.hypot(sx,sy) * 0.28 * scale;
+      const vx = Math.cos(dir)*sp, vy = Math.sin(dir)*sp;
+      const p = new Particle(x,y,vx,vy, particleColor(h+hueShift), 1.9, 1.7);
+      p.ay=0.06; p.trailLen=8;
+      state.particles.push(p);
+    }
+  }
+  function palmBurst(x,y,h){
+    const fronds = randi(6,9);
+    for (let i=0;i<fronds;i++){
+      const ang = i/fronds*TAU + rand(-0.15,0.15);
+      const sp = rand(4,5.2);
+      const hue = h+rand(-10,10);
+      for (let j=0;j<randi(18,22);j++){
+        const p = new Particle(x,y, Math.cos(ang)*sp+rand(-0.25,0.25), Math.sin(ang)*sp+rand(-0.25,0.25), particleColor(hue,80,60), rand(1.7,2.3), rand(1.2,1.7));
+        p.ay = 0.08; p.trailLen=9;
+        state.particles.push(p);
+      }
+    }
+    for (let i=0;i<26;i++){
+      const p = new Particle(x,y, rand(-0.4,0.4), rand(1.2,2.2), particleColor(h,70,55), 1.9, 0.75);
+      p.ay=0.1;
+      state.particles.push(p);
+    }
+  }
+  function saturnBurst(x,y,h){
+    radialBurst(x,y,h, 48, 2.9, {});
+    ringBurst(x,y,h+30, 1, false, 80);
+  }
+  function butterflyBurst(x,y,h){
+    const wings = 2;
+    for (let w=0;w<wings;w++){
+      const baseAng = (w===0? -Math.PI/3 : -2*Math.PI/3);
+      for (let i=0;i<90;i++){
+        const ang = baseAng + rand(-0.45,0.45);
+        const sp = rand(3,4.0);
+        const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+rand(-20,20),90,60), rand(1.5,2.1), rand(1.2,1.7));
+        p.wiggle = rand(0.2,0.6);
+        p.trailLen=9; p.ay=0.06;
+        state.particles.push(p);
+      }
+    }
+  }
+  function crossetteBurst(x,y,h){
+    const count = 72;
+    for (let i=0;i<count;i++){
+      const ang = i/count*TAU;
+      const sp = rand(3,4);
+      const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+rand(-10,10)), 1.9, 1.5);
+      p.splitAfter = rand(0.35,0.55);
+      p.trailLen=6;
+      p.update = (function(orig){
+        return function(dt){
+          orig.call(this, dt);
+          if (!this.dead && this.splitAfter>0 && this.t>this.splitAfter){
+            this.splitAfter = -1;
+            for (let k=0;k<4;k++){
+              const a = k*Math.PI/2;
+              const sp = rand(1.4,1.9);
+              const c = particleColor(h+rand(-20,20), 90, 65);
+              const q = new Particle(this.x, this.y, Math.cos(a)*sp, Math.sin(a)*sp, c, 1.7, 0.85);
+              q.ay=0.08; q.trailLen=5;
+              state.particles.push(q);
+            }
+            this.dead = true;
+          }
+        };
+      })(p.update);
+      state.particles.push(p);
+    }
+    audio.crackle(x);
+  }
+  function fishBurst(x,y,h){
+    for (let i=0;i<120;i++){
+      const ang = rand(0,TAU);
+      const sp = rand(2.6,3.4);
+      const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+rand(-30,30),90,60), 1.8, 1.6);
+      p.wiggle = rand(0.8,1.6);
+      p.trailLen=7; p.ay=0.07;
+      state.particles.push(p);
+    }
+  }
+  function ghostBurst(x,y,h){
+    const parts = [];
+    for (let i=0;i<90;i++){
+      const ang = rand(0,TAU), sp = rand(2.5,3.5);
+      const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+rand(-15,15),90,60,0.7), 2.0, 1.05);
+      p.ay=0.06; p.trailLen=5;
+      parts.push(p); state.particles.push(p);
+    }
+    setTimeout(()=>{
+      parts.forEach(p=>{
+        if (!p.dead){
+          p.strobe=true; p.life = Math.max(p.life, p.t+0.75);
+        }
+      });
+      audio.fizzTail(x);
+    }, 200);
+  }
+  function pistilBurst(x,y,h){
+    radialBurst(x,y,h, 82, 3.5, {});
+    for (let i=0;i<26;i++){
+      const ang = rand(0,TAU), sp = rand(1.3,1.9);
+      const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+180, 60, 80), 2.0, 1.3);
+      p.ay=0.05; p.trailLen=6;
+      state.particles.push(p);
+    }
+  }
+  function strobeBurst(x,y,h){
+    for (let i=0;i<120;i++){
+      const ang = rand(0,TAU), sp = rand(2.8,3.5);
+      const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+rand(-5,5),90,80), 2.0, 1.5);
+      p.strobe = true; p.ay=0.06; p.trailLen=9;
+      state.particles.push(p);
+    }
+  }
+  function crackleBurst(x,y,h){
+    for (let i=0;i<110;i++){
+      const ang = rand(0,TAU), sp = rand(2.6,3.2);
+      const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+rand(-20,20),70,90), 1.6, rand(0.5,1.0));
+      p.ay=0.08; p.trailLen=4;
+      p.update = (function(orig){
+        return function(dt){
+          orig.call(this, dt);
+          if (!this.dead && Math.random()<0.05){
+            const q = new Particle(this.x, this.y, rand(-0.5,0.5), rand(-0.5,0.5), particleColor(h+rand(-20,20),80,95), 1.2, 0.25);
+            q.ay=0.05; q.trailLen=2;
+            state.particles.push(q);
+          }
+        };
+      })(p.update);
+      state.particles.push(p);
+    }
+    audio.crackle(x);
+  }
+  function spiralBurst(x,y,h){
+    const arms = 2;
+    const count = 120;
+    for (let i=0;i<count;i++){
+      const t = i/count*6.28;
+      for (let arm=0;arm<arms;arm++){
+        const a = t + arm*Math.PI;
+        const sp = 3.6;
+        const p = new Particle(x,y, Math.cos(a)*sp, Math.sin(a)*sp, particleColor(h+arm*30,90,60), 2, 1.7);
+        p.angularVel = 0.15*(arm?1:-1);
+        p.trailLen=10; p.ay=0.06;
+        state.particles.push(p);
+      }
+    }
+  }
+  function jellyfishBurst(x,y,h){
+    radialBurst(x,y,h, 36, 2.1, {});
+    for (let i=0;i<10;i++){
+      const ang = rand(Math.PI*0.8, Math.PI*1.2);
+      let x0=x, y0=y;
+      for (let j=0;j<16;j++){
+        const sp = rand(1.2,1.7);
+        const vx = Math.cos(ang+Math.sin(j*0.3)*0.25)*sp;
+        const vy = Math.sin(ang+Math.sin(j*0.3)*0.25)*sp + j*0.02;
+        const p = new Particle(x0,y0,vx,vy, particleColor(h+rand(-20,20),80,70), 1.5, 1.05);
+        p.ay=0.08; p.trailLen=5;
+        state.particles.push(p);
+        x0 += vx*0.6; y0 += vy*0.6;
+      }
+    }
+  }
+  function serpentineBurst(x,y,h){
+    for (let i=0;i<120;i++){
+      const ang = rand(0,TAU), sp = rand(2.4,3.3);
+      const p = new Particle(x,y, Math.cos(ang)*sp, Math.sin(ang)*sp, particleColor(h+rand(-30,30),90,55), 1.9, 1.6);
+      p.wiggle = rand(1.0,2.0);
+      p.trailLen=7; p.ay=0.06;
+      state.particles.push(p);
+    }
+  }
+
+  // Input handling
+  const fxCanvas = canvases.fx.c;
+  fxCanvas.oncontextmenu = e => { e.preventDefault(); return false; };
+
+  function canvasPos(e){
+    const rect = fxCanvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left);
+    const y = (e.clientY - rect.top);
+    return {x,y};
+  }
+
+  function sprayDelay(){
+    const n = state.particles.length;
+    if (n > 6000) return 280;
+    if (n > 5000) return 220;
+    if (n > 4000) return 170;
+    if (n > 3000) return 130;
+    if (n > 2000) return 95;
+    if (n > 1200) return 70;
+    return 45;
+  }
+
+  window.addEventListener('mousemove', (e) => {
+    if (!state.enableSpray || !state.rightDown) return;
+    const p = canvasPos(e);
+    const now = performance.now();
+    if (now - state.lastSpray > sprayDelay()) {
+      launchAt(p.x, p.y, true);
+      state.lastSpray = now;
+    }
+  });
+  window.addEventListener('mousedown', (e)=>{
+    startAudio();
+    if (e.button===2){
+      if (!state.enableSpray) return;
+      state.rightDown = true;
+      state.lastSpray = 0;
+      e.preventDefault();
+    } else if (e.button===0){
+      const p = canvasPos(e);
+      launchAt(p.x, p.y, false);
+    }
+  });
+  window.addEventListener('mouseup', (e)=>{
+    if (e.button===2) state.rightDown=false;
+  });
+  window.addEventListener('mouseleave', ()=>{ state.rightDown=false; });
+
+  window.addEventListener('keydown', (e)=>{
+    if (e.code==='Space'){ e.preventDefault(); nextScene(); }
+    if (e.key==='m' || e.key==='M'){ toggleMute(); }
+  });
+
+  document.getElementById('btnScene').addEventListener('click', nextScene);
+  document.getElementById('btnMute').addEventListener('click', toggleMute);
+  document.getElementById('btnClear').addEventListener('click', ()=>{
+    state.particles.length=0; state.smokes.length=0; render();
+  });
+
+  function nextScene(){
+    state.sceneIndex = (state.sceneIndex+1)%5;
+    drawScene(); drawCity();
+  }
+  function toggleMute(){
+    state.muted = !state.muted;
+    audio.setMuted(state.muted);
+    document.getElementById('btnMute').textContent = state.muted ? '🔇' : '🔊';
+  }
+  function startAudio(){
+    if (!state.startedAudio){
+      audio.ensure(); audio.resume();
+      audio.setMuted(state.muted);
+      state.startedAudio = true;
+    } else audio.resume();
+  }
+
+  function launchAt(x, y, isSpray){
+    if (isSpray && state.particles.length > MAX_PARTICLES*0.95) return;
+    const targetX = x + rand(-40,40);
+    const targetY = Math.min(y, rand(state.h*0.18, state.h*0.5));
+    const effect = isSpray ? null : pick(EFFECTS);
+    const r = new Rocket(x, targetX, targetY, effect, isSpray);
+    state.fireworks.push(r);
+    state.launchCount++;
+    updateHud();
+  }
+
+  function updateHud(){
+    const hud = document.getElementById('hud');
+    hud.textContent = `${state.particles.length} particles • ${state.launchCount} fireworks`;
+  }
+
+  // Main render loop with failsafe
+  let last = performance.now();
+  function loop(now){
+    // schedule next frame first, so exceptions don’t stop the loop
+    requestAnimationFrame(loop);
+    try {
+      const dtRaw = (now - last)/1000;
+      const dt = Math.min(0.033, Math.max(0.001, isFiniteNum(dtRaw) ? dtRaw : 0.016));
+      last = now;
+      step(dt);
+      render();
+    } catch (err) {
+      console.error('Render error recovered:', err);
+      // Soft reset volatile state so we can keep going
+      state.fireworks.length = 0;
+      state.particles.length = 0;
+      state.smokes.length = 0;
+      // brief user hint
+      const w = document.getElementById('warn');
+      if (w){ w.style.display='block'; clearTimeout(w._t); w._t=setTimeout(()=>w.style.display='none', 2000); }
+    }
+  }
+
+  function cullOverBudget(){
+    if (state.particles.length > MAX_PARTICLES){
+      const remove = state.particles.length - Math.floor(MAX_PARTICLES*0.9);
+      state.particles.splice(0, remove);
+    }
+    if (state.smokes.length > MAX_SMOKES){
+      const remove = state.smokes.length - Math.floor(MAX_SMOKES*0.9);
+      state.smokes.splice(0, remove);
+    }
+  }
+
+  function step(dt){
+    for (let i=state.fireworks.length-1;i>=0;i--){
+      const r = state.fireworks[i];
+      r.update(dt);
+      if (r.dead) state.fireworks.splice(i,1);
+    }
+    for (let i=state.particles.length-1;i>=0;i--){
+      const p = state.particles[i];
+      p.update(dt);
+      if (p.dead) state.particles.splice(i,1);
+    }
+    for (let i=state.smokes.length-1;i>=0;i--){
+      const s = state.smokes[i];
+      s.update(dt);
+      if (s.dead) state.smokes.splice(i,1);
+    }
+    cullOverBudget();
+  }
+
+  function render(){
+    const g = canvases.fx.g;
+    g.clearRect(0,0,state.w,state.h);
+    for (const s of state.smokes) s.draw(g);
+    for (const p of state.particles) p.draw(g);
+
+    // ground haze
+    const haze = g.createLinearGradient(0, state.h*0.7, 0, state.h);
+    haze.addColorStop(0, 'rgba(20,30,60,0)');
+    haze.addColorStop(1, 'rgba(20,30,60,0.25)');
+    g.fillStyle = haze; g.fillRect(0, state.h*0.7, state.w, state.h*0.3);
+
+    updateHud();
+  }
+
+  // Start
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

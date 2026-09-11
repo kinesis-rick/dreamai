@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zen Focus Timer</title>
+    <style>
+        :root {
+            --bg-image: url('https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?q=80&w=2832&auto=format&fit=crop');
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --wood-texture: #e3c099;
+            --chrome-gradient: linear-gradient(135deg, #e0e0e0 0%, #ffffff 50%, #bdc3c7 100%);
+            --sand-color: #ffb7b2;
+            --text-color: #2c3e50;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(3px);
+            z-index: -1;
+        }
+
+        /* --- Controls --- */
+        .controls-panel {
+            position: absolute;
+            top: 30px;
+            background: rgba(253, 245, 230, 0.9);
+            border: 4px solid #d4a373;
+            box-shadow: var(--shadow);
+            padding: 15px 25px;
+            border-radius: 16px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .controls-panel::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 12px;
+            background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 2px, transparent 2px, transparent 4px);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.65rem;
+            color: #5d4037;
+            font-weight: bold;
+        }
+
+        select, input[type="number"] {
+            background: rgba(255,255,255,0.8);
+            border: 1px solid #d4a373;
+            color: #5d4037;
+            padding: 6px;
+            border-radius: 6px;
+            outline: none;
+            width: 70px;
+        }
+
+        select { width: 120px; }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #5d4037;
+            font-weight: 600;
+        }
+
+        .toggle-switch input {
+            margin-right: 8px;
+            accent-color: #d4a373;
+        }
+
+        /* NEW: Pause Button Styles */
+        .btn-pause {
+            background: #d4a373;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .btn-pause:hover {
+            transform: scale(1.05);
+            background: #c59260;
+        }
+
+        .btn-pause:active {
+            transform: scale(0.95);
+        }
+
+        /* --- Hourglass --- */
+        .timer-wrapper {
+            position: relative;
+            width: 220px;
+            height: 340px;
+            cursor: pointer;
+            /* Transition handled in JS for the reset trick */
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.3));
+        }
+
+        .timer-wrapper:hover {
+            transform: scale(1.02);
+            transition: transform 0.3s;
+        }
+
+        .timer-wrapper.flipping {
+            transform: rotate(180deg);
+            transition: transform 0.8s cubic-bezier(0.45, 0, 0.55, 1);
+        }
+
+        /* The glass bulbs must be symmetrical for the flip trick to work */
+        .bulb {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            box-sizing: border-box;
+            background: var(--glass-bg);
+            border: 6px solid rgba(255, 255, 255, 0.5);
+            box-shadow: inset 5px 5px 15px rgba(255,255,255,0.2), inset -5px -5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .bulb-top {
+            top: 0;
+            border-bottom: none;
+            /* Wide top, narrow bottom */
+            border-radius: 40% 40% 40% 40% / 15% 15% 40% 40%;
+            clip-path: polygon(0% 0%, 100% 0%, 85% 100%, 15% 100%);
+        }
+
+        .bulb-bottom {
+            bottom: 0;
+            border-top: none;
+            /* Narrow top, wide bottom - Mirrors the top perfectly */
+            border-radius: 40% 40% 40% 40% / 40% 40% 15% 15%;
+            clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
+        }
+
+        /* Chrome Neck */
+        .neck {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 12px;
+            background: var(--chrome-gradient);
+            border: 1px solid #aaa;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 20;
+            border-radius: 3px;
+        }
+
+        /* --- Sand --- */
+        .sand {
+            background-color: var(--sand-color);
+            position: absolute;
+            width: 100%;
+            left: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+        }
+
+        .sand-top {
+            bottom: 0;
+            height: 100%;
+            /* Smooth transition for draining */
+            transition: height 1s linear;
+            border-radius: 50% 50% 0 0 / 20% 20% 0 0;
+        }
+
+        .sand-bottom {
+            bottom: 0;
+            height: 0%;
+            transition: height 1s linear;
+            border-radius: 0 0 50% 50% / 0 0 20% 20%;
+        }
+
+        /* Stream */
+        .stream {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 50%;
+            background-color: var(--sand-color);
+            transform: translateX(-50%);
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .stream.flowing {
+            opacity: 1;
+        }
+
+        /* --- Text --- */
+        .digital-readout {
+            margin-top: 50px;
+            font-size: 4rem;
+            font-weight: 300;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            font-variant-numeric: tabular-nums;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .digital-readout.hidden { display: none; }
+
+        .status-text {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .instruction {
+            position: absolute;
+            bottom: 30px;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.9);
+            background: rgba(0,0,0,0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Wood Caps */
+        .cap {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 75%;
+            height: 12px;
+            background: #d4a373;
+            border-radius: 3px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+            z-index: 15;
+            background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px, transparent 1px, transparent 10px);
+        }
+        .cap-top { top: -12px; }
+        .cap-bottom { bottom: -12px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="controls-panel">
+        <div class="input-group">
+            <label>Theme</label>
+            <select id="themeSelect" onchange="changeTheme()">
+                <option value="garden">Zen Garden</option>
+                <option value="pond">Koi Pond</option>
+                <option value="mountains">Mist Mount</option>
+                <option value="ocean">Calm Ocean</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Focus</label>
+            <input type="number" id="workTime" value="25" min="1" max="60">
+        </div>
+        <div class="input-group">
+            <label>Break</label>
+            <input type="number" id="breakTime" value="5" min="1" max="30">
+        </div>
+
+        <button class="btn-pause" id="pauseBtn" onclick="togglePause()">▶</button>
+
+        <div class="toggle-switch" onclick="toggleReadout()">
+            <input type="checkbox" id="readoutToggle" checked>
+            <label for="readoutToggle">Time</label>
+        </div>
+    </div>
+
+    <div class="timer-wrapper" id="hourglass" onclick="flipTimer()">
+        <div class="cap cap-top"></div>
+
+        <div class="bulb bulb-top">
+            <div class="sand sand-top" id="sandTop"></div>
+        </div>
+
+        <div class="neck"></div>
+        <div class="stream" id="stream"></div>
+
+        <div class="bulb bulb-bottom">
+            <div class="sand sand-bottom" id="sandBottom"></div>
+        </div>
+
+        <div class="cap cap-bottom"></div>
+    </div>
+
+    <div class="digital-readout" id="digitalDisplay">25:00</div>
+    <div class="status-text" id="statusText">Breathe & Begin</div>
+    <div class="instruction">Tap hourglass to flip</div>
+
+    <script>
+        // --- Configuration ---
+        const themes = {
+            garden: { bg: "url('https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?q=80&w=2832')", sand: "#ffb7b2" },
+            // FIXED: Updated Koi Pond URL
+            pond: { bg: "url('https://images.unsplash.com/photo-1516616370751-86d6bd8b0651?q=80&w=2940&auto=format&fit=crop')", sand: "#a2d2ff" },
+            mountains: { bg: "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2940')", sand: "#e2d1c3" },
+            ocean: { bg: "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2946')", sand: "#81ecec" }
+        };
+
+        // --- State ---
+        let totalSeconds = 25 * 60;
+        let remainingSeconds = totalSeconds;
+        let intervalId = null;
+        let isRunning = false;
+        let currentMode = 'work';
+        let isFlipping = false;
+
+        // --- Elements ---
+        const hourglass = document.getElementById('hourglass');
+        const sandTop = document.getElementById('sandTop');
+        const sandBottom = document.getElementById('sandBottom');
+        const stream = document.getElementById('stream');
+        const digitalDisplay = document.getElementById('digitalDisplay');
+        const statusText = document.getElementById('statusText');
+        const workInput = document.getElementById('workTime');
+        const breakInput = document.getElementById('breakTime');
+        const readoutToggle = document.getElementById('readoutToggle');
+        const themeSelect = document.getElementById('themeSelect');
+        const pauseBtn = document.getElementById('pauseBtn'); // NEW
+
+        // --- Audio ---
+        let audioCtx;
+        function playGong() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            osc1.frequency.value = 200;
+            osc2.frequency.value = 203;
+            osc1.connect(gainNode);
+            osc2.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.4, now + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 5);
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + 5);
+            osc2.stop(now + 5);
+        }
+
+        // --- Core Logic ---
+        function init() {
+            updateDisplay();
+            updateSandVisuals();
+        }
+
+        function changeTheme() {
+            const t = themes[themeSelect.value];
+            document.documentElement.style.setProperty('--bg-image', t.bg);
+            document.documentElement.style.setProperty('--sand-color', t.sand);
+        }
+
+        function toggleReadout() {
+            digitalDisplay.classList.toggle('hidden', !readoutToggle.checked);
+        }
+
+        function formatTime(s) {
+            const min = Math.floor(s / 60);
+            const sec = s % 60;
+            return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        function updateSandVisuals() {
+            if (isFlipping) return;
+
+            const percentRemaining = remainingSeconds / totalSeconds;
+            const percentDone = 1 - percentRemaining;
+            sandTop.style.height = `${percentRemaining * 100}%`;
+            sandBottom.style.height = `${percentDone * 100}%`;
+
+            if (isRunning && remainingSeconds > 0) stream.classList.add('flowing');
+            else stream.classList.remove('flowing');
+        }
+
+        function updateDisplay() {
+            digitalDisplay.textContent = formatTime(remainingSeconds);
+            document.title = `${formatTime(remainingSeconds)} - ${currentMode}`;
+        }
+
+        function tick() {
+            if (remainingSeconds > 0) {
+                remainingSeconds--;
+                updateDisplay();
+                updateSandVisuals();
+            } else {
+                stopTimer();
+                statusText.textContent = "Harmony Restored";
+                playGong();
+            }
+        }
+
+        // NEW: Toggle Pause/Play Logic
+        function togglePause() {
+            // Prevent toggling while mid-flip animation
+            if (isFlipping) return;
+
+            if (isRunning) {
+                // Pause it
+                stopTimer();
+                statusText.textContent = "Paused";
+            } else {
+                // Resume it
+                if (remainingSeconds > 0) {
+                    startTimer();
+                } else {
+                    // If they click play but time is 0, trigger a flip reset
+                    flipTimer();
+                }
+            }
+        }
+
+        function startTimer() {
+            if (intervalId) clearInterval(intervalId);
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+            isRunning = true;
+            statusText.textContent = currentMode === 'work' ? 'Deep Focus' : 'Mindful Rest';
+
+            // Update Icon to Pause
+            pauseBtn.textContent = '⏸';
+
+            intervalId = setInterval(tick, 1000);
+            updateSandVisuals();
+        }
+
+        function stopTimer() {
+            isRunning = false;
+            clearInterval(intervalId);
+            intervalId = null;
+            stream.classList.remove('flowing');
+
+            // Update Icon to Play
+            pauseBtn.textContent = '▶';
+        }
+
+        function flipTimer() {
+            if (isFlipping) return;
+            isFlipping = true;
+
+            hourglass.classList.add('flipping');
+            stopTimer(); // This sets icon to Play, but we auto-start after flip
+
+            // Determine Next Mode
+            if (remainingSeconds === 0) {
+                if (currentMode === 'work') {
+                    currentMode = 'break';
+                    totalSeconds = parseInt(breakInput.value) * 60;
+                } else {
+                    currentMode = 'work';
+                    totalSeconds = parseInt(workInput.value) * 60;
+                }
+            } else {
+                totalSeconds = currentMode === 'work' ? parseInt(workInput.value) * 60 : parseInt(breakInput.value) * 60;
+            }
+            remainingSeconds = totalSeconds;
+            updateDisplay();
+
+            // The Invisible Reset Trick
+            setTimeout(() => {
+                sandTop.style.transition = 'none';
+                sandBottom.style.transition = 'none';
+                hourglass.classList.remove('flipping');
+
+                sandTop.style.height = '100%';
+                sandBottom.style.height = '0%';
+
+                void hourglass.offsetWidth;
+
+                sandTop.style.transition = 'height 1s linear';
+                sandBottom.style.transition = 'height 1s linear';
+
+                isFlipping = false;
+                startTimer(); // Auto-start implies changing button to Pause
+            }, 800);
+        }
+
+        // Listeners
+        workInput.addEventListener('change', () => {
+            if (!isRunning && currentMode === 'work') {
+                totalSeconds = parseInt(workInput.value) * 60;
+                remainingSeconds = totalSeconds;
+                updateDisplay();
+            }
+        });
+        breakInput.addEventListener('change', () => {
+            if (!isRunning && currentMode === 'break') {
+                totalSeconds = parseInt(breakInput.value) * 60;
+                remainingSeconds = totalSeconds;
+                updateDisplay();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

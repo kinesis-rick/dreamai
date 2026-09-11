@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snowball Fight</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA); /* Sky gradient */
+            font-family: sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        .instructions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="instructions">Snowball Fight! (Watch them play)</div>
+    <canvas id="snowCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        
+        // Resize handling
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Game constants
+        const GRAVITY = 0.2;
+        const GROUND_HEIGHT = 50;
+
+        // --- CLASSES ---
+
+        class Snowflake {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * -height;
+                this.size = Math.random() * 3 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+                this.drift = (Math.random() - 0.5) * 0.5;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.x += this.drift;
+                if (this.y > height) this.reset();
+            }
+
+            draw() {
+                ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Snowball {
+            constructor(x, y, vx, vy) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.radius = 6;
+                this.active = true;
+            }
+
+            update() {
+                if (!this.active) return;
+                
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += GRAVITY * 0.5; // Light gravity for snowballs
+
+                // Ground collision
+                if (this.y > height - GROUND_HEIGHT) {
+                    this.active = false; // Splat on ground
+                    // Optional: Create a small pile or puff (omitted for simplicity)
+                }
+
+                // Out of bounds
+                if (this.x < 0 || this.x > width) {
+                    this.active = false;
+                }
+            }
+
+            draw() {
+                if (!this.active) return;
+                ctx.fillStyle = "#FFF";
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                // Shadow
+                ctx.strokeStyle = "#DDD";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+
+        class Kid {
+            constructor(side) { // side: -1 (left), 1 (right)
+                this.side = side;
+                this.width = 30;
+                this.height = 50;
+                this.color = side === -1 ? '#FF6B6B' : '#4ECDC4'; // Red coat vs Teal coat
+                this.hatColor = side === -1 ? '#C92A2A' : '#2A9D8F';
+                
+                // Position
+                this.x = side === -1 ? width * 0.2 : width * 0.8;
+                this.y = height - GROUND_HEIGHT - this.height;
+                
+                // State
+                this.cooldown = 0;
+                this.jumpY = 0;
+                this.jumpVy = 0;
+                this.isJumping = false;
+                this.moveTimer = 0;
+                this.targetX = this.x;
+            }
+
+            update() {
+                // AI Behavior
+                
+                // 1. Movement
+                this.moveTimer++;
+                if (this.moveTimer > 100) {
+                    this.moveTimer = 0;
+                    // Pick a new spot on their side
+                    const minX = this.side === -1 ? 50 : width/2 + 50;
+                    const maxX = this.side === -1 ? width/2 - 50 : width - 50;
+                    this.targetX = Math.random() * (maxX - minX) + minX;
+                    
+                    // Random chance to jump
+                    if (Math.random() > 0.7 && !this.isJumping) {
+                        this.isJumping = true;
+                        this.jumpVy = -5;
+                    }
+                }
+
+                // Smooth move to target
+                this.x += (this.targetX - this.x) * 0.05;
+
+                // Jump physics
+                if (this.isJumping) {
+                    this.jumpY += this.jumpVy;
+                    this.jumpVy += GRAVITY;
+                    if (this.jumpY >= 0) {
+                        this.jumpY = 0;
+                        this.isJumping = false;
+                    }
+                }
+
+                // 2. Throwing
+                if (this.cooldown > 0) {
+                    this.cooldown--;
+                } else if (Math.random() < 0.02) { // 2% chance per frame to throw
+                    this.throwSnowball();
+                    this.cooldown = 60 + Math.random() * 60; // 1-2 second cooldown
+                }
+            }
+
+            throwSnowball() {
+                // Calculate velocity to throw towards the center or the enemy direction
+                const dir = this.side === -1 ? 1 : -1;
+                const vx = (Math.random() * 5 + 8) * dir; // Speed 8-13
+                const vy = -(Math.random() * 4 + 2); // Upward arc
+                
+                snowballs.push(new Snowball(this.x, this.y + this.jumpY + 15, vx, vy));
+            }
+
+            draw() {
+                const drawX = this.x - this.width/2;
+                const drawY = this.y + this.jumpY;
+
+                // Body (Coat)
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.moveTo(drawX + 5, drawY); // Shoulders
+                ctx.lineTo(drawX + this.width - 5, drawY);
+                ctx.lineTo(drawX + this.width, drawY + this.height); // Bottom of coat
+                ctx.lineTo(drawX, drawY + this.height);
+                ctx.fill();
+
+                // Head
+                ctx.fillStyle = "#FFDAB9"; // Skin tone
+                ctx.beginPath();
+                ctx.arc(this.x, drawY - 8, 12, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Hat (Beanie)
+                ctx.fillStyle = this.hatColor;
+                ctx.beginPath();
+                ctx.arc(this.x, drawY - 12, 12, Math.PI, 0); // Semicircle
+                ctx.lineTo(this.x + 12, drawY - 12);
+                ctx.lineTo(this.x - 12, drawY - 12);
+                ctx.fill();
+                // Pom pom
+                ctx.beginPath();
+                ctx.arc(this.x, drawY - 24, 4, 0, Math.PI*2);
+                ctx.fill();
+
+                // Eyes
+                ctx.fillStyle = "#000";
+                const eyeOffset = this.side === -1 ? 4 : -4; // Look at opponent
+                ctx.fillRect(this.x + eyeOffset - 2, drawY - 10, 2, 2);
+                ctx.fillRect(this.x + eyeOffset + 2, drawY - 10, 2, 2);
+
+                // Arms (Simple lines)
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                // Left arm
+                ctx.moveTo(drawX + 5, drawY + 5);
+                if (this.cooldown > 40) { // Throwing pose
+                     ctx.lineTo(this.x + (20 * this.side), drawY - 10);
+                } else {
+                     ctx.lineTo(this.x + (15 * this.side), drawY + 20);
+                }
+                ctx.stroke();
+            }
+        }
+
+        // --- INIT ---
+        
+        const snowflakes = Array.from({ length: 100 }, () => new Snowflake());
+        const kids = [new Kid(-1), new Kid(1)];
+        let snowballs = [];
+
+        // --- LOOP ---
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw Ground
+            ctx.fillStyle = "#FFF";
+            ctx.fillRect(0, height - GROUND_HEIGHT, width, GROUND_HEIGHT);
+            // Ground curve decoration
+            ctx.beginPath();
+            ctx.ellipse(width/2, height - GROUND_HEIGHT, width/1.5, 40, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Update & Draw Snowflakes (Background)
+            snowflakes.forEach(flake => {
+                flake.update();
+                flake.draw();
+            });
+
+            // Update & Draw Kids
+            kids.forEach(kid => {
+                kid.update();
+                kid.draw();
+            });
+
+            // Update & Draw Snowballs
+            for (let i = snowballs.length - 1; i >= 0; i--) {
+                let ball = snowballs[i];
+                ball.update();
+                ball.draw();
+
+                // Simple Hit Detection (Ball vs Kid)
+                if (ball.active) {
+                    kids.forEach(kid => {
+                        // Don't hit yourself immediately (check direction vs side)
+                        // If kid is on left (-1) and ball moving right (>0), it's his ball mostly, unless reflected. 
+                        // Simpler: Check distance
+                        
+                        const dx = ball.x - kid.x;
+                        const dy = ball.y - (kid.y + kid.jumpY + 25); // Center of body approx
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+
+                        if (dist < 25) {
+                            // Check ownership (ball moving towards kid)
+                            if ((kid.side === -1 && ball.vx < 0) || (kid.side === 1 && ball.vx > 0)) {
+                                ball.active = false;
+                                // Hit effect: Kid jumps in surprise
+                                kid.isJumping = true;
+                                kid.jumpVy = -3;
+                            }
+                        }
+                    });
+                }
+
+                if (!ball.active) {
+                    snowballs.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+    </script>
+</body>
+</html>

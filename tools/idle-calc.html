@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idle Profit Optimizer v2</title>
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+            --accent: #00d4ff;
+            --text-dim: rgba(255, 255, 255, 0.6);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at top right, #1e2a4a, #0f172a);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 { text-align: center; margin-bottom: 2rem; font-weight: 300; letter-spacing: 2px; }
+
+        .input-group { margin-bottom: 1.8rem; position: relative; }
+
+        label { display: block; margin-bottom: 0.6rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            font-size: 1.2rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+
+        .word-count {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-style: italic;
+            min-height: 1.2em;
+        }
+
+        .results {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .stat-label { color: var(--text-dim); }
+        .stat-value { font-weight: 600; color: #fff; }
+
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 212, 255, 0.05));
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 1.5rem;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .highlight-label { font-size: 0.8rem; text-transform: uppercase; color: var(--accent); margin-bottom: 5px; }
+        .highlight-value { font-size: 1.5rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Shop Optimizer</h2>
+
+    <div class="input-group">
+        <label>Sale Price ($)</label>
+        <input type="text" id="priceInput" placeholder="22,000,000" autocomplete="off">
+        <div id="wordDisplay" class="word-count"></div>
+    </div>
+
+    <div class="input-group">
+        <label>Time to Build (Seconds)</label>
+        <input type="number" id="timeInput" placeholder="25" step="0.1">
+    </div>
+
+    <div class="results">
+        <div class="stat">
+            <span class="stat-label">Earnings / Second</span>
+            <span class="stat-value" id="mpsDisplay">$0</span>
+        </div>
+
+        <div class="highlight-box">
+            <div class="highlight-label">Estimated 3-Hour Profit</div>
+            <div class="highlight-value" id="threeHrDisplay">$0</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const priceInput = document.getElementById('priceInput');
+    const timeInput = document.getElementById('timeInput');
+    const wordDisplay = document.getElementById('wordDisplay');
+    const mpsDisplay = document.getElementById('mpsDisplay');
+    const threeHrDisplay = document.getElementById('threeHrDisplay');
+
+    // Helper to convert number to words
+    function numberToWords(num) {
+        if (num === 0) return "";
+        if (num >= 1e15) return "That's a lot of money...";
+
+        const units = ['', 'Thousand', 'Million', 'Billion', 'Trillion', 'Quadrillion'];
+        let output = '';
+        let unitIdx = 0;
+
+        let tempNum = num;
+        while (tempNum > 0) {
+            let chunk = tempNum % 1000;
+            if (chunk > 0) {
+                output = chunk + " " + units[unitIdx] + " " + output;
+            }
+            tempNum = Math.floor(tempNum / 1000);
+            unitIdx++;
+        }
+        return output.trim();
+    }
+
+    function updateCalculations() {
+        // Remove commas to get raw number
+        let rawValue = priceInput.value.replace(/,/g, '');
+        let price = parseFloat(rawValue) || 0;
+        let time = parseFloat(timeInput.value) || 0;
+
+        // Format input with commas
+        if (rawValue !== "") {
+            priceInput.value = Number(rawValue).toLocaleString();
+        }
+
+        // Update word footnote
+        wordDisplay.innerText = price > 0 ? numberToWords(price) : "";
+
+        // Calculate
+        if (price > 0 && time > 0) {
+            let mps = price / time;
+            let threeHr = mps * 10800; // 3 hours in seconds
+
+            mpsDisplay.innerText = "$" + mps.toLocaleString(undefined, {maximumFractionDigits: 2});
+            threeHrDisplay.innerText = "$" + threeHr.toLocaleString(undefined, {maximumFractionDigits: 0});
+        } else {
+            mpsDisplay.innerText = "$0";
+            threeHrDisplay.innerText = "$0";
+        }
+    }
+
+    priceInput.addEventListener('input', updateCalculations);
+    timeInput.addEventListener('input', updateCalculations);
+</script>
+
+</body>
+</html>

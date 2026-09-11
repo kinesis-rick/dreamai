@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Steam Year Tier List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        glass: {
+                            100: 'rgba(255, 255, 255, 0.05)',
+                            200: 'rgba(255, 255, 255, 0.1)',
+                            300: 'rgba(255, 255, 255, 0.15)',
+                            border: 'rgba(255, 255, 255, 0.1)',
+                        },
+                        tier: {
+                            s: '#ff7f7f',
+                            a: '#ffbf7f',
+                            b: '#ffdf7f',
+                            c: '#ffff7f',
+                            d: '#bfff7f',
+                            e: '#7fff7f',
+                            f: '#7fffff',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            border-color: #f472b6;
+            outline: none;
+            box-shadow: 0 0 15px rgba(244, 114, 182, 0.2);
+        }
+
+        /* Gradient Blobs */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.6;
+            animation: float 20s infinite;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #4c1d95; animation-delay: 0s; }
+        .blob-2 { bottom: -10%; right: -10%; width: 600px; height: 600px; background: #be185d; animation-delay: -5s; }
+        .blob-3 { top: 40%; left: 40%; width: 400px; height: 400px; background: #0f766e; animation-delay: -10s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        /* Drag and Drop Styling */
+        .game-card {
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .game-card:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        .game-card.dragging {
+            opacity: 0.5;
+        }
+
+        .tier-row {
+            min-height: 120px;
+            transition: background 0.3s;
+        }
+        .tier-row.drag-over {
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .tier-label {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans selection:bg-pink-500 selection:text-white">
+
+    <!-- Background Ambience -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
+
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400">
+                Steam Year Tier List
+            </h1>
+            <p class="text-slate-300 text-lg max-w-2xl mx-auto">
+                Visualize your gaming year. Paste your Steam Replay URL to generate a drag-and-drop tier list.
+            </p>
+            <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-200 text-sm">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                <span>Note: Your Steam Replay page must be set to <strong>Public</strong>.</span>
+            </div>
+        </header>
+
+        <!-- Input Section -->
+        <div class="glass-panel rounded-2xl p-6 mb-10 max-w-3xl mx-auto">
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="steamUrl"
+                    placeholder="https://store.steampowered.com/replay/YOUR_ID/2025"
+                    class="glass-input flex-1 rounded-xl px-4 py-3 text-sm placeholder-slate-400 w-full"
+                >
+                <button onclick="fetchGames()" class="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg hover:shadow-pink-500/25 flex items-center justify-center gap-2">
+                    <i data-lucide="wand-2" class="w-4 h-4"></i>
+                    Generate
+                </button>
+            </div>
+            <p id="statusMsg" class="text-xs mt-3 text-slate-400 pl-1 h-4"></p>
+        </div>
+
+        <!-- Main Workspace -->
+        <div id="captureArea" class="glass-panel rounded-2xl p-8 mb-8 relative">
+            <div class="absolute top-4 right-4 opacity-50 pointer-events-none">
+                <i data-lucide="gamepad-2" class="w-24 h-24 text-white/5"></i>
+            </div>
+
+            <!-- Tier List Container -->
+            <div class="space-y-3 mb-8" id="tierContainer">
+                <!-- Tiers generated by JS -->
+            </div>
+
+            <!-- Unranked Pool -->
+            <div class="mt-12">
+                <h3 class="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-4 h-4"></i> Unranked Games
+                </h3>
+                <div id="unranked-pool"
+                     class="min-h-[120px] bg-black/20 rounded-xl p-4 flex flex-wrap gap-3 border border-dashed border-white/10 transition-colors"
+                     ondrop="drop(event)"
+                     ondragover="allowDrop(event)">
+
+                     <!-- Placeholder Text -->
+                     <div id="empty-state" class="w-full h-full flex flex-col items-center justify-center text-slate-500 py-8 pointer-events-none">
+                        <i data-lucide="ghost" class="w-8 h-8 mb-2 opacity-50"></i>
+                        <p class="text-sm">Enter a URL above to summon your games.</p>
+                     </div>
+
+                </div>
+            </div>
+
+            <!-- Footer for screenshot -->
+            <div class="mt-8 pt-4 border-t border-white/10 flex justify-between items-center text-xs text-slate-500">
+                <span>Generated via Steam Year Tier List</span>
+                <span>n8n-glass-inspired</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center gap-4 mb-20">
+            <button onclick="takeScreenshot()" class="glass-panel hover:bg-white/10 text-white font-semibold py-3 px-6 rounded-xl transition-all flex items-center gap-2">
+                <i data-lucide="camera" class="w-4 h-4"></i>
+                Save Image
+            </button>
+            <button onclick="location.reload()" class="glass-panel hover:bg-white/10 text-red-300 font-semibold py-3 px-6 rounded-xl transition-all flex items-center gap-2 border-red-500/20">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                Reset
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Hidden canvas for processing -->
+    <div id="canvas-output" class="hidden"></div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Tier Configuration
+        const tiers = [
+            { id: 'S', color: 'bg-red-500', label: 'S', desc: 'Overwhelmingly Good' },
+            { id: 'A', color: 'bg-orange-500', label: 'A', desc: 'Very Positive' },
+            { id: 'B', color: 'bg-yellow-500', label: 'B', desc: 'Positive' },
+            { id: 'C', color: 'bg-green-500', label: 'C', desc: 'Neutral' },
+            { id: 'D', color: 'bg-teal-500', label: 'D', desc: 'Negative' },
+            { id: 'E', color: 'bg-blue-500', label: 'E', desc: 'Very Negative' },
+            { id: 'F', color: 'bg-purple-500', label: 'F', desc: 'Overwhelmingly Negative' },
+        ];
+
+        // Init Tiers
+        const tierContainer = document.getElementById('tierContainer');
+
+        tiers.forEach(tier => {
+            const row = document.createElement('div');
+            row.className = 'flex flex-col md:flex-row rounded-lg overflow-hidden border border-white/5 bg-black/20';
+
+            row.innerHTML = `
+                <div class="${tier.color} w-full md:w-32 flex flex-col items-center justify-center p-4 md:p-2 shadow-inner">
+                    <span class="text-2xl font-black text-black/70 tier-label">${tier.label}</span>
+                    <span class="text-[10px] font-bold text-black/50 uppercase tracking-tight text-center hidden md:block">${tier.desc}</span>
+                </div>
+                <div id="tier-${tier.id}"
+                     class="flex-1 min-h-[100px] p-3 flex flex-wrap gap-2 transition-colors tier-row"
+                     ondrop="drop(event)"
+                     ondragover="allowDrop(event)"
+                     ondragenter="dragEnter(event)"
+                     ondragleave="dragLeave(event)">
+                </div>
+            `;
+            tierContainer.appendChild(row);
+        });
+
+        // --- Drag and Drop Logic ---
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            ev.target.classList.add('dragging');
+        }
+
+        function dragEnd(ev) {
+            ev.target.classList.remove('dragging');
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+
+            // Remove highlighting
+            document.querySelectorAll('.tier-row, #unranked-pool').forEach(el => {
+                el.classList.remove('drag-over', 'bg-white/5');
+            });
+
+            // Find closest drop zone
+            let dropZone = ev.target;
+            while (dropZone && !dropZone.id.startsWith('tier-') && dropZone.id !== 'unranked-pool') {
+                dropZone = dropZone.parentElement;
+            }
+
+            if (dropZone && (dropZone.id.startsWith('tier-') || dropZone.id === 'unranked-pool')) {
+                dropZone.appendChild(draggedElement);
+            }
+        }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            let dropZone = ev.target;
+            // Bubble up to find the container
+            while (dropZone && !dropZone.classList.contains('tier-row') && dropZone.id !== 'unranked-pool') {
+                dropZone = dropZone.parentElement;
+            }
+            if (dropZone) {
+                dropZone.classList.add('bg-white/5');
+            }
+        }
+
+        function dragLeave(ev) {
+            let dropZone = ev.target;
+            // Bubble up
+            while (dropZone && !dropZone.classList.contains('tier-row') && dropZone.id !== 'unranked-pool') {
+                dropZone = dropZone.parentElement;
+            }
+            if (dropZone) {
+                dropZone.classList.remove('bg-white/5');
+            }
+        }
+
+
+        // --- Fetch Logic ---
+
+        async function fetchGames() {
+            const urlInput = document.getElementById('steamUrl');
+            const statusMsg = document.getElementById('statusMsg');
+            const unrankedPool = document.getElementById('unranked-pool');
+            const emptyState = document.getElementById('empty-state');
+
+            let url = urlInput.value.trim();
+
+            if (!url) {
+                statusMsg.textContent = "Please enter a URL.";
+                statusMsg.className = "text-xs mt-3 text-red-400 pl-1 h-4";
+                return;
+            }
+
+            statusMsg.textContent = "Accessing Steam via proxy network (attempt 1/3)...";
+            statusMsg.className = "text-xs mt-3 text-blue-400 pl-1 h-4 animate-pulse";
+
+            if (emptyState) emptyState.remove();
+
+            // Mock Data for specific URL or failure fallback (Demo Mode)
+            const demoGames = [
+                { name: "Baldur's Gate 3", id: 1086940 },
+                { name: "Elden Ring", id: 1245620 },
+                { name: "Cyberpunk 2077", id: 1091500 },
+                { name: "Hades II", id: 1145350 },
+                { name: "Stardew Valley", id: 413150 },
+                { name: "Dave the Diver", id: 1868140 },
+                { name: "Lethal Company", id: 1966720 },
+                { name: "Palworld", id: 1623730 },
+                { name: "Helldivers 2", id: 553850 },
+                { name: "Balatro", id: 2379780 },
+                { name: "Hollow Knight", id: 367520 },
+                { name: "Terraria", id: 105600 }
+            ];
+
+            try {
+                // Infer ID and Year from URL to try alternative endpoints if HTML fails
+                // Pattern: https://store.steampowered.com/replay/76561197970864851/2025
+                let steamId, year;
+                const urlMatch = url.match(/replay\/(\d+)\/(\d+)/);
+                if (urlMatch) {
+                    steamId = urlMatch[1];
+                    year = urlMatch[2];
+                }
+
+                // Multi-proxy Strategy
+                const proxies = [
+                    {
+                        name: 'CodeTabs',
+                        url: (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+                        extract: async (res) => res.text()
+                    },
+                    {
+                        name: 'AllOrigins',
+                        url: (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+                        extract: async (res) => {
+                            const json = await res.json();
+                            return json.contents;
+                        }
+                    },
+                    {
+                        name: 'CorsProxy',
+                        url: (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+                        extract: async (res) => res.text()
+                    }
+                ];
+
+                let htmlContent = null;
+
+                // 1. Try fetching the main page
+                for (const proxy of proxies) {
+                    try {
+                        statusMsg.textContent = `Trying proxy: ${proxy.name}...`;
+                        console.log(`Trying proxy: ${proxy.name}`);
+
+                        const response = await fetch(proxy.url(url));
+                        if (response.ok) {
+                            const content = await proxy.extract(response);
+                            if (content && content.length > 500 && !content.includes("Access Denied")) {
+                                htmlContent = content;
+                                console.log(`Success with ${proxy.name}. Content length: ${content.length}`);
+                                break;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn(`Proxy ${proxy.name} failed:`, e);
+                    }
+                }
+
+                // 2. Fallback: If HTML is empty/stubborn, try the JSON data endpoint directly
+                // Endpoint: https://store.steampowered.com/public/replay/render/{year}/{steamId}?l=english
+                if ((!htmlContent || htmlContent.length < 5000) && steamId && year) {
+                    console.log("HTML fetch weak, trying direct data endpoint...");
+                    const dataUrl = `https://store.steampowered.com/public/replay/render/${year}/${steamId}?l=english`;
+
+                    for (const proxy of proxies) {
+                         try {
+                            const res = await fetch(proxy.url(dataUrl));
+                            if (res.ok) {
+                                const raw = await proxy.extract(res);
+                                if (raw && raw.length > 100) {
+                                    htmlContent = (htmlContent || "") + raw; // Append data
+                                    console.log("Appended direct API data.");
+                                    break;
+                                }
+                            }
+                         } catch(e) {}
+                    }
+                }
+
+                if (!htmlContent) {
+                    throw new Error("All proxies failed to retrieve valid Steam data.");
+                }
+
+                let gamesFound = [];
+                let uniqueIds = new Set();
+
+                // --- AGGRESSIVE & ROBUST PARSING STRATEGIES ---
+
+                // Strategy 1: URL Patterns (Escaped or not)
+                const cdnParams = [...htmlContent.matchAll(/\/apps\\?\/(\d{3,8})/gi)];
+                cdnParams.forEach(m => uniqueIds.add(m[1]));
+
+                // Strategy 2: JSON Keys
+                const keyParams = [...htmlContent.matchAll(/["']?(appid|app_id|game_id|gameid)["']?\s*[:=]\s*["']?(\d{3,8})["']?/gi)];
+                keyParams.forEach(m => uniqueIds.add(m[2]));
+
+                // Strategy 3: Store URLs
+                const shopParams = [...htmlContent.matchAll(/\/app\\?\/(\d{3,8})/gi)];
+                shopParams.forEach(m => uniqueIds.add(m[1]));
+
+                // Strategy 4: Image Assets (Most Reliable)
+                const assetParams = [...htmlContent.matchAll(/(\d{3,8})\\?\/[a-zA-Z0-9_]+\.(jpg|png)/gi)];
+                assetParams.forEach(m => uniqueIds.add(m[1]));
+
+                // Strategy 5: Data attributes
+                const dataAttrParams = [...htmlContent.matchAll(/data-appid=["']?(\d{3,8})["']?/gi)];
+                dataAttrParams.forEach(m => uniqueIds.add(m[1]));
+
+                 // Strategy 6: THE NUCLEAR OPTION (Broad Search)
+                 // Always run broad search to catch IDs missed by specific patterns
+                 console.log("Running broad number search...");
+                 // Match any sequence of 3-7 digits (Min 3 to catch old games)
+                 const broadParams = [...htmlContent.matchAll(/\b(\d{3,7})\b/g)];
+                 broadParams.forEach(m => uniqueIds.add(m[1]));
+
+                // Convert Set to Array and Filter
+                const foundIds = [...uniqueIds];
+
+                // Strict Filtering
+                const validIds = foundIds.filter(id => {
+                    const num = parseInt(id);
+                    // Filter Years
+                    if (num >= 2020 && num <= 2030) return false;
+                    // Filter Common Screen Resolutions / HTTP codes / Noise
+                    if ([1920, 1080, 720, 480, 200, 404, 300, 400, 500, 600, 900].includes(num)) return false;
+
+                    // Filter out very small IDs (likely noise) unless specifically known
+                    // Lowered threshold to 10 to allow older games, relying on image load failures to cleanup noise
+                    if (num < 10) return false;
+
+                    return true;
+                });
+
+                if (validIds.length > 0) {
+                     statusMsg.textContent = `Found ${validIds.length} candidate IDs. Validating via images...`;
+                     // Increased limit to 300 to ensure valid games aren't pushed out by noise in the candidates list
+                     const limitedIds = validIds.slice(0, 300);
+
+                     for (let id of limitedIds) {
+                         gamesFound.push({
+                             id: id,
+                             name: "Game " + id,
+                             real: true
+                         });
+                     }
+                     renderGames(gamesFound);
+                     // Success message will be set, but visual cleanup happens via image onError
+                     setTimeout(() => {
+                        const count = document.querySelectorAll('.game-card').length;
+                        statusMsg.textContent = `Loaded successfully! (Filtered noise)`;
+                        statusMsg.className = "text-xs mt-3 text-green-400 pl-1 h-4";
+                     }, 2000);
+
+                } else {
+                    console.warn("Parsed IDs but filtered all out:", foundIds);
+                    throw new Error("No valid game IDs found (Check privacy settings or proxy blocked).");
+                }
+
+            } catch (err) {
+                console.log("Fetch failed or no games found, loading demo data.", err);
+                statusMsg.textContent = "Could not parse live data (Steam/CORS Block). Loaded Demo Data.";
+                statusMsg.className = "text-xs mt-3 text-yellow-400 pl-1 h-4";
+                renderGames(demoGames);
+            }
+        }
+
+        function renderGames(games) {
+            const pool = document.getElementById('unranked-pool');
+            pool.innerHTML = ''; // Clear existing
+
+            games.forEach(game => {
+                const card = document.createElement('div');
+                card.id = `game-${game.id}`;
+                card.draggable = true;
+                card.className = 'game-card relative group w-24 h-32 bg-slate-800 rounded-lg overflow-hidden border border-white/10 shadow-lg';
+                card.ondragstart = drag;
+                card.ondragend = dragEnd;
+
+                // Image URL construction
+                const imgUrl = `https://cdn.cloudflare.steamstatic.com/steam/apps/${game.id}/library_600x900.jpg`;
+
+                card.innerHTML = `
+                    <img src="${imgUrl}"
+                         alt="${game.name}"
+                         class="w-full h-full object-cover pointer-events-none"
+                         onerror="this.closest('.game-card').remove()">
+
+                    <!-- Hover Overlay -->
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                    </div>
+
+                    <!-- Link Button (Clickable) -->
+                    <a href="https://store.steampowered.com/app/${game.id}"
+                       target="_blank"
+                       title="View on Steam"
+                       class="absolute bottom-1 right-1 p-1 bg-blue-600 hover:bg-blue-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-20 cursor-pointer">
+                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    </a>
+                `;
+
+                pool.appendChild(card);
+            });
+        }
+
+        // --- Screenshot Logic ---
+        function takeScreenshot() {
+            const element = document.getElementById('captureArea');
+
+            // Visual feedback before capture
+            const originalBorder = element.style.borderColor;
+            element.style.borderColor = 'rgba(255,255,255,0.0)';
+
+            html2canvas(element, {
+                backgroundColor: '#161e31', // Match mostly with body
+                scale: 2, // High res
+                useCORS: true, // Try to load images
+                logging: false
+            }).then(canvas => {
+                // Restore border
+                element.style.borderColor = originalBorder;
+
+                // Create download
+                const link = document.createElement('a');
+                link.download = 'my-steam-tier-list.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }).catch(err => {
+                console.error("Screenshot failed:", err);
+                alert("Could not create screenshot. Note: Steam images might be blocked by browser security (CORS) when saving canvas.");
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mega Monkee Bonk</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1d;
+            --panel-color: #2d2d35;
+            --accent-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --text-color: #ecf0f1;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            overflow: hidden; /* Prevent scrollbars from flying numbers */
+            user-select: none;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* LEFT PANEL - The Arena */
+        .arena {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-right: 4px solid #000;
+            background: radial-gradient(circle at center, #2c3e50 0%, #000000 100%);
+        }
+
+        /* RIGHT PANEL - Upgrades */
+        .dashboard {
+            flex: 1;
+            background-color: var(--panel-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+            min-width: 300px;
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 20px;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+        }
+        .gold-display {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #000;
+        }
+        .wave-display {
+            font-size: 1.2rem;
+            color: #bdc3c7;
+            margin-top: 5px;
+        }
+
+        /* CHARACTERS */
+        .stage {
+            display: flex;
+            align-items: flex-end;
+            gap: 50px;
+            margin-bottom: 50px;
+        }
+
+        .monkee {
+            font-size: 8rem;
+            cursor: pointer;
+            transition: transform 0.05s;
+            position: relative;
+            z-index: 10;
+        }
+        .monkee:active {
+            transform: scale(0.9) rotate(-10deg);
+        }
+
+        .enemy-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .enemy {
+            font-size: 8rem;
+            transition: transform 0.1s;
+            filter: drop-shadow(0 0 10px rgba(255,0,0,0.2));
+        }
+
+        /* ANIMATIONS */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .hit-anim {
+            animation: shake 0.3s;
+            filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); /* Flash red */
+        }
+
+        /* HEALTH BAR */
+        .hp-bar-container {
+            width: 150px;
+            height: 15px;
+            background: #000;
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+            border: 2px solid #555;
+        }
+        .hp-bar-fill {
+            height: 100%;
+            background: var(--danger-color);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        /* FLOATING TEXT */
+        .damage-text {
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            font-size: 2rem;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-100px) scale(1.5); }
+        }
+
+        .crit-text {
+            color: var(--accent-color);
+            font-size: 3rem;
+            z-index: 100;
+        }
+
+        /* UPGRADES UI */
+        h2 {
+            border-bottom: 2px solid #444;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .upgrade-btn {
+            background: #34495e;
+            border: none;
+            border-left: 5px solid var(--accent-color);
+            color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s;
+            border-radius: 4px;
+            position: relative;
+            opacity: 0.7;
+        }
+
+        .upgrade-btn.affordable {
+            opacity: 1;
+            background: #3d566e;
+        }
+
+        .upgrade-btn.affordable:hover {
+            background: #4a6b8a;
+            transform: translateX(5px);
+        }
+
+        .upgrade-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .upgrade-cost {
+            color: var(--accent-color);
+        }
+        .upgrade-desc {
+            font-size: 0.85rem;
+            color: #bdc3c7;
+            margin-top: 5px;
+        }
+        .level-badge {
+            background: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+
+        /* Click Prompt */
+        .click-prompt {
+            position: absolute;
+            bottom: 20%;
+            font-size: 1.5rem;
+            color: white;
+            animation: pulse 1s infinite;
+            pointer-events: none;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="arena" id="arena">
+
+        <div class="hud">
+            <div class="gold-display">🍌 <span id="gold">0</span></div>
+            <div class="wave-display">Enemies Defeated: <span id="kills">0</span></div>
+            <div class="wave-display" style="font-size: 0.9rem; color: #7f8c8d;">DPS: <span id="dps-display">0</span></div>
+        </div>
+
+        <div class="stage">
+            <div class="monkee" id="monkee" onclick="playerClick()">🐵</div>
+
+            <div class="enemy-container">
+                <div class="enemy" id="enemy">🦖</div>
+                <div class="hp-bar-container">
+                    <div class="hp-bar-fill" id="hp-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="click-prompt" id="click-prompt">CLICK THE MONKEE TO BONK!</div>
+
+    </div>
+
+    <div class="dashboard">
+        <h2>Monkee Evolution</h2>
+
+        <div class="stat-box">
+            <div>Bonk Damage: <strong id="stat-dmg" style="color:#e74c3c">1</strong></div>
+            <div>Crit Chance: <strong id="stat-crit" style="color:#f1c40f">0%</strong></div>
+        </div>
+
+        <div id="upgrades-list">
+            </div>
+    </div>
+
+    <script>
+        // --- GAME STATE ---
+        const state = {
+            gold: 0,
+            kills: 0,
+            clickDamage: 1,
+            autoDamage: 0,
+            critChance: 0.0, // 0 to 1
+            critMultiplier: 2.0,
+
+            // Enemy State
+            enemyMaxHp: 10,
+            enemyCurrentHp: 10,
+            enemyLevel: 1,
+        };
+
+        // --- CONFIGURATION ---
+        const enemies = ['🐍', '🕷️', '🦖', '🦂', '🦇', '👺', '🤖', '🧟', '🐉', '👽'];
+
+        const upgrades = [
+            {
+                id: 'muscle',
+                name: 'Banana Muscles',
+                desc: '+1 Base Damage per click',
+                baseCost: 10,
+                costMult: 1.5,
+                level: 0,
+                effect: () => { state.clickDamage += 1; }
+            },
+            {
+                id: 'helper',
+                name: 'Lil\' Chimp Bro',
+                desc: '+2 Auto Damage per second (DPS)',
+                baseCost: 50,
+                costMult: 1.4,
+                level: 0,
+                effect: () => { state.autoDamage += 2; }
+            },
+            {
+                id: 'stick',
+                name: 'Big Stick',
+                desc: 'Multiplies Click Damage by 1.2x',
+                baseCost: 150,
+                costMult: 1.8,
+                level: 0,
+                effect: () => { state.clickDamage = Math.ceil(state.clickDamage * 1.2); }
+            },
+            {
+                id: 'rage',
+                name: 'Simian Rage',
+                desc: '+5% Critical Hit Chance',
+                baseCost: 300,
+                costMult: 2.0,
+                level: 0,
+                effect: () => { state.critChance = Math.min(state.critChance + 0.05, 1.0); }
+            },
+            {
+                id: 'gorilla',
+                name: 'Gorilla Spirit',
+                desc: '+25 Base Damage & +10 DPS',
+                baseCost: 1000,
+                costMult: 1.6,
+                level: 0,
+                effect: () => { state.clickDamage += 25; state.autoDamage += 10; }
+            }
+        ];
+
+        // --- DOM ELEMENTS ---
+        const elGold = document.getElementById('gold');
+        const elKills = document.getElementById('kills');
+        const elEnemy = document.getElementById('enemy');
+        const elHpFill = document.getElementById('hp-fill');
+        const elArena = document.getElementById('arena');
+        const elUpgradesList = document.getElementById('upgrades-list');
+        const elStatDmg = document.getElementById('stat-dmg');
+        const elStatCrit = document.getElementById('stat-crit');
+        const elDps = document.getElementById('dps-display');
+        const elPrompt = document.getElementById('click-prompt');
+
+        // --- INITIALIZATION ---
+        function init() {
+            renderUpgrades();
+            spawnEnemy();
+            gameLoop();
+        }
+
+        // --- CORE MECHANICS ---
+
+        function playerClick() {
+            // Hide prompt on first click
+            elPrompt.style.display = 'none';
+
+            // Calculate Damage
+            let isCrit = Math.random() < state.critChance;
+            let dmg = state.clickDamage;
+            if (isCrit) dmg = Math.floor(dmg * state.critMultiplier);
+
+            dealDamage(dmg, isCrit);
+        }
+
+        function dealDamage(amount, isCrit = false) {
+            if(state.enemyCurrentHp <= 0) return;
+
+            state.enemyCurrentHp -= amount;
+
+            // Visuals
+            createDamageText(amount, isCrit);
+            updateHpBar();
+
+            // Animate Enemy Getting Hit
+            elEnemy.classList.remove('hit-anim');
+            void elEnemy.offsetWidth; // trigger reflow
+            elEnemy.classList.add('hit-anim');
+
+            // Check Death
+            if (state.enemyCurrentHp <= 0) {
+                killEnemy();
+            }
+        }
+
+        function killEnemy() {
+            state.kills++;
+
+            // Reward logic (Base + scaling)
+            const reward = Math.ceil(state.enemyMaxHp / 3);
+            state.gold += reward;
+
+            spawnEnemy();
+            updateUI();
+        }
+
+        function spawnEnemy() {
+            // Scale HP: 10 * (1.15 ^ kills)
+            state.enemyMaxHp = Math.floor(15 * Math.pow(1.15, state.kills));
+            state.enemyCurrentHp = state.enemyMaxHp;
+
+            // Pick random enemy look
+            const randomEmoji = enemies[Math.floor(Math.random() * enemies.length)];
+            elEnemy.innerText = randomEmoji;
+
+            updateHpBar();
+        }
+
+        // --- UI & VISUALS ---
+
+        function createDamageText(amount, isCrit) {
+            const el = document.createElement('div');
+            el.textContent = isCrit ? "CRIT! " + amount : amount;
+            el.className = 'damage-text';
+            if (isCrit) el.classList.add('crit-text');
+
+            // Randomize position slightly around the enemy
+            const rect = elEnemy.getBoundingClientRect();
+            const randomX = (Math.random() - 0.5) * 50;
+
+            el.style.left = (rect.left + rect.width / 2 + randomX) + 'px';
+            el.style.top = (rect.top) + 'px';
+
+            document.body.appendChild(el);
+
+            // Cleanup
+            setTimeout(() => {
+                el.remove();
+            }, 800);
+        }
+
+        function updateHpBar() {
+            const pct = Math.max(0, (state.enemyCurrentHp / state.enemyMaxHp) * 100);
+            elHpFill.style.width = pct + '%';
+        }
+
+        function updateUI() {
+            elGold.innerText = formatNumber(state.gold);
+            elKills.innerText = formatNumber(state.kills);
+            elStatDmg.innerText = formatNumber(state.clickDamage);
+            elStatCrit.innerText = Math.floor(state.critChance * 100) + "%";
+            elDps.innerText = formatNumber(state.autoDamage);
+
+            // Update buttons state
+            upgrades.forEach((u, index) => {
+                const cost = getCost(u);
+                const btn = document.getElementById(`btn-${index}`);
+                if(btn) {
+                    const costEl = btn.querySelector('.upgrade-cost');
+                    costEl.innerText = formatNumber(cost);
+
+                    if (state.gold >= cost) {
+                        btn.classList.add('affordable');
+                    } else {
+                        btn.classList.remove('affordable');
+                    }
+                }
+            });
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            return num;
+        }
+
+        // --- UPGRADE SYSTEM ---
+
+        function getCost(upgrade) {
+            return Math.floor(upgrade.baseCost * Math.pow(upgrade.costMult, upgrade.level));
+        }
+
+        function renderUpgrades() {
+            elUpgradesList.innerHTML = '';
+            upgrades.forEach((u, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'upgrade-btn';
+                btn.id = `btn-${index}`;
+                btn.onclick = () => buyUpgrade(index);
+
+                btn.innerHTML = `
+                    <div class="upgrade-header">
+                        <span>${u.name} <span class="level-badge">Lvl <span id="lvl-${index}">0</span></span></span>
+                        <span>🍌 <span class="upgrade-cost">${u.baseCost}</span></span>
+                    </div>
+                    <div class="upgrade-desc">${u.desc}</div>
+                `;
+                elUpgradesList.appendChild(btn);
+            });
+        }
+
+        function buyUpgrade(index) {
+            const u = upgrades[index];
+            const cost = getCost(u);
+
+            if (state.gold >= cost) {
+                state.gold -= cost;
+                u.level++;
+                u.effect();
+
+                // Update Level Text UI
+                document.getElementById(`lvl-${index}`).innerText = u.level;
+
+                updateUI();
+            }
+        }
+
+        // --- GAME LOOP (Auto Damage) ---
+
+        function gameLoop() {
+            // Run every 1 second for DPS
+            setInterval(() => {
+                if (state.autoDamage > 0 && state.enemyCurrentHp > 0) {
+                    // Split DPS into smaller chunks for smoother visuals?
+                    // For simplicity, we just bonk once per second automatically
+                    dealDamage(state.autoDamage);
+
+                    // Slight visual bounce on Monkee to show he's working
+                    const monkee = document.getElementById('monkee');
+                    monkee.style.transform = "scale(0.95)";
+                    setTimeout(() => monkee.style.transform = "scale(1)", 100);
+                }
+            }, 1000);
+
+            // Fast UI Loop
+            setInterval(() => {
+                updateUI();
+            }, 100);
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>

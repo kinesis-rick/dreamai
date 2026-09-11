@@ -1,0 +1,86 @@
+[
+  {
+    "category": "Tools",
+    "name": "Mysteamyeartierlist",
+    "path": "tools/MySteamYearTierList.html",
+    "type": "tool"
+  },
+  {
+    "category": "Tools",
+    "name": "Idle-Calc",
+    "path": "tools/idle-calc.html",
+    "type": "tool"
+  },
+  {
+    "category": "Tools",
+    "name": "Pomodoro-Sand-Timer",
+    "path": "tools/pomodoro-sand-timer.html",
+    "type": "tool"
+  },
+  {
+    "category": "Tools",
+    "name": "Rickshtmlstudio",
+    "path": "tools/rickshtmlstudio.html",
+    "type": "tool"
+  },
+  {
+    "category": "Games",
+    "name": "Typingdefender",
+    "path": "games/TypingDefender.html",
+    "type": "game"
+  },
+  {
+    "category": "Games",
+    "name": "Starfall-Armada",
+    "path": "games/starfall-armada.html",
+    "type": "game"
+  },
+  {
+    "category": "Games",
+    "name": "Monkee",
+    "path": "games/monkee.html",
+    "type": "game"
+  },
+  {
+    "category": "Games",
+    "name": "Emoji-Ninja",
+    "path": "games/emoji-ninja.html",
+    "type": "game"
+  },
+  {
+    "category": "Games",
+    "name": "Openwheelmotorsports",
+    "path": "games/openwheelmotorsports.html",
+    "type": "game"
+  },
+  {
+    "category": "Music",
+    "name": "Glassamp",
+    "path": "music/glassamp.html",
+    "type": "music"
+  },
+  {
+    "category": "Toys",
+    "name": "Hellman-Demo",
+    "path": "toys/hellman-demo.html",
+    "type": "toy"
+  },
+  {
+    "category": "Toys",
+    "name": "Slap-O-Matic-3000",
+    "path": "toys/Slap-o-Matic-3000.html",
+    "type": "toy"
+  },
+  {
+    "category": "Toys",
+    "name": "Snowballs",
+    "path": "toys/snowballs.html",
+    "type": "toy"
+  },
+  {
+    "category": "Toys",
+    "name": "Fireworks-Toy",
+    "path": "toys/fireworks-toy.html",
+    "type": "toy"
+  }
+]
