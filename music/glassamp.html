@@ -264,6 +264,9 @@
                                 <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="8">
                                     <i class="fa-solid fa-dna text-rose-400"></i> Vector Helix Field
                                 </button>
+                                <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="9">
+                                    <i class="fa-solid fa-road text-amber-400"></i> AudioSurf Highway
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -303,6 +306,7 @@
                         <button class="viz-opt-btn text-[11px] px-2 py-1 rounded-lg text-white/70 hover:text-white" data-mode="6">3D Tunnel</button>
                         <button class="viz-opt-btn text-[11px] px-2 py-1 rounded-lg text-white/70 hover:text-white" data-mode="7">Ribbon Mesh</button>
                         <button class="viz-opt-btn text-[11px] px-2 py-1 rounded-lg text-white/70 hover:text-white" data-mode="8">Helix Field</button>
+                        <button class="viz-opt-btn text-[11px] px-2 py-1 rounded-lg text-white/70 hover:text-white" data-mode="9">AudioSurf</button>
                     </div>
                 </div>
 
@@ -787,9 +791,11 @@
                 } else if (e.code === 'KeyF') {
                     toggleImmersionMode();
                 } else if (e.code === 'KeyV') {
-                    setVizMode((state.vizMode + 1) % 9);
+                    setVizMode((state.vizMode + 1) % 10);
                 } else if (e.code >= 'Digit1' && e.code <= 'Digit9') {
                     setVizMode(parseInt(e.key) - 1);
+                } else if (e.code === 'Digit0') {
+                    setVizMode(9);
                 } else if (e.code === 'KeyN') {
                     nextTrack();
                 } else if (e.code === 'KeyP') {
@@ -879,7 +885,8 @@
                 "3D Wireframe",
                 "Wireframe Tunnel",
                 "Morphing Ribbon Mesh",
-                "Vector Helix Field"
+                "Vector Helix Field",
+                "AudioSurf Highway"
             ];
             els.vizModeName.textContent = names[mode] || "Visualizer";
 
@@ -1457,6 +1464,153 @@
                     else ctx.lineTo(strand2[i].x, strand2[i].y);
                 }
                 ctx.stroke();
+
+            } else if (state.vizMode === 9) {
+                // MODE 9: AudioSurf Highway 3D Spectator Engine
+                const cx = w / 2;
+                const cy = h * 0.45;
+                const time = Date.now() * 0.0015;
+                const isAudioActive = state.isPlaying && state.beatIntensity > 0.02;
+
+                // Track speed & camera progression down the highway
+                state.audiosurfPos = (state.audiosurfPos || 0) + (isAudioActive ? (3.5 + state.beatIntensity * 14.0) : 0.4);
+
+                const slices = 28;
+                const fov = 380;
+                const maxDepth = 750;
+                const trackWidth = w * 0.55;
+                const numLanes = 3;
+
+                const trackNodes = [];
+
+                for (let i = 0; i < slices; i++) {
+                    const zWorld = maxDepth - ((i * 26 + state.audiosurfPos) % maxDepth);
+                    const zNorm = zWorld / maxDepth;
+                    const alpha = Math.sin(zNorm * Math.PI);
+
+                    const freqIdx = Math.floor((1 - zNorm) * (bufferLen / 3));
+                    const audioVal = isAudioActive ? ((freqArray[freqIdx] || 0) / 255) : 0;
+
+                    const hillWave = Math.sin(zWorld * 0.008 - time * 2) * 55;
+                    const turnBank = Math.cos(zWorld * 0.005 + time) * 80;
+                    const audioY = -audioVal * 120 * (1 + state.beatIntensity);
+                    
+                    const yWorld = (h * 0.15) + hillWave + audioY;
+                    const xWorld = turnBank;
+
+                    const projScale = fov / (zWorld + 30);
+                    const screenX = cx + xWorld * projScale;
+                    const screenY = cy + yWorld * projScale;
+                    const currentTrackW = trackWidth * projScale;
+
+                    trackNodes.push({
+                        x: screenX,
+                        y: screenY,
+                        z: zWorld,
+                        w: currentTrackW,
+                        scale: projScale,
+                        alpha: alpha,
+                        audioVal: audioVal,
+                        zNorm: zNorm
+                    });
+                }
+
+                trackNodes.sort((a, b) => b.z - a.z);
+
+                // 1. Horizon Retro Sun Core
+                const sunRadius = Math.min(w, h) * 0.12 + (isAudioActive ? state.beatIntensity * 35 : 0);
+                const sunGrad = ctx.createRadialGradient(cx, cy, 5, cx, cy, sunRadius * 1.8);
+                sunGrad.addColorStop(0, '#ffffff');
+                sunGrad.addColorStop(0.3, isAudioActive ? '#f43f5e' : 'rgba(244, 63, 94, 0.4)');
+                sunGrad.addColorStop(0.7, isAudioActive ? '#8b5cf6' : 'rgba(139, 92, 246, 0.2)');
+                sunGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+                ctx.fillStyle = sunGrad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, sunRadius * 1.8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 2. 3D AudioSurf Highway Ribs, Guardrails, and Tiles
+                for (let i = 0; i < trackNodes.length - 1; i++) {
+                    const n1 = trackNodes[i];
+                    const n2 = trackNodes[i + 1];
+
+                    if (Math.abs(n1.z - n2.z) > 100) continue;
+
+                    const hue = (time * 60 + n1.z * 0.5) % 360;
+                    ctx.lineWidth = 2 * (window.devicePixelRatio || 1);
+
+                    const left1 = n1.x - n1.w / 2;
+                    const right1 = n1.x + n1.w / 2;
+                    const left2 = n2.x - n2.w / 2;
+                    const right2 = n2.x + n2.w / 2;
+
+                    ctx.fillStyle = `hsla(${hue}, 90%, 30%, ${n1.alpha * 0.2})`;
+                    ctx.beginPath();
+                    ctx.moveTo(left1, n1.y);
+                    ctx.lineTo(right1, n1.y);
+                    ctx.lineTo(right2, n2.y);
+                    ctx.lineTo(left2, n2.y);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.strokeStyle = `hsla(${hue}, 100%, 70%, ${n1.alpha * 0.85})`;
+                    ctx.beginPath();
+                    ctx.moveTo(left1, n1.y);
+                    ctx.lineTo(left2, n2.y);
+                    ctx.moveTo(right1, n1.y);
+                    ctx.lineTo(right2, n2.y);
+                    ctx.stroke();
+
+                    for (let l = 1; l < numLanes; l++) {
+                        const lx1 = left1 + (n1.w / numLanes) * l;
+                        const lx2 = left2 + (n2.w / numLanes) * l;
+                        ctx.strokeStyle = `hsla(${(hue + 40) % 360}, 100%, 65%, ${n1.alpha * 0.4})`;
+                        ctx.beginPath();
+                        ctx.moveTo(lx1, n1.y);
+                        ctx.lineTo(lx2, n2.y);
+                        ctx.stroke();
+                    }
+
+                    // 3. AudioSurf Frequency Spectrum Pillars / Blocks
+                    for (let l = 0; l < numLanes; l++) {
+                        const laneCenter1 = left1 + (n1.w / numLanes) * (l + 0.5);
+                        const laneW1 = (n1.w / numLanes) * 0.7;
+
+                        const bandOffset = l * Math.floor(bufferLen / 6);
+                        const blockFreqIdx = Math.floor((1 - n1.zNorm) * (bufferLen / 4)) + bandOffset;
+                        const blockVal = isAudioActive ? ((freqArray[blockFreqIdx % bufferLen] || 0) / 255) : 0;
+
+                        if (blockVal > 0.18) {
+                            const blockH = blockVal * 90 * n1.scale * (1 + state.beatIntensity);
+                            const blockHue = (hue + l * 80) % 360;
+
+                            ctx.fillStyle = `hsla(${blockHue}, 100%, 65%, ${n1.alpha * 0.9})`;
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.lineWidth = 1 * (window.devicePixelRatio || 1);
+
+                            ctx.beginPath();
+                            ctx.rect(laneCenter1 - laneW1 / 2, n1.y - blockH, laneW1, blockH);
+                            ctx.fill();
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // 4. Speed Warp Particles
+                ctx.fillStyle = '#38bdf8';
+                for (let p = 0; p < 24; p++) {
+                    const pZ = (maxDepth - ((p * 30 + state.audiosurfPos * 2) % maxDepth));
+                    const pScale = fov / (pZ + 20);
+                    const pSide = (p % 2 === 0 ? 1 : -1);
+                    const px = cx + pSide * (trackWidth * 0.65) * pScale;
+                    const py = cy + (h * 0.15) * pScale + (Math.sin(pZ * 0.01) * 40);
+                    const pSize = Math.max(1, 3 * pScale);
+
+                    ctx.beginPath();
+                    ctx.arc(px, py, pSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
         }
 
