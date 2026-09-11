@@ -1038,26 +1038,30 @@
                 ctx.stroke();
 
             } else if (state.vizMode === 3) {
-                // MODE 3: Particle Supernova Cosmic Vortex & Shockwave Engine
+                // MODE 3: Tempo-Synced Particle Supernova (Calm Idle & Dynamic Tempo Pulse)
                 const cx = w / 2;
                 const cy = h / 2;
-                const time = Date.now() * 0.002;
+                const time = Date.now() * 0.0015;
+                
+                // Determine if audio is actively producing sound
+                const isAudioActive = state.isPlaying && state.beatIntensity > 0.02;
                 
                 // Calculate average bass frequency (bins 0..8)
                 let bassSum = 0;
                 for (let i = 0; i < 8; i++) bassSum += freqArray[i] || 0;
-                const bassAvg = (bassSum / 8) / 255;
+                const bassAvg = isAudioActive ? (bassSum / 8) / 255 : 0;
 
-                // 1. Spawn Bass Shockwave Rings on heavy beat hits
+                // 1. Spawn Bass Shockwave Rings (Only during active beat peaks)
                 if (!state.supernovaShockwaves) state.supernovaShockwaves = [];
                 state.lastShockwave = state.lastShockwave || 0;
-                if (state.beatIntensity > 0.55 && (Date.now() - state.lastShockwave > 180)) {
+                
+                if (isAudioActive && state.beatIntensity > 0.50 && (Date.now() - state.lastShockwave > 220)) {
                     state.supernovaShockwaves.push({
-                        radius: 20 + bassAvg * 50,
-                        maxRadius: Math.max(w, h) * 0.65,
-                        speed: 8 + state.beatIntensity * 16,
+                        radius: 15 + bassAvg * 30,
+                        maxRadius: Math.max(w, h) * 0.55,
+                        speed: 5 + state.beatIntensity * 10,
                         opacity: 1.0,
-                        hue: (time * 120) % 360
+                        hue: (time * 100) % 360
                     });
                     state.lastShockwave = Date.now();
                 }
@@ -1073,58 +1077,61 @@
                         continue;
                     }
 
-                    ctx.lineWidth = 3 * (window.devicePixelRatio || 1);
-                    ctx.strokeStyle = `hsla(${sw.hue}, 100%, 70%, ${sw.opacity * 0.75})`;
+                    ctx.lineWidth = 2 * (window.devicePixelRatio || 1);
+                    ctx.strokeStyle = `hsla(${sw.hue}, 95%, 70%, ${sw.opacity * 0.6})`;
                     ctx.beginPath();
                     ctx.arc(cx, cy, sw.radius, 0, Math.PI * 2);
                     ctx.stroke();
                 }
 
-                // 2. Central Explosive Supernova Core & Solar Flare Spikes
-                const coreRadius = Math.min(w, h) * 0.06 + (state.beatIntensity * 85) + (bassAvg * 45);
-                const rayCount = 28;
+                // 2. Central Supernova Core & Solar Flare Rays
+                const coreRadius = Math.min(w, h) * 0.04 + (isAudioActive ? (state.beatIntensity * 45 + bassAvg * 25) : 0);
+                const rayCount = 20;
                 
-                ctx.lineWidth = 2 * (window.devicePixelRatio || 1);
-                for (let r = 0; r < rayCount; r++) {
-                    const angle = (r / rayCount) * Math.PI * 2 + time * 0.8;
-                    const freqVal = (freqArray[Math.floor((r / rayCount) * (bufferLen / 2))] || 0) / 255;
-                    const rayLen = coreRadius + (freqVal * 160 * (1 + state.beatIntensity));
-                    
-                    const rx = cx + Math.cos(angle) * rayLen;
-                    const ry = cy + Math.sin(angle) * rayLen;
-                    
-                    const hue = (time * 90 + r * 13) % 360;
-                    ctx.strokeStyle = `hsla(${hue}, 100%, 75%, ${0.3 + freqVal * 0.6})`;
-                    ctx.beginPath();
-                    ctx.moveTo(cx, cy);
-                    ctx.lineTo(rx, ry);
-                    ctx.stroke();
+                if (isAudioActive) {
+                    ctx.lineWidth = 1.5 * (window.devicePixelRatio || 1);
+                    for (let r = 0; r < rayCount; r++) {
+                        const angle = (r / rayCount) * Math.PI * 2 + time * 0.5;
+                        const freqVal = (freqArray[Math.floor((r / rayCount) * (bufferLen / 2))] || 0) / 255;
+                        const rayLen = coreRadius + (freqVal * 70 * (1 + state.beatIntensity));
+                        
+                        const rx = cx + Math.cos(angle) * rayLen;
+                        const ry = cy + Math.sin(angle) * rayLen;
+                        
+                        const hue = (time * 60 + r * 18) % 360;
+                        ctx.strokeStyle = `hsla(${hue}, 90%, 75%, ${0.2 + freqVal * 0.5})`;
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(rx, ry);
+                        ctx.stroke();
+                    }
                 }
 
                 // Core Glowing Disk Gradient
-                const coreGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, coreRadius * 1.5);
+                const coreGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, coreRadius * 1.4);
                 coreGrad.addColorStop(0, '#ffffff');
-                coreGrad.addColorStop(0.3, 'rgba(6, 182, 212, 0.9)');
-                coreGrad.addColorStop(0.7, 'rgba(168, 85, 247, 0.5)');
+                coreGrad.addColorStop(0.3, isAudioActive ? 'rgba(6, 182, 212, 0.8)' : 'rgba(6, 182, 212, 0.3)');
+                coreGrad.addColorStop(0.7, isAudioActive ? 'rgba(168, 85, 247, 0.4)' : 'rgba(168, 85, 247, 0.15)');
                 coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
                 ctx.fillStyle = coreGrad;
                 ctx.beginPath();
-                ctx.arc(cx, cy, coreRadius * 1.5, 0, Math.PI * 2);
+                ctx.arc(cx, cy, coreRadius * 1.4, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 3. Swirling 3D Orbital Particle Galaxy
+                // 3. Smooth Tempo-Synced Orbital Particle Galaxy
                 state.particles.forEach(p => {
-                    const pAudioVal = (freqArray[p.freqIdx % bufferLen] || 0) / 255;
+                    const pAudioVal = isAudioActive ? ((freqArray[p.freqIdx % bufferLen] || 0) / 255) : 0;
                     
-                    // Orbit advance speed accelerates with music energy
-                    p.angle += p.speed * (1 + state.beatIntensity * 6 + pAudioVal * 4);
+                    // Orbit advance speed: Calm idle when silent, scales smoothly with song tempo & beat intensity
+                    const speedFactor = isAudioActive ? (0.2 + state.beatIntensity * 2.2 + pAudioVal * 1.2) : 0.05;
+                    p.angle += p.speed * speedFactor;
                     
-                    // Radial explosion expansion on audio peaks
-                    p.radius = p.baseRadius + (pAudioVal * 180) + (state.beatIntensity * 120);
+                    // Subtle radial expansion on audio peaks
+                    p.radius = p.baseRadius + (isAudioActive ? (pAudioVal * 60 + state.beatIntensity * 40) : 0);
                     
-                    // Z-axis zoom speed
-                    p.z -= 2 + (state.beatIntensity * 18) + (pAudioVal * 10);
+                    // Z-axis movement: Calm drift when silent, tempo forward zoom when playing
+                    p.z -= isAudioActive ? (0.4 + state.beatIntensity * 6.0 + pAudioVal * 3.0) : 0.1;
                     if (p.z <= 0) {
                         p.z = 800;
                         p.angle = Math.random() * Math.PI * 2;
@@ -1135,26 +1142,28 @@
                     const k = 420 / p.z;
                     const px = cx + Math.cos(p.angle) * p.radius * k;
                     const py = cy + Math.sin(p.angle) * p.radius * k;
-                    const size = Math.max(1, p.size * k * (1 + pAudioVal * 2.5));
+                    const size = Math.max(1, p.size * k * (isAudioActive ? (1 + pAudioVal * 1.5) : 0.8));
 
                     if (px >= -50 && px <= w + 50 && py >= -50 && py <= h + 50) {
                         const alpha = Math.min(1, (800 - p.z) / 400);
-                        const hue = (p.hue + time * 40 + pAudioVal * 140) % 360;
+                        const hue = (p.hue + time * 20 + pAudioVal * 80) % 360;
 
-                        // Motion Trail towards previous position / center explosion
-                        const prevK = 420 / (p.z + 18 + state.beatIntensity * 25);
-                        const prevPx = cx + Math.cos(p.angle - p.speed * 2) * p.radius * prevK;
-                        const prevPy = cy + Math.sin(p.angle - p.speed * 2) * p.radius * prevK;
+                        // Motion Trail (Only active during playing audio)
+                        if (isAudioActive && state.beatIntensity > 0.15) {
+                            const prevK = 420 / (p.z + 8 + state.beatIntensity * 10);
+                            const prevPx = cx + Math.cos(p.angle - p.speed * 0.8) * p.radius * prevK;
+                            const prevPy = cy + Math.sin(p.angle - p.speed * 0.8) * p.radius * prevK;
 
-                        ctx.lineWidth = size * 0.8;
-                        ctx.strokeStyle = `hsla(${hue}, 100%, 75%, ${alpha * 0.6})`;
-                        ctx.beginPath();
-                        ctx.moveTo(px, py);
-                        ctx.lineTo(prevPx, prevPy);
-                        ctx.stroke();
+                            ctx.lineWidth = size * 0.6;
+                            ctx.strokeStyle = `hsla(${hue}, 90%, 75%, ${alpha * 0.35})`;
+                            ctx.beginPath();
+                            ctx.moveTo(px, py);
+                            ctx.lineTo(prevPx, prevPy);
+                            ctx.stroke();
+                        }
 
-                        // Glowing Star Particle Node
-                        ctx.fillStyle = `hsla(${hue}, 100%, 80%, ${alpha})`;
+                        // Glowing Particle Node
+                        ctx.fillStyle = `hsla(${hue}, 90%, 75%, ${isAudioActive ? alpha : alpha * 0.5})`;
                         ctx.beginPath();
                         ctx.arc(px, py, size, 0, Math.PI * 2);
                         ctx.fill();
