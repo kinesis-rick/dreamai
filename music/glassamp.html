@@ -190,6 +190,17 @@
 </head>
 <body>
 
+    <!-- Toast Notification Alert -->
+    <div id="toastNotification" class="fixed top-6 right-6 z-50 max-w-sm bg-slate-900/95 border border-amber-500/40 text-white p-4 rounded-2xl shadow-2xl backdrop-blur-xl flex items-start gap-3 opacity-0 pointer-events-none transition-all duration-300 transform translate-y-[-10px]">
+        <div id="toastIcon" class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-triangle-exclamation text-base"></i>
+        </div>
+        <div>
+            <h4 id="toastTitle" class="text-xs font-bold text-white">Notice</h4>
+            <p id="toastMsg" class="text-[11px] text-white/70 mt-0.5">Stream notification.</p>
+        </div>
+    </div>
+
     <!-- Dynamic Beat Ambient Blobs -->
     <div id="blob1" class="ambient-blob blob-1"></div>
     <div id="blob2" class="ambient-blob blob-2"></div>
@@ -638,6 +649,35 @@
                 els.progressBar.max = audio.duration;
             });
 
+            // Stream Error & Fallback Retry Handler
+            audio.addEventListener('error', (e) => {
+                console.warn("Audio error encountered:", e, audio.src);
+                const track = state.playlist[state.currentIndex];
+
+                if (track && track.type === 'suno') {
+                    track.sunoRetry = (track.sunoRetry || 0) + 1;
+                    const uuid = track.uuid;
+
+                    if (uuid && track.sunoRetry === 1) {
+                        const newUrl = `https://audiopipe.suno.ai/v1/cdn/${uuid}.mp3`;
+                        audio.src = newUrl;
+                        playAudio();
+                        return;
+                    } else if (uuid && track.sunoRetry === 2) {
+                        const newUrl = `https://corsproxy.io/?https://cdn1.suno.ai/${uuid}.mp3`;
+                        audio.src = newUrl;
+                        playAudio();
+                        return;
+                    }
+                }
+
+                showToast(
+                    "Stream Loading Error",
+                    "Suno CDN blocked direct web streaming (CORS/Cloudflare protection). Download the .mp3 file and drag it into GlassAmp to visualize!",
+                    true
+                );
+            });
+
             els.progressBar.addEventListener('input', (e) => {
                 audio.currentTime = e.target.value;
             });
@@ -790,15 +830,16 @@
 
                 let cdnUrl = rawUrl;
                 let trackTitle = sunoTitleInput.value.trim();
+                let extractedUuid = null;
 
                 // Extract UUID using regex pattern
                 const uuidMatch = rawUrl.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
 
                 if (uuidMatch) {
-                    const uuid = uuidMatch[0];
-                    cdnUrl = `https://cdn1.suno.ai/${uuid}.mp3`;
+                    extractedUuid = uuidMatch[0];
+                    cdnUrl = `https://cdn1.suno.ai/${extractedUuid}.mp3`;
                     if (!trackTitle) {
-                        trackTitle = `Suno Track (${uuid.substring(0, 8)})`;
+                        trackTitle = `Suno Track (${extractedUuid.substring(0, 8)})`;
                     }
                 } else if (!trackTitle) {
                     trackTitle = "Suno Stream";
@@ -807,12 +848,15 @@
                 const sunoTrack = {
                     title: trackTitle,
                     url: cdnUrl,
+                    uuid: extractedUuid,
                     type: 'suno'
                 };
 
                 state.playlist.unshift(sunoTrack);
                 renderPlaylist();
                 loadTrack(0, true);
+
+                showToast("Suno Track Added", `Streaming "${trackTitle}" through GlassAmp visualizers.`, false);
 
                 sunoUrlInput.value = '';
                 sunoTitleInput.value = '';
@@ -1454,6 +1498,30 @@
             if (val == 0) icon.classList.add('fa-volume-xmark');
             else if (val < 0.5) icon.classList.add('fa-volume-low');
             else icon.classList.add('fa-volume-high');
+        }
+
+        function showToast(title, msg, isError = false) {
+            const toast = document.getElementById('toastNotification');
+            const icon = document.getElementById('toastIcon');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMsg = document.getElementById('toastMsg');
+
+            toastTitle.textContent = title;
+            toastMsg.textContent = msg;
+
+            if (isError) {
+                icon.className = "w-8 h-8 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center shrink-0";
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-base"></i>';
+                toast.className = "fixed top-6 right-6 z-50 max-w-sm bg-slate-900/95 border border-red-500/40 text-white p-4 rounded-2xl shadow-2xl backdrop-blur-xl flex items-start gap-3 opacity-100 pointer-events-auto transition-all duration-300 transform translate-y-0";
+            } else {
+                icon.className = "w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0";
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-base"></i>';
+                toast.className = "fixed top-6 right-6 z-50 max-w-sm bg-slate-900/95 border border-cyan-500/40 text-white p-4 rounded-2xl shadow-2xl backdrop-blur-xl flex items-start gap-3 opacity-100 pointer-events-auto transition-all duration-300 transform translate-y-0";
+            }
+
+            setTimeout(() => {
+                toast.className = "fixed top-6 right-6 z-50 max-w-sm bg-slate-900/95 border border-amber-500/40 text-white p-4 rounded-2xl shadow-2xl backdrop-blur-xl flex items-start gap-3 opacity-0 pointer-events-none transition-all duration-300 transform translate-y-[-10px]";
+            }, 5500);
         }
 
         // Initialize on DOM Ready
