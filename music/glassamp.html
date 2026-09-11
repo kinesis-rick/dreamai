@@ -896,13 +896,19 @@
 
         function initParticles() {
             state.particles = [];
-            for (let i = 0; i < 120; i++) {
+            state.supernovaShockwaves = [];
+            for (let i = 0; i < 260; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const baseRad = Math.random() * 380 + 15;
                 state.particles.push({
-                    x: (Math.random() - 0.5) * 800,
-                    y: (Math.random() - 0.5) * 800,
+                    angle: angle,
+                    baseRadius: baseRad,
+                    radius: baseRad,
                     z: Math.random() * 800 + 1,
-                    size: Math.random() * 2 + 1,
-                    color: Math.random() > 0.5 ? '#06b6d4' : '#a855f7'
+                    speed: (Math.random() * 0.025 + 0.006) * (Math.random() > 0.5 ? 1 : -1),
+                    size: Math.random() * 2.8 + 1.2,
+                    freqIdx: Math.floor(Math.random() * 128),
+                    hue: Math.random() * 360
                 });
             }
         }
@@ -1032,26 +1038,123 @@
                 ctx.stroke();
 
             } else if (state.vizMode === 3) {
-                // MODE 3: Particle Supernova 3D Vortex
+                // MODE 3: Particle Supernova Cosmic Vortex & Shockwave Engine
                 const cx = w / 2;
                 const cy = h / 2;
-                const speedMult = 1 + state.beatIntensity * 8;
+                const time = Date.now() * 0.002;
+                
+                // Calculate average bass frequency (bins 0..8)
+                let bassSum = 0;
+                for (let i = 0; i < 8; i++) bassSum += freqArray[i] || 0;
+                const bassAvg = (bassSum / 8) / 255;
 
-                state.particles.forEach(p => {
-                    p.z -= speedMult * 2;
-                    if (p.z <= 0) {
-                        p.z = 800;
-                        p.x = (Math.random() - 0.5) * 800;
-                        p.y = (Math.random() - 0.5) * 800;
+                // 1. Spawn Bass Shockwave Rings on heavy beat hits
+                if (!state.supernovaShockwaves) state.supernovaShockwaves = [];
+                state.lastShockwave = state.lastShockwave || 0;
+                if (state.beatIntensity > 0.55 && (Date.now() - state.lastShockwave > 180)) {
+                    state.supernovaShockwaves.push({
+                        radius: 20 + bassAvg * 50,
+                        maxRadius: Math.max(w, h) * 0.65,
+                        speed: 8 + state.beatIntensity * 16,
+                        opacity: 1.0,
+                        hue: (time * 120) % 360
+                    });
+                    state.lastShockwave = Date.now();
+                }
+
+                // Render Expanding Shockwave Rings
+                for (let s = state.supernovaShockwaves.length - 1; s >= 0; s--) {
+                    const sw = state.supernovaShockwaves[s];
+                    sw.radius += sw.speed;
+                    sw.opacity = Math.max(0, 1 - (sw.radius / sw.maxRadius));
+
+                    if (sw.opacity <= 0) {
+                        state.supernovaShockwaves.splice(s, 1);
+                        continue;
                     }
 
-                    const k = 400 / p.z;
-                    const px = p.x * k + cx;
-                    const py = p.y * k + cy;
-                    const size = Math.max(1, p.size * k);
+                    ctx.lineWidth = 3 * (window.devicePixelRatio || 1);
+                    ctx.strokeStyle = `hsla(${sw.hue}, 100%, 70%, ${sw.opacity * 0.75})`;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, sw.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
 
-                    if (px >= 0 && px <= w && py >= 0 && py <= h) {
-                        ctx.fillStyle = p.color;
+                // 2. Central Explosive Supernova Core & Solar Flare Spikes
+                const coreRadius = Math.min(w, h) * 0.06 + (state.beatIntensity * 85) + (bassAvg * 45);
+                const rayCount = 28;
+                
+                ctx.lineWidth = 2 * (window.devicePixelRatio || 1);
+                for (let r = 0; r < rayCount; r++) {
+                    const angle = (r / rayCount) * Math.PI * 2 + time * 0.8;
+                    const freqVal = (freqArray[Math.floor((r / rayCount) * (bufferLen / 2))] || 0) / 255;
+                    const rayLen = coreRadius + (freqVal * 160 * (1 + state.beatIntensity));
+                    
+                    const rx = cx + Math.cos(angle) * rayLen;
+                    const ry = cy + Math.sin(angle) * rayLen;
+                    
+                    const hue = (time * 90 + r * 13) % 360;
+                    ctx.strokeStyle = `hsla(${hue}, 100%, 75%, ${0.3 + freqVal * 0.6})`;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(rx, ry);
+                    ctx.stroke();
+                }
+
+                // Core Glowing Disk Gradient
+                const coreGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, coreRadius * 1.5);
+                coreGrad.addColorStop(0, '#ffffff');
+                coreGrad.addColorStop(0.3, 'rgba(6, 182, 212, 0.9)');
+                coreGrad.addColorStop(0.7, 'rgba(168, 85, 247, 0.5)');
+                coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.fillStyle = coreGrad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, coreRadius * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 3. Swirling 3D Orbital Particle Galaxy
+                state.particles.forEach(p => {
+                    const pAudioVal = (freqArray[p.freqIdx % bufferLen] || 0) / 255;
+                    
+                    // Orbit advance speed accelerates with music energy
+                    p.angle += p.speed * (1 + state.beatIntensity * 6 + pAudioVal * 4);
+                    
+                    // Radial explosion expansion on audio peaks
+                    p.radius = p.baseRadius + (pAudioVal * 180) + (state.beatIntensity * 120);
+                    
+                    // Z-axis zoom speed
+                    p.z -= 2 + (state.beatIntensity * 18) + (pAudioVal * 10);
+                    if (p.z <= 0) {
+                        p.z = 800;
+                        p.angle = Math.random() * Math.PI * 2;
+                        p.baseRadius = Math.random() * 380 + 15;
+                    }
+
+                    // 3D Perspective Projection
+                    const k = 420 / p.z;
+                    const px = cx + Math.cos(p.angle) * p.radius * k;
+                    const py = cy + Math.sin(p.angle) * p.radius * k;
+                    const size = Math.max(1, p.size * k * (1 + pAudioVal * 2.5));
+
+                    if (px >= -50 && px <= w + 50 && py >= -50 && py <= h + 50) {
+                        const alpha = Math.min(1, (800 - p.z) / 400);
+                        const hue = (p.hue + time * 40 + pAudioVal * 140) % 360;
+
+                        // Motion Trail towards previous position / center explosion
+                        const prevK = 420 / (p.z + 18 + state.beatIntensity * 25);
+                        const prevPx = cx + Math.cos(p.angle - p.speed * 2) * p.radius * prevK;
+                        const prevPy = cy + Math.sin(p.angle - p.speed * 2) * p.radius * prevK;
+
+                        ctx.lineWidth = size * 0.8;
+                        ctx.strokeStyle = `hsla(${hue}, 100%, 75%, ${alpha * 0.6})`;
+                        ctx.beginPath();
+                        ctx.moveTo(px, py);
+                        ctx.lineTo(prevPx, prevPy);
+                        ctx.stroke();
+
+                        // Glowing Star Particle Node
+                        ctx.fillStyle = `hsla(${hue}, 100%, 80%, ${alpha})`;
                         ctx.beginPath();
                         ctx.arc(px, py, size, 0, Math.PI * 2);
                         ctx.fill();
