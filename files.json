@@ -49,11 +49,11 @@
   },
   {
     "category": "Music",
-    "name": "GlassAmp - Modern Audio Player",
+    "name": "GlassAmp 2.0 - Modern Audio Studio & Visualizer",
     "path": "music/glassamp.html",
     "type": "music",
     "icon": "fa-compact-disc",
-    "description": "Sleek music player & dynamic visualizer."
+    "description": "A state-of-the-art glassmorphism web audio player with 5 visualizer modes, 5-band equalizer, dynamic beat lighting, and custom MP3 support."
   },
   {
     "category": "Tools",
