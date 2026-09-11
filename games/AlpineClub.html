@@ -2,73 +2,217 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Alpine Flow - NPC & Trail Fix</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpine Flow - 3D Downhill Snowboarding & Slalom</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --primary: #00d2ff;
+            --accent: #ffcc00;
+            --danger: #ff3366;
+            --success: #00ff88;
+            --bg-glass: rgba(5, 15, 35, 0.7);
+            --border-glass: rgba(255, 255, 255, 0.15);
+        }
+
+        * { box-sizing: border-box; user-select: none; }
+        body { margin: 0; overflow: hidden; background: #030814; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
         #canvas-container { width: 100vw; height: 100vh; display: block; }
 
+        /* UI Overlay */
         #ui {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
+            padding: 20px; z-index: 5;
         }
 
+        /* Top HUD */
         #hud-top {
-            display: flex; justify-content: space-between; padding: 20px;
-            color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            display: flex; justify-content: space-between; align-items: flex-start; width: 100%;
         }
+
+        .hud-group { display: flex; gap: 15px; }
 
         .stat-box {
-            background: rgba(0, 20, 40, 0.6); padding: 10px 20px;
-            border-radius: 8px; border-left: 4px solid #00d2ff;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 22px;
+            border-radius: 14px;
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            color: white;
+            min-width: 120px;
         }
 
-        h1 { margin: 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; color: #aaddff; }
-        .value { font-size: 2rem; font-weight: bold; }
+        .stat-box h1 {
+            margin: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #8aabbf;
+        }
 
+        .stat-box .value {
+            font-size: 1.8rem; font-weight: 800; line-height: 1.1; margin-top: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stat-box.rank-box { border-left: 4px solid var(--accent); }
+        .stat-box.rank-box .value { color: var(--accent); }
+        .stat-box.score-box { border-left: 4px solid var(--primary); }
+        .stat-box.score-box .value { color: var(--primary); }
+        .stat-box.speed-box { border-left: 4px solid var(--success); }
+        .stat-box.speed-box .value { color: var(--success); }
+        .stat-box.streak-box { border-left: 4px solid #ffaa00; }
+        .stat-box.streak-box .value { color: #ffaa00; }
+
+        /* Leaderboard Panel */
+        #leaderboard {
+            position: absolute; top: 100px; right: 20px; width: 220px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            padding: 14px; border-radius: 14px;
+            border: 1px solid var(--border-glass);
+            color: white; font-size: 0.85rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .lb-title {
+            font-weight: 800; letter-spacing: 1px; font-size: 0.8rem; text-transform: uppercase;
+            color: #a0c4de; margin-bottom: 8px; padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex; justify-content: space-between;
+        }
+
+        .lb-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 6px; border-radius: 6px; margin-bottom: 2px;
+            transition: background 0.2s;
+        }
+
+        .lb-row.me {
+            background: rgba(0, 210, 255, 0.25);
+            color: #ffffff; font-weight: 800;
+            border: 1px solid rgba(0, 210, 255, 0.5);
+        }
+
+        /* Center Notifications & Charge Bar */
         #center-screen {
-            position: absolute; top: 40%; left: 50%;
+            position: absolute; top: 38%; left: 50%;
             transform: translate(-50%, -50%);
-            text-align: center; color: white;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.8); width: 100%;
+            text-align: center; color: white; width: 100%;
+            pointer-events: none;
         }
 
-        #msg-label {
-            font-size: 3rem; font-weight: 900; font-style: italic;
-            transition: transform 0.1s; display: none;
+        #trick-label {
+            font-size: 2.8rem; font-weight: 900; font-style: italic;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.8), 0 0 10px rgba(0,210,255,0.6);
+            margin-bottom: 5px; opacity: 0; transform: scale(0.7);
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.15s;
+        }
+
+        #gate-label {
+            font-size: 2.2rem; font-weight: 800;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            opacity: 0; transform: translateY(10px);
+            transition: transform 0.2s, opacity 0.2s;
         }
 
         #charge-bar-container {
-            width: 300px; height: 15px; background: rgba(0,0,0,0.6); border: 2px solid white;
-            margin: 10px auto; border-radius: 10px; overflow: hidden; display: none;
+            width: 320px; height: 16px; background: rgba(0,0,0,0.7);
+            border: 2px solid rgba(255,255,255,0.8);
+            margin: 15px auto 0; border-radius: 10px; overflow: hidden; display: none;
+            box-shadow: 0 0 15px rgba(0,210,255,0.4);
         }
-        #charge-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ff00, #ffff00); }
-
-        #leaderboard {
-            position: absolute; top: 20%; right: 20px; width: 200px;
-            background: rgba(0,0,0,0.7); color: white; padding: 10px;
-            border-radius: 8px; font-size: 0.8rem;
+        #charge-bar {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, #00ff88, #ffff00, #ff0055);
+            border-radius: 8px; transition: width 0.05s linear;
         }
 
-        .lb-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .lb-row.me { color: #00d2ff; font-weight: bold; }
-
-        #start-screen {
+        /* Speed Lines / Vignette */
+        #speed-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,10,30,0.9); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; color: white;
+            pointer-events: none;
+            box-shadow: inset 0 0 100px rgba(0,210,255,0);
+            transition: box-shadow 0.3s;
+        }
+
+        /* Screens (Start & Game Over) */
+        .modal-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(6, 20, 48, 0.85) 0%, rgba(2, 8, 20, 0.96) 100%);
+            backdrop-filter: blur(12px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; pointer-events: auto; z-index: 20; text-align: center; padding: 20px;
+        }
+
+        .modal-card {
+            background: rgba(10, 25, 50, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px; padding: 40px 50px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 210, 255, 0.2);
+            max-width: 520px; width: 100%;
+        }
+
+        h1.title {
+            font-size: 3.5rem; font-weight: 900; margin: 0 0 10px;
+            background: linear-gradient(135deg, #ffffff 0%, #00d2ff 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 2px; text-shadow: 0 10px 30px rgba(0,210,255,0.3);
+        }
+
+        p.subtitle {
+            font-size: 1.1rem; color: #a0c4de; margin: 0 0 25px; font-weight: 500;
+        }
+
+        button.btn-primary {
+            background: linear-gradient(135deg, #00d2ff 0%, #0066ff 100%);
+            border: none; padding: 16px 48px; color: white;
+            font-size: 1.4rem; font-weight: 800; cursor: pointer;
+            border-radius: 50px; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(0, 210, 255, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s; margin-top: 10px;
+        }
+        button.btn-primary:hover {
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 15px 40px rgba(0, 210, 255, 0.6);
+        }
+        button.btn-primary:active { transform: translateY(1px) scale(0.98); }
+
+        .controls-card {
+            margin-top: 25px; background: rgba(255,255,255,0.05);
+            padding: 15px 20px; border-radius: 14px; font-size: 0.9rem;
+            color: #d0e4f5; text-align: left; line-height: 1.8;
+        }
+        .key {
+            display: inline-block; padding: 2px 8px; background: rgba(255,255,255,0.2);
+            border-radius: 6px; font-weight: 700; color: #fff; font-family: monospace;
+        }
+
+        /* Results Modal Grid */
+        .results-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; text-align: left;
+        }
+        .res-item {
+            background: rgba(255,255,255,0.06); padding: 10px 15px; border-radius: 10px;
+        }
+        .res-label { font-size: 0.75rem; color: #8aabbf; text-transform: uppercase; }
+        .res-val { font-size: 1.4rem; font-weight: 800; color: #fff; margin-top: 2px; }
+
+        .medal-badge {
+            font-size: 3rem; margin: 10px 0;
+        }
+
+        /* Mobile Touch Controls */
+        #touch-controls {
+            position: absolute; bottom: 20px; left: 0; width: 100%;
+            display: none; justify-content: space-between; padding: 0 30px;
             pointer-events: auto; z-index: 10;
         }
-
-        button {
-            background: linear-gradient(45deg, #00d2ff, #0077ff); border: none;
-            padding: 15px 40px; color: white; font-size: 1.5rem; font-weight: bold;
-            cursor: pointer; border-radius: 50px;
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.5); transition: transform 0.2s;
+        .touch-btn {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4);
+            color: white; font-size: 1.8rem; display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
         }
-        button:hover { transform: scale(1.05); }
-
-        .controls { margin-top: 20px; opacity: 0.7; font-size: 0.9rem; text-align: center; line-height: 1.6; }
-        .key { display: inline-block; padding: 2px 6px; background: rgba(255,255,255,0.2); border-radius: 4px; font-weight: bold;}
+        .touch-btn:active { transform: scale(0.9); }
     </style>
 
     <script type="importmap">
@@ -77,39 +221,103 @@
 </head>
 <body>
 
-    <div id="start-screen">
-        <h1 style="font-size: 4rem; margin-bottom: 10px;">ALPINE FLOW</h1>
-        <p>Trails Restored & Smart AI</p>
-        <br>
-        <button id="start-btn">DROP IN</button>
-        <div class="controls">
-            CONTROLS<br>
-            <span class="key">WASD</span> to Steer & Spin<br>
-            <span class="key">HOLD SPACE</span> Charge Jump<br>
-            <span class="key">RELEASE SPACE</span> Launch<br>
+    <div id="speed-overlay"></div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="modal-screen">
+        <div class="modal-card">
+            <h1 class="title">ALPINE FLOW</h1>
+            <p class="subtitle">3D Downhill Snowboarding & Slalom Championship</p>
+            <button id="start-btn" class="btn-primary">DROP IN</button>
+            <div class="controls-card">
+                <strong>HOW TO SHRED:</strong><br>
+                <span class="key">A</span> / <span class="key">D</span> or <span class="key">←</span> / <span class="key">→</span> : Steer & Air Spin<br>
+                <span class="key">W</span> / <span class="key">S</span> or <span class="key">↑</span> / <span class="key">↓</span> : Tuck / Air Flip<br>
+                <span class="key">HOLD SPACE</span> : Charge Jump<br>
+                <span class="key">RELEASE SPACE</span> : Launch Off Kickers!<br>
+                ⚡ <em>Pass between slalom flags for combo speed & point boosts!</em>
+            </div>
         </div>
     </div>
 
+    <!-- Finish / Game Over Screen -->
+    <div id="finish-screen" class="modal-screen" style="display: none;">
+        <div class="modal-card">
+            <div class="medal-badge" id="medal-icon">🥇</div>
+            <h1 class="title" id="finish-title">FINISH LINE!</h1>
+            <p class="subtitle" id="finish-sub">Race Complete</p>
+            
+            <div class="results-grid">
+                <div class="res-item">
+                    <div class="res-label">Final Rank</div>
+                    <div class="res-val" id="res-rank" style="color: var(--accent);">1st / 31</div>
+                </div>
+                <div class="res-item">
+                    <div class="res-label">Total Score</div>
+                    <div class="res-val" id="res-score" style="color: var(--primary);">0</div>
+                </div>
+                <div class="res-item">
+                    <div class="res-label">Race Time</div>
+                    <div class="res-val" id="res-time">00:00</div>
+                </div>
+                <div class="res-item">
+                    <div class="res-label">Slalom Gates</div>
+                    <div class="res-val" id="res-gates" style="color: var(--success);">0 / 0</div>
+                </div>
+            </div>
+
+            <button id="restart-btn" class="btn-primary">RACE AGAIN</button>
+        </div>
+    </div>
+
+    <!-- Gameplay HUD -->
     <div id="ui">
         <div id="hud-top">
-            <div class="stat-box">
-                <h1>Score</h1>
-                <div class="value" id="score-val">0</div>
+            <div class="hud-group">
+                <div class="stat-box rank-box">
+                    <h1>Rank</h1>
+                    <div class="value" id="rank-val">1st</div>
+                </div>
+                <div class="stat-box score-box">
+                    <h1>Score</h1>
+                    <div class="value" id="score-val">0</div>
+                </div>
+                <div class="stat-box streak-box">
+                    <h1>Slalom</h1>
+                    <div class="value" id="streak-val">x1</div>
+                </div>
             </div>
-            <div class="stat-box" style="border-color: #ffcc00; text-align: right;">
-                <h1>Time</h1>
-                <div class="value" id="time-val">00:00</div>
+
+            <div class="hud-group">
+                <div class="stat-box speed-box">
+                    <h1>Speed</h1>
+                    <div class="value" id="speed-val">0 km/h</div>
+                </div>
+                <div class="stat-box" style="border-left: 4px solid #aa55ff;">
+                    <h1>Time</h1>
+                    <div class="value" id="time-val">120</div>
+                </div>
             </div>
         </div>
 
         <div id="leaderboard">
-            <div style="font-weight: bold; border-bottom: 2px solid white; margin-bottom: 5px;">LIVE RANKING</div>
+            <div class="lb-title">
+                <span>RACE STANDINGS</span>
+                <span id="lb-count">31 RIDERS</span>
+            </div>
             <div id="lb-content"></div>
         </div>
 
         <div id="center-screen">
-            <div id="msg-label">CRASH!</div>
+            <div id="trick-label">BACKFLIP 360!</div>
+            <div id="gate-label">GATE PASSED +500</div>
             <div id="charge-bar-container"><div id="charge-bar"></div></div>
+        </div>
+
+        <div id="touch-controls">
+            <div class="touch-btn" id="t-left">◄</div>
+            <div class="touch-btn" id="t-jump" style="width: 90px; height: 90px;">JUMP</div>
+            <div class="touch-btn" id="t-right">►</div>
         </div>
     </div>
 
@@ -119,178 +327,502 @@
 
 import * as THREE from 'three';
 
-// --- Config ---
-const START_Z = -1000;
+// --- Global Config ---
+const START_Z = -800;
 const FINISH_Z = 12000;
-const GRAVITY = -80;
+const GRAVITY = -75;
 
-// --- Audio ---
+// Detect touch device
+if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    document.getElementById('touch-controls').style.display = 'flex';
+}
+
+// --- Synthesizer Audio Manager ---
 class AudioManager {
     constructor() {
+        this.ctx = null;
+        this.carveGain = null;
+        this.carveFilter = null;
+        this.windGain = null;
+        this.windFilter = null;
+        this.isInit = false;
+    }
+
+    init() {
+        if(this.isInit) return;
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0.3;
+        this.masterGain.gain.value = 0.35;
         this.masterGain.connect(this.ctx.destination);
+
+        // Procedural Snow Carving Noise
+        const bufferSize = this.ctx.sampleRate * 2;
+        const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+
+        const whiteNoise = this.ctx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        this.carveFilter = this.ctx.createBiquadFilter();
+        this.carveFilter.type = 'bandpass';
+        this.carveFilter.frequency.value = 800;
+        this.carveFilter.Q.value = 1.5;
+
+        this.carveGain = this.ctx.createGain();
+        this.carveGain.gain.value = 0;
+
+        whiteNoise.connect(this.carveFilter);
+        this.carveFilter.connect(this.carveGain);
+        this.carveGain.connect(this.masterGain);
+        whiteNoise.start();
+
+        // Wind Whistle Noise
+        const windNoise = this.ctx.createBufferSource();
+        windNoise.buffer = noiseBuffer;
+        windNoise.loop = true;
+
+        this.windFilter = this.ctx.createBiquadFilter();
+        this.windFilter.type = 'lowpass';
+        this.windFilter.frequency.value = 200;
+
+        this.windGain = this.ctx.createGain();
+        this.windGain.gain.value = 0;
+
+        windNoise.connect(this.windFilter);
+        this.windFilter.connect(this.windGain);
+        this.windGain.connect(this.masterGain);
+        windNoise.start();
+
+        this.isInit = true;
     }
-    resume() { if(this.ctx.state === 'suspended') this.ctx.resume(); }
-    play(type) {
-        if(this.ctx.state === 'suspended') return;
+
+    resume() {
+        if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    }
+
+    updateContinuous(speed, turning, onGround) {
+        if(!this.isInit || this.ctx.state === 'suspended') return;
+        
+        // Carving sound volume & pitch based on speed and turning sharpness
+        if (onGround && speed > 5) {
+            const carveVol = Math.min(0.8, (speed / 120) * 0.3 + Math.abs(turning) * 0.5);
+            this.carveGain.gain.setTargetAtTime(carveVol, this.ctx.currentTime, 0.05);
+            this.carveFilter.frequency.setTargetAtTime(600 + Math.abs(turning) * 1200 + speed * 5, this.ctx.currentTime, 0.05);
+        } else {
+            this.carveGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.08);
+        }
+
+        // Wind sound based on overall speed
+        const windVol = Math.min(0.6, (speed / 140) * 0.5);
+        this.windGain.gain.setTargetAtTime(windVol, this.ctx.currentTime, 0.1);
+        this.windFilter.frequency.setTargetAtTime(150 + speed * 12, this.ctx.currentTime, 0.1);
+    }
+
+    playSFX(type) {
+        if(!this.isInit || this.ctx.state === 'suspended') return;
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
+
         if (type === 'jump') {
-            osc.frequency.setValueAtTime(150, t); osc.frequency.exponentialRampToValueAtTime(600, t + 0.1);
-            gain.gain.setValueAtTime(0.5, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+            osc.frequency.setValueAtTime(180, t);
+            osc.frequency.exponentialRampToValueAtTime(700, t + 0.18);
+            gain.gain.setValueAtTime(0.4, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+            osc.connect(gain); gain.connect(this.masterGain);
+            osc.start(); osc.stop(t + 0.2);
+        } else if (type === 'gate') {
+            // Uplifting gate pass chime
+            const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+            notes.forEach((freq, idx) => {
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.type = 'sine'; o.frequency.setValueAtTime(freq, t + idx * 0.04);
+                g.gain.setValueAtTime(0.3, t + idx * 0.04);
+                g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.04 + 0.25);
+                o.connect(g); g.connect(this.masterGain);
+                o.start(t + idx * 0.04); o.stop(t + idx * 0.04 + 0.3);
+            });
+        } else if (type === 'boost') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(300, t);
+            osc.frequency.exponentialRampToValueAtTime(1200, t + 0.3);
+            gain.gain.setValueAtTime(0.5, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+            osc.connect(gain); gain.connect(this.masterGain);
+            osc.start(); osc.stop(t + 0.35);
         } else if (type === 'land') {
-            osc.type = 'triangle'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(50, t + 0.1);
-            gain.gain.setValueAtTime(0.8, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(120, t);
+            osc.frequency.exponentialRampToValueAtTime(40, t + 0.15);
+            gain.gain.setValueAtTime(0.6, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+            osc.connect(gain); gain.connect(this.masterGain);
+            osc.start(); osc.stop(t + 0.25);
         } else if (type === 'crash') {
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(10, t + 0.4);
-            gain.gain.setValueAtTime(1.0, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(140, t);
+            osc.frequency.exponentialRampToValueAtTime(20, t + 0.5);
+            gain.gain.setValueAtTime(0.8, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+            osc.connect(gain); gain.connect(this.masterGain);
+            osc.start(); osc.stop(t + 0.5);
         }
-        osc.connect(gain); gain.connect(this.masterGain); osc.start(); osc.stop(t + 0.5);
     }
 }
 
-// --- Scene ---
+// --- Scene Setup ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xaaccff);
-scene.fog = new THREE.FogExp2(0xaaccff, 0.0015);
+scene.background = new THREE.Color(0x89bceb);
+scene.fog = new THREE.FogExp2(0x89bceb, 0.0006);
 
-const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 3000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.5, 5000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-dirLight.position.set(100, 500, 100);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+dirLight.position.set(200, 600, 200);
 dirLight.castShadow = true;
-dirLight.shadow.mapSize.set(2048,2048);
-dirLight.shadow.camera.top = 400; dirLight.shadow.camera.bottom = -400;
-dirLight.shadow.camera.left = -400; dirLight.shadow.camera.right = 400;
-dirLight.shadow.camera.far = 1000;
+dirLight.shadow.mapSize.set(2048, 2048);
+dirLight.shadow.camera.top = 500; dirLight.shadow.camera.bottom = -500;
+dirLight.shadow.camera.left = -500; dirLight.shadow.camera.right = 500;
+dirLight.shadow.camera.far = 1200;
 scene.add(dirLight);
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
-// --- Terrain & Track ---
+scene.add(new THREE.AmbientLight(0xddeeff, 0.75));
+
+// --- Track & Height Math ---
 function pseudoNoise(x, z) {
-    return Math.sin(x * 0.01) * 5 + Math.cos(z * 0.008) * 10 + Math.sin(x*0.05 + z*0.05)*2;
+    return Math.sin(x * 0.012) * 8 + Math.cos(z * 0.007) * 14 + Math.sin(x * 0.04 + z * 0.04) * 3;
 }
+
 function getTrackX(z) {
-    // A wandering sine wave for the "track center"
-    return Math.sin(z * 0.004) * 80 + Math.sin(z * 0.01) * 20;
+    return Math.sin(z * 0.003) * 110 + Math.sin(z * 0.009) * 35;
 }
+
 function getTerrainHeight(x, z) {
-    let y = -z * 0.40;
+    let y = -z * 0.35; // Steady 35% downhill gradient
     y += pseudoNoise(x, z);
-    // Bowl shape limits (Gentle walls so NPCs don't get stuck)
-    if (Math.abs(x) > 150) y += Math.pow((Math.abs(x) - 150) * 0.15, 2);
+    // Smooth natural mountain corridor boundaries
+    if (Math.abs(x) > 130) {
+        y += Math.pow((Math.abs(x) - 130) * 0.12, 2.1);
+    }
     return y;
 }
 
-const geo = new THREE.PlaneGeometry(800, 4000, 100, 400);
-geo.rotateX(-Math.PI / 2);
-const pos = geo.attributes.position;
-for(let i=0; i<pos.count; i++) pos.setY(i, getTerrainHeight(pos.getX(i), pos.getZ(i)));
-geo.computeVertexNormals();
-const terrain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.8}));
-terrain.receiveShadow = true;
-scene.add(terrain);
+// Full Depth Terrain Mesh
+const TERRAIN_START = START_Z - 1000;
+const TERRAIN_END = FINISH_Z + 2000;
+const TERRAIN_DEPTH = TERRAIN_END - TERRAIN_START;
+const terrainGeo = new THREE.PlaneGeometry(700, TERRAIN_DEPTH, 140, 500);
+terrainGeo.rotateX(-Math.PI / 2);
+terrainGeo.translate(0, 0, TERRAIN_START + TERRAIN_DEPTH / 2);
 
-// --- Environment ---
-const treeGeo = new THREE.ConeGeometry(4, 15, 6);
-const treeMat = new THREE.MeshStandardMaterial({color: 0x1a4d2e});
-const trees = new THREE.InstancedMesh(treeGeo, treeMat, 500);
+const tPos = terrainGeo.attributes.position;
+for(let i=0; i<tPos.count; i++) {
+    tPos.setY(i, getTerrainHeight(tPos.getX(i), tPos.getZ(i)));
+}
+terrainGeo.computeVertexNormals();
+
+const snowMat = new THREE.MeshStandardMaterial({
+    color: 0xf4f9ff, roughness: 0.85, metalness: 0.05
+});
+const terrainMesh = new THREE.Mesh(terrainGeo, snowMat);
+terrainMesh.receiveShadow = true;
+scene.add(terrainMesh);
+
+// --- Track Features Data ---
+const gates = [];
+const kickers = [];
+const boostPads = [];
+
+// --- Environment Generation ---
+const treeGeo = new THREE.ConeGeometry(5, 18, 5);
+const treeMat = new THREE.MeshStandardMaterial({ color: 0x184a2c, roughness: 0.9 });
+const trees = new THREE.InstancedMesh(treeGeo, treeMat, 650);
 scene.add(trees);
 
-const flagGeo = new THREE.CylinderGeometry(0.2, 0.2, 6);
-const flagMatRed = new THREE.MeshBasicMaterial({color: 0xff0000});
-const flagMatBlue = new THREE.MeshBasicMaterial({color: 0x0000ff});
-const flagsRed = new THREE.InstancedMesh(flagGeo, flagMatRed, 300);
-const flagsBlue = new THREE.InstancedMesh(flagGeo, flagMatBlue, 300);
+const rockGeo = new THREE.DodecahedronGeometry(4, 1);
+const rockMat = new THREE.MeshStandardMaterial({ color: 0x5a6575, roughness: 0.95 });
+const rocks = new THREE.InstancedMesh(rockGeo, rockMat, 150);
+scene.add(rocks);
+
+// Flags Instanced Meshes
+const poleGeo = new THREE.CylinderGeometry(0.2, 0.2, 7);
+const flagRedMat = new THREE.MeshStandardMaterial({ color: 0xff2244, roughness: 0.4 });
+const flagBlueMat = new THREE.MeshStandardMaterial({ color: 0x0088ff, roughness: 0.4 });
+const flagsRed = new THREE.InstancedMesh(poleGeo, flagRedMat, 200);
+const flagsBlue = new THREE.InstancedMesh(poleGeo, flagBlueMat, 200);
 scene.add(flagsRed); scene.add(flagsBlue);
 
-function setupEnvironment() {
+function setupCourse() {
     const dummy = new THREE.Object3D();
 
-    // Trees
-    let tIdx = 0;
-    for(let z = START_Z; z < FINISH_Z; z += 30) {
-        if(tIdx < 500) {
+    // 1. Trees & Boulders
+    let tCount = 0, rCount = 0;
+    for(let z = START_Z + 100; z < FINISH_Z - 200; z += 25) {
+        const tx = getTrackX(z);
+        // Left & Right woods
+        [-1, 1].forEach(side => {
+            if(Math.random() < 0.6 && tCount < 650) {
+                const x = tx + side * (55 + Math.random() * 90);
+                const y = getTerrainHeight(x, z);
+                dummy.position.set(x, y + 9, z);
+                dummy.scale.set(0.8 + Math.random()*0.6, 0.8 + Math.random()*0.7, 0.8 + Math.random()*0.6);
+                dummy.rotation.set(0, Math.random()*Math.PI, 0);
+                dummy.updateMatrix();
+                trees.setMatrixAt(tCount++, dummy.matrix);
+            }
+        });
+
+        // Boulders near edge of track
+        if(Math.random() < 0.08 && rCount < 150) {
             const side = Math.random() > 0.5 ? 1 : -1;
-            const tx = getTrackX(z);
-            const x = tx + side * (60 + Math.random() * 100);
+            const x = tx + side * (32 + Math.random() * 20);
             const y = getTerrainHeight(x, z);
-            dummy.position.set(x, y + 7.5, z);
-            dummy.scale.setScalar(0.8 + Math.random()*0.5);
-            dummy.rotation.set(0, Math.random()*3, 0);
+            dummy.position.set(x, y + 2, z);
+            dummy.scale.setScalar(0.7 + Math.random()*0.8);
+            dummy.rotation.set(Math.random(), Math.random(), Math.random());
             dummy.updateMatrix();
-            trees.setMatrixAt(tIdx++, dummy.matrix);
+            rocks.setMatrixAt(rCount++, dummy.matrix);
         }
     }
     trees.instanceMatrix.needsUpdate = true;
+    rocks.instanceMatrix.needsUpdate = true;
 
-    // Flags
-    let fIdx = 0;
-    for(let z = START_Z; z < FINISH_Z; z += 80) {
-        if(fIdx < 300) {
+    // 2. Slalom Gates (Every 110 units Z)
+    let gIdx = 0;
+    for(let z = START_Z + 200; z < FINISH_Z - 400; z += 110) {
+        if(gIdx < 200) {
             const cx = getTrackX(z);
-            const yRed = getTerrainHeight(cx - 15, z);
-            const yBlue = getTerrainHeight(cx + 15, z);
+            const width = 28;
+            const leftX = cx - width/2;
+            const rightX = cx + width/2;
+            const leftY = getTerrainHeight(leftX, z);
+            const rightY = getTerrainHeight(rightX, z);
 
-            dummy.position.set(cx - 15, yRed + 3, z);
-            dummy.scale.set(1,1,1); dummy.rotation.set(0,0,0); dummy.updateMatrix();
-            flagsRed.setMatrixAt(fIdx, dummy.matrix);
+            // Red pole (left)
+            dummy.position.set(leftX, leftY + 3.5, z);
+            dummy.scale.set(1, 1, 1); dummy.rotation.set(0,0,0); dummy.updateMatrix();
+            flagsRed.setMatrixAt(gIdx, dummy.matrix);
 
-            dummy.position.set(cx + 15, yBlue + 3, z);
+            // Blue pole (right)
+            dummy.position.set(rightX, rightY + 3.5, z);
             dummy.updateMatrix();
-            flagsBlue.setMatrixAt(fIdx, dummy.matrix);
-            fIdx++;
+            flagsBlue.setMatrixAt(gIdx, dummy.matrix);
+
+            // Store Gate Logic Data
+            gates.push({
+                z: z, x: cx, width: width, passed: false,
+                leftX: leftX, rightX: rightX
+            });
+
+            gIdx++;
         }
     }
     flagsRed.instanceMatrix.needsUpdate = true;
     flagsBlue.instanceMatrix.needsUpdate = true;
+
+    // 3. Jump Kickers (Ramps)
+    const kickerMat = new THREE.MeshStandardMaterial({ color: 0xe8f4ff, roughness: 0.5 });
+    for(let z = START_Z + 350; z < FINISH_Z - 600; z += 260) {
+        const kx = getTrackX(z) + (Math.random() - 0.5) * 20;
+        const ky = getTerrainHeight(kx, z);
+        
+        const rampGroup = new THREE.Group();
+        const rampMesh = new THREE.Mesh(new THREE.BoxGeometry(14, 3.5, 12), kickerMat);
+        rampMesh.rotation.x = -0.3; // Angled ramp
+        rampMesh.position.set(0, 1.5, 0);
+        rampMesh.castShadow = true; rampMesh.receiveShadow = true;
+        rampGroup.add(rampMesh);
+
+        rampGroup.position.set(kx, ky, z);
+        scene.add(rampGroup);
+
+        kickers.push({ x: kx, z: z, width: 14, height: 3.5 });
+    }
+
+    // 4. Speed Boost Pads
+    const boostMat = new THREE.MeshBasicMaterial({ color: 0x00d2ff, transparent: true, opacity: 0.8 });
+    for(let z = START_Z + 180; z < FINISH_Z - 500; z += 320) {
+        const bx = getTrackX(z) + (Math.random() - 0.5) * 30;
+        const by = getTerrainHeight(bx, z) + 0.15;
+
+        const pad = new THREE.Mesh(new THREE.PlaneGeometry(10, 18), boostMat);
+        pad.rotateX(-Math.PI / 2);
+        pad.position.set(bx, by, z);
+        scene.add(pad);
+
+        boostPads.push({ x: bx, z: z, width: 10, length: 18, active: true });
+    }
+
+    // 5. Finish Line Arch
+    createFinishLine();
 }
 
-// --- Trail System (FIXED) ---
-class Trail {
-    constructor(scene, color) {
-        this.maxPoints = 80; // Longer trails
+function createFinishLine() {
+    const fz = FINISH_Z;
+    const fx = getTrackX(fz);
+    const fy = getTerrainHeight(fx, fz);
+
+    const archGroup = new THREE.Group();
+
+    // Wooden Pillars
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x3d2314 });
+    const pLeft = new THREE.Mesh(new THREE.BoxGeometry(3, 24, 3), pillarMat);
+    pLeft.position.set(-25, 12, 0);
+    const pRight = new THREE.Mesh(new THREE.BoxGeometry(3, 24, 3), pillarMat);
+    pRight.position.set(25, 12, 0);
+
+    // Crossbar Banner
+    const bannerMat = new THREE.MeshStandardMaterial({ color: 0xffaa00 });
+    const banner = new THREE.Mesh(new THREE.BoxGeometry(53, 5, 1.5), bannerMat);
+    banner.position.set(0, 22, 0);
+
+    archGroup.add(pLeft, pRight, banner);
+    archGroup.position.set(fx, fy, fz);
+    scene.add(archGroup);
+}
+
+// --- Particle Systems ---
+class ParticleSystem {
+    constructor() {
+        this.maxParticles = 400;
+        this.geo = new THREE.BufferGeometry();
+        this.pos = new Float32Array(this.maxParticles * 3);
+        this.sizes = new Float32Array(this.maxParticles);
+        this.opacities = new Float32Array(this.maxParticles);
+
+        this.geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
+        
+        const mat = new THREE.PointsMaterial({
+            color: 0xffffff, size: 1.2, transparent: true, opacity: 0.8,
+            blending: THREE.AdditiveBlending, depthWrite: false
+        });
+        
+        this.points = new THREE.Points(this.geo, mat);
+        scene.add(this.points);
+
+        this.particles = [];
+        for(let i=0; i<this.maxParticles; i++) {
+            this.particles.push({ active: false, x:0, y:0, z:0, vx:0, vy:0, vz:0, life:0, maxLife:1 });
+        }
+    }
+
+    spawnSpray(x, y, z, rotY, intensity) {
+        const count = Math.floor(intensity * 5);
+        for(let i=0; i<count; i++) {
+            const p = this.particles.find(part => !part.active);
+            if(!p) break;
+            p.active = true;
+            p.x = x + (Math.random() - 0.5) * 1.5;
+            p.y = y + 0.2;
+            p.z = z + (Math.random() - 0.5) * 1.5;
+
+            const angle = rotY + Math.PI + (Math.random() - 0.5) * 1.2;
+            const speed = 4 + Math.random() * 8 * intensity;
+            p.vx = Math.sin(angle) * speed;
+            p.vy = 2 + Math.random() * 4;
+            p.vz = Math.cos(angle) * speed;
+
+            p.life = 0;
+            p.maxLife = 0.3 + Math.random() * 0.4;
+        }
+    }
+
+    spawnLandingBurst(x, y, z) {
+        for(let i=0; i<40; i++) {
+            const p = this.particles.find(part => !part.active);
+            if(!p) break;
+            p.active = true;
+            p.x = x; p.y = y + 0.3; p.z = z;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 6 + Math.random() * 12;
+            p.vx = Math.cos(angle) * speed;
+            p.vy = 3 + Math.random() * 8;
+            p.vz = Math.sin(angle) * speed;
+            p.life = 0; p.maxLife = 0.6 + Math.random() * 0.4;
+        }
+    }
+
+    update(dt) {
+        const positions = this.geo.attributes.position.array;
+        for(let i=0; i<this.maxParticles; i++) {
+            const p = this.particles[i];
+            if(p.active) {
+                p.life += dt;
+                if(p.life >= p.maxLife) {
+                    p.active = false;
+                    positions[i*3] = 0; positions[i*3+1] = -1000; positions[i*3+2] = 0;
+                } else {
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.z += p.vz * dt;
+                    p.vy += GRAVITY * 0.2 * dt;
+
+                    positions[i*3] = p.x;
+                    positions[i*3+1] = p.y;
+                    positions[i*3+2] = p.z;
+                }
+            }
+        }
+        this.geo.attributes.position.needsUpdate = true;
+    }
+}
+const particleSystem = new ParticleSystem();
+
+// --- Ribbon Trail System ---
+class DualTrail {
+    constructor(color) {
+        this.maxPoints = 70;
         this.geo = new THREE.BufferGeometry();
         this.pos = new Float32Array(this.maxPoints * 3 * 2);
         this.geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
+        
         const indices = [];
         for(let i=0; i<this.maxPoints-1; i++) {
             indices.push(i*2, i*2+1, i*2+2, i*2+2, i*2+1, i*2+3);
         }
         this.geo.setIndex(indices);
-        // Ensure material is double sided and has depth write false for transparency
-        this.material = new THREE.MeshBasicMaterial({color:color, opacity:0.6, transparent:true, side:THREE.DoubleSide, depthWrite:false});
-        this.mesh = new THREE.Mesh(this.geo, this.material);
-        this.mesh.frustumCulled = false; // Critical fix
+        
+        this.mat = new THREE.MeshBasicMaterial({
+            color: color, opacity: 0.5, transparent: true, side: THREE.DoubleSide, depthWrite: false
+        });
+        this.mesh = new THREE.Mesh(this.geo, this.mat);
+        this.mesh.frustumCulled = false;
         scene.add(this.mesh);
         this.points = [];
     }
-    update(pos, rot, onGround) {
-        if(!onGround) return;
-        const w = 0.5; // Wider trails
-        const cx = Math.cos(rot)*w, cz = Math.sin(rot)*w;
-        // Bump Y slightly to avoid z-fighting with snow
-        const yOff = 0.2;
-        this.points.unshift(pos.x - cx, pos.y + yOff, pos.z + cz, pos.x + cx, pos.y + yOff, pos.z - cz);
 
-        if(this.points.length > this.maxPoints * 6) this.points.splice(this.points.length - 6, 6);
+    update(pos, rotY, onGround) {
+        if(!onGround) return;
+        const width = 0.8;
+        const cx = Math.cos(rotY) * width, cz = Math.sin(rotY) * width;
+        const yOff = 0.25;
+
+        this.points.unshift(
+            pos.x - cx, pos.y + yOff, pos.z + cz,
+            pos.x + cx, pos.y + yOff, pos.z - cz
+        );
+
+        if(this.points.length > this.maxPoints * 6) {
+            this.points.splice(this.points.length - 6, 6);
+        }
 
         const arr = this.geo.attributes.position.array;
         for(let i=0; i<this.points.length; i++) arr[i] = this.points[i];
-
-        // Zero out remaining buffer
         for(let i=this.points.length; i<arr.length; i++) arr[i] = 0;
 
         this.geo.attributes.position.needsUpdate = true;
         this.geo.setDrawRange(0, (this.points.length / 3));
     }
+
     reset() {
         this.points = [];
         const arr = this.geo.attributes.position.array;
@@ -299,165 +831,351 @@ class Trail {
     }
 }
 
-// --- Rider Class ---
+// --- Rider Class (Player & AI) ---
 class Rider {
-    constructor(isPlayer, color) {
+    constructor(id, name, isPlayer, color) {
+        this.id = id;
+        this.name = name;
         this.isPlayer = isPlayer;
+        
+        // Rider Mesh Group
         this.mesh = new THREE.Group();
-        const board = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 4), new THREE.MeshStandardMaterial({color:0x333333})); board.castShadow = true; this.mesh.add(board);
-        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.5, 1.4, 4, 8), new THREE.MeshStandardMaterial({color:color})); body.position.y = 0.8; body.castShadow = true; this.mesh.add(body);
+        
+        // Snowboard
+        const boardMesh = new THREE.Mesh(
+            new THREE.BoxGeometry(1.6, 0.12, 4.2),
+            new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3 })
+        );
+        boardMesh.castShadow = true;
+        this.mesh.add(boardMesh);
+
+        // Body Outfit
+        const bodyMesh = new THREE.Mesh(
+            new THREE.CapsuleGeometry(0.55, 1.4, 4, 8),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 })
+        );
+        bodyMesh.position.y = 0.95;
+        bodyMesh.castShadow = true;
+        this.mesh.add(bodyMesh);
+
+        // Head / Helmet
+        const headMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.4, 8, 8),
+            new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 })
+        );
+        headMesh.position.y = 1.95;
+        this.mesh.add(headMesh);
+
         scene.add(this.mesh);
 
-        this.skill = isPlayer ? 1.0 : 0.9 + Math.random() * 0.2;
-        this.trail = new Trail(scene, isPlayer ? 0x00d2ff : 0xdddddd); // Init Trail
+        this.skill = isPlayer ? 1.0 : 0.85 + Math.random() * 0.3;
+        this.trail = new DualTrail(isPlayer ? 0x00d2ff : 0xcccccc);
+
+        // Airborne Trick Tracker
+        this.airtime = 0;
+        this.airPitch = 0;
+        this.airYaw = 0;
+
         this.reset();
     }
 
     reset() {
-        const spawnX = this.isPlayer ? 0 : (Math.random()-0.5) * 30;
+        const spawnX = this.isPlayer ? 0 : (Math.random() - 0.5) * 50;
         this.pos = new THREE.Vector3(spawnX, 0, START_Z);
-        this.pos.y = getTerrainHeight(this.pos.x, this.pos.z) + 5;
-        this.vel = new THREE.Vector3(0,0,0);
+        this.pos.y = getTerrainHeight(this.pos.x, this.pos.z) + 3;
+        this.vel = new THREE.Vector3(0, 0, 0);
         this.rotY = 0;
-        this.onGround = false;
+        this.onGround = true;
         this.crashed = false;
         this.crashTimer = 0;
-        this.score = this.isPlayer ? 0 : Math.floor(Math.random()*1000);
-        this.trickBuffer = 0;
+        this.score = 0;
         this.jumpCharge = 0;
         this.charging = false;
         this.mesh.visible = true;
         this.mesh.rotation.set(0,0,0);
         this.trail.reset();
+        this.airtime = 0;
+        this.airPitch = 0;
+        this.airYaw = 0;
     }
 
     update(dt, input, playerZ) {
         if (this.crashed) {
             this.crashTimer -= dt;
-            if(this.crashTimer <= 0) this.respawn(); else return;
+            if(this.crashTimer <= 0) this.respawn();
+            return;
         }
 
+        // Apply Gravity
         this.vel.y += GRAVITY * dt;
         const nextPos = this.pos.clone().addScaledVector(this.vel, dt);
         const groundH = getTerrainHeight(nextPos.x, nextPos.z);
 
-        if (nextPos.y <= groundH + 1.0) {
-            if(!this.onGround && this.isPlayer) this.checkLanding();
+        if (nextPos.y <= groundH + 0.8) {
+            // Touchdown / Ground Collision
+            if(!this.onGround) {
+                this.handleLanding();
+            }
+
             this.onGround = true;
             this.pos.copy(nextPos);
             this.pos.y = groundH;
             this.vel.y = 0;
 
-            const slopeAccel = 55.0;
+            // Downhill Acceleration
+            const slopeAccel = 60.0;
             let speedMod = this.skill;
 
-            // Rubber Banding
+            // AI Speed Rubber-banding relative to player
             if(!this.isPlayer) {
                 const dist = playerZ - this.pos.z;
-                if(dist > 250) speedMod = 1.4;
-                if(dist < -300) speedMod = 0.8;
+                if(dist > 200) speedMod = 1.35;
+                if(dist < -250) speedMod = 0.82;
             }
 
             this.vel.z += Math.cos(this.rotY) * slopeAccel * speedMod * dt;
             this.vel.x += Math.sin(this.rotY) * slopeAccel * speedMod * dt;
 
-            // Jump Logic
+            // Player Steering & Jump Controls
             if(this.isPlayer) {
+                // Steer turning
+                this.rotY -= input.x * 2.8 * dt;
+
+                // Jump Charging Logic
                 if(input.space) {
                     this.charging = true;
-                    this.jumpCharge = Math.min(this.jumpCharge + dt * 40, 40);
+                    this.jumpCharge = Math.min(this.jumpCharge + dt * 45, 45);
                     document.getElementById('charge-bar-container').style.display = 'block';
-                    document.getElementById('charge-bar').style.width = (this.jumpCharge * 2.5) + '%';
+                    document.getElementById('charge-bar').style.width = (this.jumpCharge * 2.22) + '%';
                 } else if(this.charging && !input.space) {
-                    this.vel.y = 15 + this.jumpCharge;
+                    // Launch Jump
+                    this.vel.y = 16 + this.jumpCharge * 0.7;
                     this.onGround = false;
                     this.charging = false;
                     this.jumpCharge = 0;
                     document.getElementById('charge-bar-container').style.display = 'none';
-                    audio.play('jump');
-                    this.pos.y += 0.5;
+                    audio.playSFX('jump');
+                    this.pos.y += 0.6;
                 }
-            } else if (Math.random() < 0.005) {
-                 this.vel.y = 18; this.onGround = false; this.pos.y += 0.5;
+
+                // Check Kickers Collision
+                kickers.forEach(k => {
+                    if(Math.abs(this.pos.z - k.z) < 6 && Math.abs(this.pos.x - k.x) < k.width/2) {
+                        if(this.onGround) {
+                            this.vel.y = 28 + (this.vel.z * 0.15); // Launch off ramp!
+                            this.onGround = false;
+                            audio.playSFX('jump');
+                        }
+                    }
+                });
+
+                // Check Speed Boost Pads
+                boostPads.forEach(b => {
+                    if(Math.abs(this.pos.z - b.z) < b.length/2 && Math.abs(this.pos.x - b.x) < b.width/2) {
+                        this.vel.z += 30; // Velocity boost!
+                        audio.playSFX('boost');
+                        showGateLabel("BOOST! ⚡", "#00d2ff");
+                    }
+                });
+
+                // Spawn Snow Carve Particles
+                if(Math.abs(input.x) > 0.2) {
+                    particleSystem.spawnSpray(this.pos.x, this.pos.y, this.pos.z, this.rotY, Math.abs(input.x));
+                }
+            } else {
+                // AI Random Jumps
+                if (Math.random() < 0.004) {
+                    this.vel.y = 18; this.onGround = false; this.pos.y += 0.5;
+                }
             }
 
-            this.rotY -= input.x * 2.5 * dt;
-            this.vel.multiplyScalar(0.995);
-            this.mesh.rotation.set(-0.4, this.rotY, -input.x * 0.4);
+            // Frame-rate independent friction damping
+            const damp = Math.pow(0.993, dt * 60);
+            this.vel.x *= damp;
+            this.vel.z *= damp;
+
+            // Visual Board Alignment on Slope
+            this.mesh.rotation.set(-0.35, this.rotY, -input.x * 0.35);
+
         } else {
+            // Airborne State & Tricks
             this.onGround = false;
             this.pos.copy(nextPos);
-            const spin = 5.0;
-            this.mesh.rotation.y -= input.x * spin * dt;
-            this.mesh.rotation.x += input.y * spin * dt;
-            if(this.isPlayer && (Math.abs(input.x)>0.1 || Math.abs(input.y)>0.1)) this.trickBuffer += 20;
+            this.airtime += dt;
+
+            // Air Rotation (Spins & Flips)
+            const spinSpeed = 5.5;
+            const gyroYaw = input.x * spinSpeed * dt;
+            const gyroPitch = input.y * spinSpeed * dt;
+
+            this.mesh.rotation.y -= gyroYaw;
+            this.mesh.rotation.x += gyroPitch;
+
+            this.airYaw += gyroYaw;
+            this.airPitch += gyroPitch;
         }
 
-        // Safety
+        // Safety ground clamp
         const gh = getTerrainHeight(this.pos.x, this.pos.z);
         if(this.pos.y < gh) { this.pos.y = gh; this.vel.y = 0; this.onGround = true; }
 
         this.mesh.position.copy(this.pos);
 
-        // Update Trail
+        // Update Ribbon Trail
         this.trail.update(this.pos, this.rotY, this.onGround);
     }
 
-    checkLanding() {
-        const up = new THREE.Vector3(0,1,0).applyQuaternion(this.mesh.quaternion);
-        if(up.dot(new THREE.Vector3(0,1,0)) < 0.4) this.crash();
-        else if(this.trickBuffer > 0) {
-            this.score += this.trickBuffer;
-            const el = document.getElementById('msg-label');
-            el.innerText = `LANDED! +${this.trickBuffer}`; el.style.color='#00ff00'; el.style.display='block';
-            setTimeout(()=>el.style.display='none', 1000);
-            this.trickBuffer = 0; audio.play('land');
+    handleLanding() {
+        if(!this.isPlayer) return;
+
+        particleSystem.spawnLandingBurst(this.pos.x, this.pos.y, this.pos.z);
+
+        // Check landing orientation
+        const boardUp = new THREE.Vector3(0,1,0).applyQuaternion(this.mesh.quaternion);
+        const uprightDot = boardUp.dot(new THREE.Vector3(0,1,0));
+
+        if(uprightDot < 0.35) {
+            this.crash();
+        } else {
+            // Calculate landed trick
+            const spins = Math.round(Math.abs(this.airYaw) / (Math.PI * 2) * 360);
+            const flips = Math.round(Math.abs(this.airPitch) / (Math.PI * 2));
+
+            if(spins >= 180 || flips >= 1 || this.airtime > 1.0) {
+                let trickName = "";
+                if(flips >= 1) trickName += flips === 1 ? "BACKFLIP " : "DOUBLE FLIP ";
+                if(spins >= 180) trickName += `${spins}° SPIN `;
+                if(!trickName) trickName = "BIG AIR! ";
+
+                const trickScore = Math.floor((spins * 2 + flips * 800 + this.airtime * 300) * gateStreak);
+                this.score += trickScore;
+
+                showTrickLabel(`${trickName} +${trickScore}`);
+                audio.playSFX('land');
+            } else {
+                audio.playSFX('land');
+            }
         }
+
+        // Reset Air Trackers
+        this.airtime = 0;
+        this.airPitch = 0;
+        this.airYaw = 0;
     }
 
     crash() {
-        this.crashed = true; this.crashTimer = 2.0; this.vel.set(0,0,0); this.trickBuffer=0;
-        this.mesh.visible = false; audio.play('crash');
-        const el = document.getElementById('msg-label');
-        el.innerText = "WIPEOUT!"; el.style.color='#ff0000'; el.style.display='block';
-        setTimeout(()=>el.style.display='none', 1000);
+        this.crashed = true;
+        this.crashTimer = 2.2;
+        this.vel.set(0,0,0);
+        this.mesh.visible = false;
+        audio.playSFX('crash');
+        gateStreak = 1;
+        document.getElementById('streak-val').innerText = 'x1';
+
+        if(this.isPlayer) {
+            showTrickLabel("WIPEOUT!", "#ff3366");
+        }
     }
 
     respawn() {
-        this.crashed = false; this.mesh.visible = true; this.mesh.rotation.set(0,0,0); this.rotY = 0;
-        this.pos.y = getTerrainHeight(this.pos.x, this.pos.z) + 10; this.vel.set(0,0,20);
+        this.crashed = false;
+        this.mesh.visible = true;
+        this.mesh.rotation.set(0,0,0);
+        this.rotY = 0;
+        this.pos.y = getTerrainHeight(this.pos.x, this.pos.z) + 8;
+        this.vel.set(0,0,25);
         this.trail.reset();
     }
 }
 
-// --- Main ---
+// --- Main Game Engine ---
 const audio = new AudioManager();
-const player = new Rider(true, 0xff5500);
-const npcs = Array(30).fill().map(() => new Rider(false, Math.random() * 0xffffff));
+const player = new Rider(0, 'PLAYER (YOU)', true, 0xff3300);
+const npcs = Array(30).fill().map((_, i) => new Rider(
+    i + 1, `RIDER ${i + 1}`, false, Math.floor(Math.random() * 0xffffff)
+));
 
 const input = { x: 0, y: 0, space: false };
 const keys = {};
-window.addEventListener('keydown', e => { keys[e.code] = true; if(e.code === 'Space') input.space = true; });
-window.addEventListener('keyup', e => { keys[e.code] = false; if(e.code === 'Space') input.space = false; });
+
+window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if(e.code === 'Space') input.space = true;
+});
+window.addEventListener('keyup', e => {
+    keys[e.code] = false;
+    if(e.code === 'Space') input.space = false;
+});
+
+// Touch Button Listeners
+const setupTouch = (id, keyName) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; if(keyName==='Space') input.space=true; });
+    el.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; if(keyName==='Space') input.space=false; });
+};
+setupTouch('t-left', 'KeyA');
+setupTouch('t-right', 'KeyD');
+setupTouch('t-jump', 'Space');
 
 let gameTime = 120;
 let gameActive = false;
+let gateStreak = 1;
+let totalGatesPassed = 0;
 
-setupEnvironment();
+setupCourse();
+
+// UI Notifications
+function showTrickLabel(text, color = '#00d2ff') {
+    const el = document.getElementById('trick-label');
+    el.innerText = text;
+    el.style.color = color;
+    el.style.opacity = '1';
+    el.style.transform = 'scale(1)';
+    setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'scale(0.7)';
+    }, 1200);
+}
+
+function showGateLabel(text, color = '#00ff88') {
+    const el = document.getElementById('gate-label');
+    el.innerText = text;
+    el.style.color = color;
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0px)';
+    setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px)';
+    }, 1000);
+}
 
 function resetGame() {
+    audio.init();
     audio.resume();
+
     gameTime = 120;
+    gateStreak = 1;
+    totalGatesPassed = 0;
+    document.getElementById('streak-val').innerText = 'x1';
+    document.getElementById('score-val').innerText = '0';
+
+    // Reset Slalom Gates & Boost Pads State on Replay
+    gates.forEach(g => { g.passed = false; });
+    boostPads.forEach(b => { b.active = true; });
+
     player.reset();
     npcs.forEach(n => n.reset());
-    camera.position.set(0, 100, START_Z - 100);
+
+    camera.position.set(0, 80, START_Z - 100);
     gameActive = true;
+
     document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('start-btn').innerText = "DROP IN AGAIN";
-    document.getElementById('start-screen').querySelector('h1').innerText = "ALPINE FLOW";
+    document.getElementById('finish-screen').style.display = 'none';
 }
 
 document.getElementById('start-btn').addEventListener('click', resetGame);
+document.getElementById('restart-btn').addEventListener('click', resetGame);
 
 const clock = new THREE.Clock();
 
@@ -466,6 +1184,7 @@ function animate() {
     const dt = Math.min(clock.getDelta(), 0.05);
 
     if(gameActive) {
+        // Collect Keyboard Input
         input.x = 0; input.y = 0;
         if(keys['KeyA'] || keys['ArrowLeft']) input.x = -1;
         if(keys['KeyD'] || keys['ArrowRight']) input.x = 1;
@@ -474,64 +1193,123 @@ function animate() {
 
         player.update(dt, input, player.pos.z);
 
-        // --- IMPROVED NPC AI ---
+        // Update CPU Competitors
         npcs.forEach(n => {
-            // Calculate where the track center is ahead of us
-            const targetX = getTrackX(n.pos.z + 60);
-
-            // Calculate error from track center
+            const targetX = getTrackX(n.pos.z + 55);
             const error = targetX - n.pos.x;
-
-            // Determine Steering Force
-            // Proportional steering towards center
-            let steer = error * 0.02;
-
-            // Add some wander to make them look human
-            steer += Math.sin(Date.now() * 0.003 + n.pos.z) * 0.3;
-
-            // Critical: If they are WAY off (e.g. error > 50), steer HARD back
-            if(Math.abs(error) > 80) steer = Math.sign(error) * 1.5;
-
-            // Clamp input
+            let steer = error * 0.025 + Math.sin(Date.now() * 0.003 + n.pos.z) * 0.3;
+            if(Math.abs(error) > 70) steer = Math.sign(error) * 1.4;
             steer = THREE.MathUtils.clamp(steer, -1.0, 1.0);
-
-            n.update(dt, {x: steer, y: 0, space: false}, player.pos.z);
+            n.update(dt, { x: steer, y: 0, space: false }, player.pos.z);
         });
 
-        const camOff = new THREE.Vector3(0, 30, -50);
+        // Particle System Update
+        particleSystem.update(dt);
+
+        // Slalom Gates Passing Logic
+        gates.forEach(g => {
+            if(!g.passed && player.pos.z >= g.z) {
+                g.passed = true;
+                if(Math.abs(player.pos.x - g.x) <= g.width / 2) {
+                    // Gate Passed!
+                    totalGatesPassed++;
+                    gateStreak = Math.min(gateStreak + 1, 5);
+                    const pts = 300 * gateStreak;
+                    player.score += pts;
+                    player.vel.z += 12; // Gate speed boost
+                    audio.playSFX('gate');
+                    document.getElementById('streak-val').innerText = `x${gateStreak}`;
+                    showGateLabel(`GATE PASSED! x${gateStreak} (+${pts})`, '#00ff88');
+                } else {
+                    // Gate Missed!
+                    gateStreak = 1;
+                    document.getElementById('streak-val').innerText = 'x1';
+                    showGateLabel("GATE MISSED!", "#ff3366");
+                }
+            }
+        });
+
+        // Audio Engine Update
+        const playerSpeed = Math.floor(player.vel.length() * 3.6);
+        audio.updateContinuous(playerSpeed, input.x, player.onGround);
+
+        // Dynamic Camera Follow
+        const camOff = new THREE.Vector3(0, 25, -45);
         camOff.applyAxisAngle(new THREE.Vector3(0,1,0), player.rotY);
         const camTarget = player.pos.clone().add(camOff);
-        camera.position.lerp(camTarget, 0.1);
-        camera.lookAt(player.pos.x, player.pos.y - 5, player.pos.z + 50);
+        camera.position.lerp(camTarget, 0.12);
+        camera.lookAt(player.pos.x, player.pos.y + 2, player.pos.z + 40);
 
-        if(player.pos.z > terrain.position.z + 400) terrain.position.z += 400;
-
+        // Timer & Finish Line Check
         gameTime -= dt;
-        if(player.pos.z > FINISH_Z || gameTime <= 0) {
-            gameActive = false;
-            document.getElementById('start-screen').style.display = 'flex';
-            document.querySelector('#start-screen h1').innerText = player.pos.z > FINISH_Z ? "FINISH LINE!" : "TIME UP";
-            document.querySelector('#start-screen p').innerText = `Final Score: ${player.score}`;
+        if(player.pos.z >= FINISH_Z || gameTime <= 0) {
+            endGame();
         }
 
-        document.getElementById('score-val').innerText = player.score;
-        document.getElementById('time-val').innerText = Math.floor(gameTime);
+        // Live Race Placement Leaderboard Update
+        const allRiders = [player, ...npcs];
+        allRiders.sort((a, b) => b.pos.z - a.pos.z);
+        const myRank = allRiders.findIndex(r => r.isPlayer) + 1;
 
+        // HUD Updates
+        document.getElementById('rank-val').innerHTML = `${myRank}<sup>${getOrdinal(myRank)}</sup>`;
+        document.getElementById('score-val').innerText = player.score;
+        document.getElementById('speed-val').innerText = `${playerSpeed} km/h`;
+        document.getElementById('time-val').innerText = Math.max(0, Math.floor(gameTime));
+
+        // Speed Lines Vignette Effect
+        document.getElementById('speed-overlay').style.boxShadow = 
+            playerSpeed > 90 ? `inset 0 0 ${Math.min(150, (playerSpeed - 90) * 3)}px rgba(0,210,255,0.4)` : 'none';
+
+        // Update Live Leaderboard UI
         if(Math.random() < 0.1) {
-            const all = [{n:'YOU', s:player.score, m:true}, ...npcs.map((n,i)=>({n:'CPU '+(i+1), s:n.score, m:false}))];
-            all.sort((a,b)=>b.s - a.s);
-            let h = '';
-            for(let i=0; i<5; i++) h += `<div class="lb-row ${all[i].m?'me':''}"><span>${i+1}. ${all[i].n}</span><span>${all[i].s}</span></div>`;
-            document.getElementById('lb-content').innerHTML = h;
+            let lbHTML = '';
+            for(let i = 0; i < 6; i++) {
+                const r = allRiders[i];
+                lbHTML += `
+                    <div class="lb-row ${r.isPlayer ? 'me' : ''}">
+                        <span>${i + 1}. ${r.name}</span>
+                        <span>${Math.floor(r.pos.z)}m</span>
+                    </div>
+                `;
+            }
+            document.getElementById('lb-content').innerHTML = lbHTML;
         }
     }
 
     renderer.render(scene, camera);
 }
+
+function getOrdinal(n) {
+    const s = ["th", "st", "nd", "rd"], v = n % 100;
+    return s[(v - 20) % 10] || s[v] || s[0];
+}
+
+function endGame() {
+    gameActive = false;
+    
+    const allRiders = [player, ...npcs];
+    allRiders.sort((a, b) => b.pos.z - a.pos.z);
+    const finalRank = allRiders.findIndex(r => r.isPlayer) + 1;
+
+    let medal = "🥇";
+    if(finalRank > 3 && finalRank <= 10) medal = "🥈";
+    else if(finalRank > 10) medal = "🥉";
+
+    document.getElementById('medal-icon').innerText = medal;
+    document.getElementById('finish-title').innerText = player.pos.z >= FINISH_Z ? "FINISH LINE!" : "TIME UP!";
+    document.getElementById('res-rank').innerText = `${finalRank} / 31`;
+    document.getElementById('res-score').innerText = player.score;
+    document.getElementById('res-time').innerText = `${120 - Math.floor(gameTime)}s`;
+    document.getElementById('res-gates').innerText = `${totalGatesPassed} / ${gates.length}`;
+
+    document.getElementById('finish-screen').style.display = 'flex';
+}
+
 animate();
 
 window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
