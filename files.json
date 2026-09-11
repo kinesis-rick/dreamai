@@ -4,8 +4,8 @@
     "name": "Alpine Flow - NPC & Trail Fix",
     "path": "games/AlpineClub.html",
     "type": "game",
-    "icon": "fa-gamepad",
-    "description": "Interactive web game experience."
+    "icon": "fa-mountain",
+    "description": "Alpine adventure & climbing challenge game."
   },
   {
     "category": "Games",
@@ -94,6 +94,14 @@
     "type": "toy",
     "icon": "fa-hand",
     "description": "Hilarious slap physics and sound machine."
+  },
+  {
+    "category": "Toys",
+    "name": "Beehive Construction Simulation",
+    "path": "toys/bee-hive.html",
+    "type": "toy",
+    "icon": "fa-puzzle-piece",
+    "description": "Fun interactive canvas toy."
   },
   {
     "category": "Toys",

@@ -824,6 +824,136 @@
             }
         }
     </style>
+    <script id="portal-data">window.PORTAL_FILES = [
+  {
+    "category": "Games",
+    "name": "Alpine Flow - NPC & Trail Fix",
+    "path": "games/AlpineClub.html",
+    "type": "game",
+    "icon": "fa-mountain",
+    "description": "Alpine adventure & climbing challenge game."
+  },
+  {
+    "category": "Games",
+    "name": "Emoji Ninja",
+    "path": "games/emoji-ninja.html",
+    "type": "game",
+    "icon": "fa-user-ninja",
+    "description": "Slice emojis & test your reaction speeds."
+  },
+  {
+    "category": "Games",
+    "name": "Mega Monkee Bonk",
+    "path": "games/monkee.html",
+    "type": "game",
+    "icon": "fa-frog",
+    "description": "Physics-based arcade bonking action."
+  },
+  {
+    "category": "Games",
+    "name": "Open Wheel - Motorsports",
+    "path": "games/openwheelmotorsports.html",
+    "type": "game",
+    "icon": "fa-car-side",
+    "description": "High-speed open wheel motorsports racing."
+  },
+  {
+    "category": "Games",
+    "name": "Starfall Armada",
+    "path": "games/starfall-armada.html",
+    "type": "game",
+    "icon": "fa-rocket",
+    "description": "Epic space combat & strategy arcade game."
+  },
+  {
+    "category": "Games",
+    "name": "Typing Siege",
+    "path": "games/typing-siege.html",
+    "type": "game",
+    "icon": "fa-keyboard",
+    "description": "Defend your base with fast typing skills."
+  },
+  {
+    "category": "Music",
+    "name": "GlassAmp - Modern Audio Player",
+    "path": "music/glassamp.html",
+    "type": "music",
+    "icon": "fa-compact-disc",
+    "description": "Sleek music player & dynamic visualizer."
+  },
+  {
+    "category": "Tools",
+    "name": "My Steam Year Tier List",
+    "path": "tools/MySteamYearTierList.html",
+    "type": "tool",
+    "icon": "fa-list-check",
+    "description": "Organize and tier list your Steam gaming year."
+  },
+  {
+    "category": "Tools",
+    "name": "Idle Profit Optimizer v2",
+    "path": "tools/idle-calc.html",
+    "type": "tool",
+    "icon": "fa-calculator",
+    "description": "Optimize profits & incremental stats solver."
+  },
+  {
+    "category": "Tools",
+    "name": "Zen Focus Timer",
+    "path": "tools/pomodoro-sand-timer.html",
+    "type": "tool",
+    "icon": "fa-hourglass-half",
+    "description": "Zen glass sand timer for focused work sessions."
+  },
+  {
+    "category": "Tools",
+    "name": "Rick's HTML Studio",
+    "path": "tools/rickshtmlstudio.html",
+    "type": "tool",
+    "icon": "fa-code",
+    "description": "Live in-browser HTML & CSS code playground."
+  },
+  {
+    "category": "Toys",
+    "name": "Slap-o-Matic 3000",
+    "path": "toys/Slap-o-Matic-3000.html",
+    "type": "toy",
+    "icon": "fa-hand",
+    "description": "Hilarious slap physics and sound machine."
+  },
+  {
+    "category": "Toys",
+    "name": "Beehive Construction Simulation",
+    "path": "toys/bee-hive.html",
+    "type": "toy",
+    "icon": "fa-puzzle-piece",
+    "description": "Fun interactive canvas toy."
+  },
+  {
+    "category": "Toys",
+    "name": "City Fireworks Playground",
+    "path": "toys/fireworks-toy.html",
+    "type": "toy",
+    "icon": "fa-wand-magic-sparkles",
+    "description": "Interactive particle fireworks city sky."
+  },
+  {
+    "category": "Toys",
+    "name": "The Color of Security: How Encryption Works",
+    "path": "toys/hellman-demo.html",
+    "type": "toy",
+    "icon": "fa-shield-halved",
+    "description": "Visual demonstration of Diffie-Hellman key exchange."
+  },
+  {
+    "category": "Toys",
+    "name": "Snowball Fight",
+    "path": "toys/snowballs.html",
+    "type": "toy",
+    "icon": "fa-snowflake",
+    "description": "Playful winter snowball simulator."
+  }
+];</script>
 </head>
 <body>
 
@@ -961,10 +1091,10 @@
             let activeCategory = 'All';
             let searchQuery = '';
 
-            // 1. Fetch JSON data
-            fetch('files.json')
+            // 1. Fetch JSON data with inline fallback
+            fetch('./files.json', { cache: 'no-cache' })
                 .then(res => {
-                    if (!res.ok) throw new Error("Unable to load files.json");
+                    if (!res.ok) throw new Error("Unable to load files.json (Status " + res.status + ")");
                     return res.json();
                 })
                 .then(data => {
@@ -973,12 +1103,19 @@
                     render();
                 })
                 .catch(err => {
-                    contentDiv.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fa-solid fa-triangle-exclamation empty-icon" style="color: #f43f5e;"></i>
-                            <div class="empty-title">Error Loading Portal Content</div>
-                            <div class="empty-desc">${err.message}. Please run <code>python3 generate_index.py</code>.</div>
-                        </div>`;
+                    console.warn("Fetch files.json failed/blocked, checking fallback:", err);
+                    if (window.PORTAL_FILES && Array.isArray(window.PORTAL_FILES) && window.PORTAL_FILES.length > 0) {
+                        allFiles = window.PORTAL_FILES;
+                        updateCounts(allFiles);
+                        render();
+                    } else {
+                        contentDiv.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fa-solid fa-triangle-exclamation empty-icon" style="color: #f43f5e;"></i>
+                                <div class="empty-title">Error Loading Portal Content</div>
+                                <div class="empty-desc">${err.message}. Please run <code>python3 generate_index.py</code>.</div>
+                            </div>`;
+                    }
                 });
 
             // 2. Update pill counts

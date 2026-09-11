@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beehive Construction Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #eee;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #d4af37;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            z-index: 10;
+            width: 250px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #d4af37;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .stats {
+            font-size: 0.8rem;
+            margin-top: 10px;
+            border-top: 1px solid #444;
+            padding-top: 10px;
+            line-height: 1.6;
+        }
+
+        canvas {
+            background-color: #111;
+            box-shadow: inset 0 0 100px #000;
+            cursor: crosshair;
+        }
+
+        h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #ffcc00;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <h2>Hive Sim</h2>
+        <div class="control-group">
+            <label id="label-colony">Colony Size: 20</label>
+            <input type="range" id="colonySize" min="1" max="100" value="20">
+        </div>
+        <div class="control-group">
+            <label id="label-resources">Resource Availability: 50%</label>
+            <input type="range" id="resourceAvail" min="1" max="100" value="50">
+        </div>
+        <div class="stats">
+            Cells Built: <span id="stat-cells">0</span><br>
+            Honey Stored: <span id="stat-honey">0</span>%<br>
+            Active Bees: <span id="stat-bees">0</span>
+        </div>
+    </div>
+
+    <canvas id="hiveCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('hiveCanvas');
+        const ctx = canvas.getContext('2d');
+        const colonySlider = document.getElementById('colonySize');
+        const resourceSlider = document.getElementById('resourceAvail');
+        const labelColony = document.getElementById('label-colony');
+        const labelResources = document.getElementById('label-resources');
+        const statCells = document.getElementById('stat-cells');
+        const statHoney = document.getElementById('stat-honey');
+        const statBees = document.getElementById('stat-bees');
+
+        let width, height;
+        let hexSize = 15;
+        let grid = new Map();
+        let bees = [];
+
+        class Cell {
+            constructor(q, r) {
+                this.q = q;
+                this.r = r;
+                this.progress = 0;
+                this.honey = 0;
+                this.isBuilt = false;
+                this.x = hexSize * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
+                this.y = hexSize * (3/2 * r);
+            }
+
+            draw() {
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i + (Math.PI / 6);
+                    const px = this.x + hexSize * Math.cos(angle);
+                    const py = this.y + hexSize * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+
+                if (!this.isBuilt) {
+                    ctx.strokeStyle = `rgba(212, 175, 55, ${this.progress / 100})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                } else {
+                    const honeyColor = `rgb(${200 + (this.honey * 0.55)}, ${150 - (this.honey * 0.5)}, 0)`;
+                    ctx.fillStyle = this.honey > 0 ? honeyColor : '#d4af37';
+                    ctx.fill();
+                    ctx.strokeStyle = '#b8860b';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        class Bee {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = 0;
+                this.y = 0;
+                this.target = null;
+                this.state = 'searching';
+                this.cargo = 0;
+                this.speed = 1.5 + Math.random() * 2;
+            }
+
+            update() {
+                if (!this.target) {
+                    this.findTarget();
+                    if (!this.target) return;
+                }
+
+                const dx = this.target.x - this.x;
+                const dy = this.target.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 3) {
+                    this.interact();
+                } else {
+                    this.x += (dx / dist) * this.speed;
+                    this.y += (dy / dist) * this.speed;
+                }
+            }
+
+            findTarget() {
+                const cells = Array.from(grid.values());
+                const buildable = cells.filter(c => !c.isBuilt);
+                const fillable = cells.filter(c => c.isBuilt && c.honey < 100);
+
+                if (this.state === 'gathering') {
+                    this.target = {
+                        x: (Math.random() - 0.5) * width * 0.8,
+                        y: (Math.random() - 0.5) * height * 0.8,
+                        isResourceNode: true
+                    };
+                } else if (this.state === 'storing') {
+                    if (fillable.length > 0) {
+                        this.target = fillable[Math.floor(Math.random() * fillable.length)];
+                    } else {
+                        this.state = 'searching';
+                        this.findTarget();
+                    }
+                } else if (this.state === 'building') {
+                    if (buildable.length > 0) {
+                        this.target = buildable[Math.floor(Math.random() * buildable.length)];
+                    } else {
+                        this.state = 'searching';
+                        this.findTarget();
+                    }
+                } else {
+                    // Searching state: decide what to do
+                    if (buildable.length > 0 && Math.random() < 0.4) {
+                        this.state = 'building';
+                        this.target = buildable[Math.floor(Math.random() * buildable.length)];
+                    } else if (fillable.length > 0) {
+                        this.state = 'storing';
+                        this.target = fillable[Math.floor(Math.random() * fillable.length)];
+                    } else {
+                        // Expand the hive
+                        const built = cells.filter(c => c.isBuilt);
+                        if (built.length > 0) {
+                            const root = built[Math.floor(Math.random() * built.length)];
+                            const neighbors = this.getNeighbors(root.q, root.r);
+                            const targetCoord = neighbors[Math.floor(Math.random() * neighbors.length)];
+                            const key = `${targetCoord.q},${targetCoord.r}`;
+                            if (!grid.has(key)) {
+                                grid.set(key, new Cell(targetCoord.q, targetCoord.r));
+                            }
+                            this.state = 'building';
+                            this.target = grid.get(key);
+                        } else {
+                            this.state = 'gathering';
+                            this.findTarget();
+                        }
+                    }
+                }
+            }
+
+            getNeighbors(q, r) {
+                return [
+                    {q: q+1, r: r}, {q: q-1, r: r}, {q: q, r: r+1},
+                    {q: q, r: r-1}, {q: q+1, r: r-1}, {q: q-1, r: r+1}
+                ];
+            }
+
+            interact() {
+                const resourceRate = resourceSlider.value / 100;
+
+                if (this.target && this.target.isResourceNode) {
+                    this.cargo = 10 + (resourceRate * 20);
+                    this.state = 'storing';
+                    this.target = null;
+                } else if (this.state === 'building' && this.target) {
+                    this.target.progress += 5 + (resourceRate * 10);
+                    if (this.target.progress >= 100) {
+                        this.target.progress = 100;
+                        this.target.isBuilt = true;
+                    }
+                    this.state = 'gathering';
+                    this.target = null;
+                } else if (this.state === 'storing' && this.target) {
+                    this.target.honey += this.cargo;
+                    if (this.target.honey > 100) this.target.honey = 100;
+                    this.cargo = 0;
+                    this.state = 'gathering';
+                    this.target = null;
+                } else {
+                    this.target = null;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = '#ffcc00';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x + (Math.sin(Date.now()/50)*3), this.y - 2);
+                ctx.stroke();
+            }
+        }
+
+        function init() {
+            resize();
+            const center = new Cell(0, 0);
+            center.isBuilt = true;
+            grid.set("0,0", center);
+            updateBeeCount();
+            animate();
+        }
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        function updateBeeCount() {
+            const targetCount = parseInt(colonySlider.value);
+            labelColony.innerText = `Colony Size: ${targetCount}`;
+            if (bees.length < targetCount) {
+                for (let i = bees.length; i < targetCount; i++) {
+                    bees.push(new Bee());
+                }
+            } else if (bees.length > targetCount) {
+                bees.splice(targetCount);
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.save();
+            ctx.translate(width / 2, height / 2);
+
+            let totalHoney = 0;
+            let builtCount = 0;
+            grid.forEach(cell => {
+                cell.draw();
+                if (cell.isBuilt) {
+                    builtCount++;
+                    totalHoney += cell.honey;
+                }
+            });
+
+            bees.forEach(bee => {
+                bee.update();
+                bee.draw();
+            });
+
+            ctx.restore();
+
+            statCells.innerText = builtCount;
+            statBees.innerText = bees.length;
+            const avgHoney = builtCount > 0 ? Math.floor(totalHoney / builtCount) : 0;
+            statHoney.innerText = avgHoney;
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        colonySlider.addEventListener('input', updateBeeCount);
+        resourceSlider.addEventListener('input', () => {
+            labelResources.innerText = `Resource Availability: ${resourceSlider.value}%`;
+        });
+
+        init();
+    </script>
+</body>
+</html>

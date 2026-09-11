@@ -5,12 +5,12 @@ from html.parser import HTMLParser
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_FILE = os.path.join(BASE_DIR, 'files.json')
+INDEX_HTML = os.path.join(BASE_DIR, 'index.html')
 
 VALID_EXTENSIONS = ['.html', '.htm']
 IGNORE_FOLDERS = ['.git', '__pycache__', 'assets', 'css', 'js', 'icons', 'scratch']
 IGNORE_FILES = ['index.html', '404.html', '500.html']
 
-# Helper title parser
 class TitleParser(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -45,18 +45,13 @@ def get_file_metadata(filepath, filename, category_dir):
         pass
 
     raw_title = parser.title.strip()
-    # Clean title
     if raw_title:
-        # Strip common trailing subtitles like " - Slow Start", ", by RickTheMelon"
         clean_title = re.sub(r'(\s*-\s*Slow Start|\s*,\s*by\s+.*|\s*\(Stability Fix.*?\))', '', raw_title, flags=re.IGNORECASE)
     else:
-        # Fallback to file name nicely formatted
         clean_name = os.path.splitext(filename)[0].replace('_', ' ').replace('-', ' ')
         clean_title = re.sub(r'([a-z])([A-Z])', r'\1 \2', clean_name).title()
 
     description = parser.description.strip()
-    
-    # Custom icon mapping & default descriptions
     path_lower = filename.lower()
     cat_lower = category_dir.lower()
 
@@ -65,13 +60,16 @@ def get_file_metadata(filepath, filename, category_dir):
         if "starfall" in path_lower:
             icon = "fa-rocket"
             if not description: description = "Epic space combat & strategy arcade game."
+        elif "alpine" in path_lower:
+            icon = "fa-mountain"
+            if not description: description = "Alpine adventure & climbing challenge game."
         elif "ninja" in path_lower:
             icon = "fa-user-ninja"
             if not description: description = "Slice emojis & test your reaction speeds."
         elif "monkee" in path_lower:
             icon = "fa-frog"
             if not description: description = "Physics-based arcade bonking action."
-        elif "typing" in path_lower:
+        elif "typing" in path_lower or "siege" in path_lower:
             icon = "fa-keyboard"
             if not description: description = "Defend your base with fast typing skills."
         elif "wheel" in path_lower or "motor" in path_lower:
@@ -141,7 +139,27 @@ for item in sorted(os.listdir(BASE_DIR)):
                 meta = get_file_metadata(filepath, file, item)
                 index_data.append(meta)
 
-with open(OUTPUT_FILE, 'w') as f:
+# Write files.json
+with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
     json.dump(index_data, f, indent=2)
 
 print(f"Success! Generated metadata for {len(index_data)} files into files.json.")
+
+# Also update embedded dataset in index.html for zero-fail fallback
+if os.path.exists(INDEX_HTML):
+    try:
+        with open(INDEX_HTML, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        
+        json_js = f'<script id="portal-data">window.PORTAL_FILES = {json.dumps(index_data, indent=2)};</script>'
+        
+        if '<script id="portal-data">' in html_content:
+            html_content = re.sub(r'<script id="portal-data">.*?</script>', json_js, html_content, flags=re.DOTALL)
+        else:
+            html_content = html_content.replace('</head>', f'    {json_js}\n</head>')
+            
+        with open(INDEX_HTML, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        print("Updated inline PORTAL_FILES dataset in index.html!")
+    except Exception as e:
+        print(f"Warning: Could not update index.html inline data: {e}")
