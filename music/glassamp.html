@@ -138,6 +138,33 @@
             transform: scale(1) !important;
         }
 
+        /* Immersion Mode Fullscreen Styling */
+        #canvasViewport:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            background: #000000 !important;
+            border-radius: 0 !important;
+        }
+
+        #canvasViewport:-webkit-full-screen {
+            width: 100vw !important;
+            height: 100vh !important;
+            background: #000000 !important;
+            border-radius: 0 !important;
+        }
+
+        #canvasViewport:fullscreen #hudTopBar,
+        #canvasViewport:-webkit-full-screen #hudTopBar {
+            display: flex !important;
+            opacity: 1;
+        }
+
+        #canvasViewport:fullscreen.mouse-idle .fullscreen-hud,
+        #canvasViewport:-webkit-full-screen.mouse-idle .fullscreen-hud {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
         /* Tooltip for progress bar */
         .time-tooltip {
             position: absolute;
@@ -241,21 +268,46 @@
             </div>
 
             <!-- Canvas Viewport -->
-            <div class="flex-1 relative bg-black/40 overflow-hidden flex items-center justify-center group">
+            <div id="canvasViewport" class="flex-1 relative bg-black/40 overflow-hidden flex items-center justify-center group">
                 <canvas id="visualizerCanvas" class="w-full h-full block"></canvas>
 
-                <!-- Floating Track Info Banner -->
-                <div class="absolute bottom-4 left-6 right-6 pointer-events-none flex items-end justify-between z-10">
+                <!-- Immersion Mode Fullscreen Button -->
+                <button id="fullScreenBtn" class="absolute top-4 right-4 z-30 px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/90 border border-white/20 text-xs font-semibold text-white/90 transition-all backdrop-blur-md flex items-center gap-1.5 shadow-lg group-hover:opacity-100 opacity-80" title="Full Screen Immersion Mode (Key F)">
+                    <i class="fa-solid fa-expand text-cyan-400"></i> <span class="hidden sm:inline">Immersion Mode</span>
+                </button>
+
+                <!-- Fullscreen Top HUD (Active in Fullscreen Mode) -->
+                <div id="hudTopBar" class="absolute top-4 left-6 right-48 z-20 items-center justify-between pointer-events-auto fullscreen-hud opacity-0 hidden transition-opacity duration-300">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-500 to-cyan-400 flex items-center justify-center text-white shadow-lg">
+                            <i class="fa-solid fa-compact-disc"></i>
+                        </div>
+                        <span class="font-bold text-sm text-white font-['Outfit']">GlassAmp Immersion</span>
+                    </div>
+
+                    <!-- Quick Viz Switcher Pills -->
+                    <div class="hidden md:flex items-center gap-1 bg-black/50 p-1 rounded-xl border border-white/10 backdrop-blur-md">
+                        <button class="viz-opt-btn text-[11px] px-2.5 py-1 rounded-lg text-white/70 hover:text-white" data-mode="0">Spectrum</button>
+                        <button class="viz-opt-btn text-[11px] px-2.5 py-1 rounded-lg text-white/70 hover:text-white" data-mode="1">Oscilloscope</button>
+                        <button class="viz-opt-btn text-[11px] px-2.5 py-1 rounded-lg text-white/70 hover:text-white" data-mode="2">Holo Pulse</button>
+                        <button class="viz-opt-btn text-[11px] px-2.5 py-1 rounded-lg text-white/70 hover:text-white" data-mode="3">Supernova</button>
+                        <button class="viz-opt-btn text-[11px] px-2.5 py-1 rounded-lg text-white/70 hover:text-white" data-mode="4">Heatmap</button>
+                        <button class="viz-opt-btn text-[11px] px-2.5 py-1 rounded-lg text-white/70 hover:text-white" data-mode="5">WhiteCap 3D</button>
+                    </div>
+                </div>
+
+                <!-- Floating Track Info & Audio Telemetry HUD Banner -->
+                <div id="hudBottomBar" class="absolute bottom-4 left-6 right-6 pointer-events-auto flex items-end justify-between z-10 fullscreen-hud transition-opacity duration-300">
                     <div class="max-w-[70%]">
                         <span id="trackBadge" class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 mb-1 inline-block">SERVER AUDIO</span>
-                        <h2 id="trackTitle" class="text-2xl font-bold text-white truncate drop-shadow-lg font-['Outfit']">No Track Loaded</h2>
-                        <p id="trackArtist" class="text-xs text-white/60 truncate">Select a song or drag an MP3 here</p>
+                        <h2 id="trackTitle" class="text-2xl md:text-3xl font-bold text-white truncate drop-shadow-xl font-['Outfit']">No Track Loaded</h2>
+                        <p id="trackArtist" class="text-xs md:text-sm text-white/70 truncate drop-shadow">Select a song or drag an MP3 here</p>
                     </div>
 
                     <!-- BPM / Audio Stats Counter -->
-                    <div class="text-right font-mono text-[10px] text-white/40 hidden sm:block">
-                        <div>RATE: <span id="sampleRateDisp" class="text-white/70">44.1 kHz</span></div>
-                        <div>BASS IMPULSE: <span id="bassLevelDisp" class="text-cyan-400">0%</span></div>
+                    <div class="text-right font-mono text-[10px] md:text-xs text-white/50 bg-black/40 backdrop-blur-md p-2.5 rounded-xl border border-white/10 shadow-lg">
+                        <div>RATE: <span id="sampleRateDisp" class="text-white/90">44.1 kHz</span></div>
+                        <div>BASS IMPULSE: <span id="bassLevelDisp" class="text-cyan-400 font-bold">0%</span></div>
                     </div>
                 </div>
             </div>
@@ -502,6 +554,8 @@
         // --- DOM Elements ---
         const els = {
             canvas: document.getElementById('visualizerCanvas'),
+            canvasViewport: document.getElementById('canvasViewport'),
+            fullScreenBtn: document.getElementById('fullScreenBtn'),
             playBtn: document.getElementById('playBtn'),
             playIcon: document.querySelector('#playBtn i'),
             prevBtn: document.getElementById('prevBtn'),
@@ -765,6 +819,55 @@
                 closeSunoModal();
             });
 
+            // Immersion Mode Fullscreen Logic
+            let mouseIdleTimer = null;
+
+            function toggleImmersionMode() {
+                const elem = els.canvasViewport;
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen();
+                    } else if (elem.webkitRequestFullscreen) {
+                        elem.webkitRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                }
+            }
+
+            function updateFullscreenUI() {
+                const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+                if (isFS) {
+                    els.fullScreenBtn.innerHTML = '<i class="fa-solid fa-compress text-cyan-400"></i> <span class="hidden sm:inline">Exit Immersion</span>';
+                } else {
+                    els.fullScreenBtn.innerHTML = '<i class="fa-solid fa-expand text-cyan-400"></i> <span class="hidden sm:inline">Immersion Mode</span>';
+                    els.canvasViewport.classList.remove('mouse-idle');
+                    if (mouseIdleTimer) clearTimeout(mouseIdleTimer);
+                }
+                setTimeout(resizeCanvas, 100);
+            }
+
+            els.fullScreenBtn.addEventListener('click', toggleImmersionMode);
+            document.addEventListener('fullscreenchange', updateFullscreenUI);
+            document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+
+            // Auto-hide HUD on Mouse Idle in Fullscreen
+            els.canvasViewport.addEventListener('mousemove', () => {
+                els.canvasViewport.classList.remove('mouse-idle');
+                if (mouseIdleTimer) clearTimeout(mouseIdleTimer);
+
+                const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+                if (isFS) {
+                    mouseIdleTimer = setTimeout(() => {
+                        els.canvasViewport.classList.add('mouse-idle');
+                    }, 3500);
+                }
+            });
+
             // Global Keyboard Shortcuts
             document.addEventListener('keydown', (e) => {
                 if (document.activeElement.tagName === 'INPUT') return;
@@ -772,6 +875,8 @@
                 if (e.code === 'Space') {
                     e.preventDefault();
                     togglePlay();
+                } else if (e.code === 'KeyF') {
+                    toggleImmersionMode();
                 } else if (e.code === 'KeyV') {
                     setVizMode((state.vizMode + 1) % 6);
                 } else if (e.code === 'KeyN') {
