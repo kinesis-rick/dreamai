@@ -123,6 +123,12 @@
             border-left: 3px solid var(--accent-cyan);
         }
 
+        /* Persistent Open Dropdown */
+        #vizDropdownMenu.open {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
         /* Tooltip for progress bar */
         .time-tooltip {
             position: absolute;
@@ -184,29 +190,31 @@
                         <i class="fa-solid fa-sliders text-cyan-400"></i> <span class="hidden sm:inline">EQ</span>
                     </button>
                     
-                    <div class="relative group">
-                        <button id="vizModeBtn" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-medium text-white/80 transition-all flex items-center gap-1.5">
+                    <div class="relative group" id="vizDropdownGroup">
+                        <button id="vizModeBtn" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-medium text-white/80 transition-all flex items-center gap-1.5" title="Change Visualizer">
                             <i class="fa-solid fa-chart-simple text-purple-400"></i> 
                             <span id="vizModeName">Spectrum</span>
                             <i class="fa-solid fa-chevron-down text-[10px] text-white/40"></i>
                         </button>
-                        <!-- Visualizer Dropdown -->
-                        <div class="absolute right-0 top-full mt-2 w-44 bg-slate-900/95 border border-white/15 rounded-xl shadow-2xl backdrop-blur-xl p-1 z-30 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all">
-                            <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2 active" data-mode="0">
-                                <i class="fa-solid fa-chart-column text-cyan-400"></i> Cyber Spectrum
-                            </button>
-                            <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="1">
-                                <i class="fa-solid fa-wave-square text-purple-400"></i> Oscilloscope
-                            </button>
-                            <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="2">
-                                <i class="fa-solid fa-circle-notch text-pink-400"></i> Holo Pulse Ring
-                            </button>
-                            <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="3">
-                                <i class="fa-solid fa-meteor text-amber-400"></i> Particle Supernova
-                            </button>
-                            <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="4">
-                                <i class="fa-solid fa-fire-flame-curved text-red-400"></i> Heatmap Waterfall
-                            </button>
+                        <!-- Visualizer Dropdown (with seamless hit area padding) -->
+                        <div id="vizDropdownMenu" class="absolute right-0 top-full pt-1.5 w-48 z-30 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
+                            <div class="bg-slate-900/95 border border-white/15 rounded-xl shadow-2xl backdrop-blur-xl p-1">
+                                <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2 active" data-mode="0">
+                                    <i class="fa-solid fa-chart-column text-cyan-400"></i> Cyber Spectrum
+                                </button>
+                                <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="1">
+                                    <i class="fa-solid fa-wave-square text-purple-400"></i> Oscilloscope
+                                </button>
+                                <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="2">
+                                    <i class="fa-solid fa-circle-notch text-pink-400"></i> Holo Pulse Ring
+                                </button>
+                                <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="3">
+                                    <i class="fa-solid fa-meteor text-amber-400"></i> Particle Supernova
+                                </button>
+                                <button class="viz-opt-btn w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 text-white flex items-center gap-2" data-mode="4">
+                                    <i class="fa-solid fa-fire-flame-curved text-red-400"></i> Heatmap Waterfall
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -563,12 +571,27 @@
                 renderPlaylist();
             });
 
-            // Visualizer Option Dropdown Buttons
+            // Visualizer Dropdown Toggle & Click Handling
+            const vizDropdownGroup = document.getElementById('vizDropdownGroup');
+            const vizDropdownMenu = document.getElementById('vizDropdownMenu');
+
+            els.vizModeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                vizDropdownMenu.classList.toggle('open');
+            });
+
             document.querySelectorAll('.viz-opt-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const mode = parseInt(btn.getAttribute('data-mode'));
                     setVizMode(mode);
+                    vizDropdownMenu.classList.remove('open');
                 });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (vizDropdownGroup && !vizDropdownGroup.contains(e.target)) {
+                    vizDropdownMenu.classList.remove('open');
+                }
             });
 
             // EQ Toggle
