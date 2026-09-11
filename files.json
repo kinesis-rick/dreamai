@@ -1,86 +1,114 @@
 [
   {
-    "category": "Tools",
-    "name": "Mysteamyeartierlist",
-    "path": "tools/MySteamYearTierList.html",
-    "type": "tool"
-  },
-  {
-    "category": "Tools",
-    "name": "Idle-Calc",
-    "path": "tools/idle-calc.html",
-    "type": "tool"
-  },
-  {
-    "category": "Tools",
-    "name": "Pomodoro-Sand-Timer",
-    "path": "tools/pomodoro-sand-timer.html",
-    "type": "tool"
-  },
-  {
-    "category": "Tools",
-    "name": "Rickshtmlstudio",
-    "path": "tools/rickshtmlstudio.html",
-    "type": "tool"
-  },
-  {
     "category": "Games",
-    "name": "Typingdefender",
+    "name": "Typing Defender",
     "path": "games/TypingDefender.html",
-    "type": "game"
+    "type": "game",
+    "icon": "fa-keyboard",
+    "description": "Defend your base with fast typing skills."
   },
   {
     "category": "Games",
-    "name": "Starfall-Armada",
-    "path": "games/starfall-armada.html",
-    "type": "game"
-  },
-  {
-    "category": "Games",
-    "name": "Monkee",
-    "path": "games/monkee.html",
-    "type": "game"
-  },
-  {
-    "category": "Games",
-    "name": "Emoji-Ninja",
+    "name": "Emoji Ninja",
     "path": "games/emoji-ninja.html",
-    "type": "game"
+    "type": "game",
+    "icon": "fa-user-ninja",
+    "description": "Slice emojis & test your reaction speeds."
   },
   {
     "category": "Games",
-    "name": "Openwheelmotorsports",
+    "name": "Mega Monkee Bonk",
+    "path": "games/monkee.html",
+    "type": "game",
+    "icon": "fa-frog",
+    "description": "Physics-based arcade bonking action."
+  },
+  {
+    "category": "Games",
+    "name": "Open Wheel - Motorsports",
     "path": "games/openwheelmotorsports.html",
-    "type": "game"
+    "type": "game",
+    "icon": "fa-car-side",
+    "description": "High-speed open wheel motorsports racing."
+  },
+  {
+    "category": "Games",
+    "name": "Starfall Armada",
+    "path": "games/starfall-armada.html",
+    "type": "game",
+    "icon": "fa-rocket",
+    "description": "Epic space combat & strategy arcade game."
   },
   {
     "category": "Music",
-    "name": "Glassamp",
+    "name": "GlassAmp - Modern Audio Player",
     "path": "music/glassamp.html",
-    "type": "music"
+    "type": "music",
+    "icon": "fa-compact-disc",
+    "description": "Sleek music player & dynamic visualizer."
+  },
+  {
+    "category": "Tools",
+    "name": "My Steam Year Tier List",
+    "path": "tools/MySteamYearTierList.html",
+    "type": "tool",
+    "icon": "fa-list-check",
+    "description": "Organize and tier list your Steam gaming year."
+  },
+  {
+    "category": "Tools",
+    "name": "Idle Profit Optimizer v2",
+    "path": "tools/idle-calc.html",
+    "type": "tool",
+    "icon": "fa-calculator",
+    "description": "Optimize profits & incremental stats solver."
+  },
+  {
+    "category": "Tools",
+    "name": "Zen Focus Timer",
+    "path": "tools/pomodoro-sand-timer.html",
+    "type": "tool",
+    "icon": "fa-hourglass-half",
+    "description": "Zen glass sand timer for focused work sessions."
+  },
+  {
+    "category": "Tools",
+    "name": "Rick's HTML Studio",
+    "path": "tools/rickshtmlstudio.html",
+    "type": "tool",
+    "icon": "fa-code",
+    "description": "Live in-browser HTML & CSS code playground."
   },
   {
     "category": "Toys",
-    "name": "Hellman-Demo",
-    "path": "toys/hellman-demo.html",
-    "type": "toy"
-  },
-  {
-    "category": "Toys",
-    "name": "Slap-O-Matic-3000",
+    "name": "Slap-o-Matic 3000",
     "path": "toys/Slap-o-Matic-3000.html",
-    "type": "toy"
+    "type": "toy",
+    "icon": "fa-hand",
+    "description": "Hilarious slap physics and sound machine."
   },
   {
     "category": "Toys",
-    "name": "Snowballs",
-    "path": "toys/snowballs.html",
-    "type": "toy"
-  },
-  {
-    "category": "Toys",
-    "name": "Fireworks-Toy",
+    "name": "City Fireworks Playground",
     "path": "toys/fireworks-toy.html",
-    "type": "toy"
+    "type": "toy",
+    "icon": "fa-wand-magic-sparkles",
+    "description": "Interactive particle fireworks city sky."
+  },
+  {
+    "category": "Toys",
+    "name": "The Color of Security: How Encryption Works",
+    "path": "toys/hellman-demo.html",
+    "type": "toy",
+    "icon": "fa-shield-halved",
+    "description": "Visual demonstration of Diffie-Hellman key exchange."
+  },
+  {
+    "category": "Toys",
+    "name": "Snowball Fight",
+    "path": "toys/snowballs.html",
+    "type": "toy",
+    "icon": "fa-snowflake",
+    "description": "Playful winter snowball simulator."
   }
 ]
