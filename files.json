@@ -1,11 +1,11 @@
 [
   {
     "category": "Games",
-    "name": "Typing Defender",
-    "path": "games/TypingDefender.html",
+    "name": "Alpine Flow - NPC & Trail Fix",
+    "path": "games/AlpineClub.html",
     "type": "game",
-    "icon": "fa-keyboard",
-    "description": "Defend your base with fast typing skills."
+    "icon": "fa-gamepad",
+    "description": "Interactive web game experience."
   },
   {
     "category": "Games",
@@ -38,6 +38,14 @@
     "type": "game",
     "icon": "fa-rocket",
     "description": "Epic space combat & strategy arcade game."
+  },
+  {
+    "category": "Games",
+    "name": "Typing Siege",
+    "path": "games/typing-siege.html",
+    "type": "game",
+    "icon": "fa-keyboard",
+    "description": "Defend your base with fast typing skills."
   },
   {
     "category": "Music",

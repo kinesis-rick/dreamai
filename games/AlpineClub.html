@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Alpine Flow - NPC & Trail Fix</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #canvas-container { width: 100vw; height: 100vh; display: block; }
+
+        #ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        #hud-top {
+            display: flex; justify-content: space-between; padding: 20px;
+            color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .stat-box {
+            background: rgba(0, 20, 40, 0.6); padding: 10px 20px;
+            border-radius: 8px; border-left: 4px solid #00d2ff;
+        }
+
+        h1 { margin: 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; color: #aaddff; }
+        .value { font-size: 2rem; font-weight: bold; }
+
+        #center-screen {
+            position: absolute; top: 40%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center; color: white;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.8); width: 100%;
+        }
+
+        #msg-label {
+            font-size: 3rem; font-weight: 900; font-style: italic;
+            transition: transform 0.1s; display: none;
+        }
+
+        #charge-bar-container {
+            width: 300px; height: 15px; background: rgba(0,0,0,0.6); border: 2px solid white;
+            margin: 10px auto; border-radius: 10px; overflow: hidden; display: none;
+        }
+        #charge-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ff00, #ffff00); }
+
+        #leaderboard {
+            position: absolute; top: 20%; right: 20px; width: 200px;
+            background: rgba(0,0,0,0.7); color: white; padding: 10px;
+            border-radius: 8px; font-size: 0.8rem;
+        }
+
+        .lb-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .lb-row.me { color: #00d2ff; font-weight: bold; }
+
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,10,30,0.9); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: white;
+            pointer-events: auto; z-index: 10;
+        }
+
+        button {
+            background: linear-gradient(45deg, #00d2ff, #0077ff); border: none;
+            padding: 15px 40px; color: white; font-size: 1.5rem; font-weight: bold;
+            cursor: pointer; border-radius: 50px;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.5); transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
+
+        .controls { margin-top: 20px; opacity: 0.7; font-size: 0.9rem; text-align: center; line-height: 1.6; }
+        .key { display: inline-block; padding: 2px 6px; background: rgba(255,255,255,0.2); border-radius: 4px; font-weight: bold;}
+    </style>
+
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
+</head>
+<body>
+
+    <div id="start-screen">
+        <h1 style="font-size: 4rem; margin-bottom: 10px;">ALPINE FLOW</h1>
+        <p>Trails Restored & Smart AI</p>
+        <br>
+        <button id="start-btn">DROP IN</button>
+        <div class="controls">
+            CONTROLS<br>
+            <span class="key">WASD</span> to Steer & Spin<br>
+            <span class="key">HOLD SPACE</span> Charge Jump<br>
+            <span class="key">RELEASE SPACE</span> Launch<br>
+        </div>
+    </div>
+
+    <div id="ui">
+        <div id="hud-top">
+            <div class="stat-box">
+                <h1>Score</h1>
+                <div class="value" id="score-val">0</div>
+            </div>
+            <div class="stat-box" style="border-color: #ffcc00; text-align: right;">
+                <h1>Time</h1>
+                <div class="value" id="time-val">00:00</div>
+            </div>
+        </div>
+
+        <div id="leaderboard">
+            <div style="font-weight: bold; border-bottom: 2px solid white; margin-bottom: 5px;">LIVE RANKING</div>
+            <div id="lb-content"></div>
+        </div>
+
+        <div id="center-screen">
+            <div id="msg-label">CRASH!</div>
+            <div id="charge-bar-container"><div id="charge-bar"></div></div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+<script type="module">
+
+import * as THREE from 'three';
+
+// --- Config ---
+const START_Z = -1000;
+const FINISH_Z = 12000;
+const GRAVITY = -80;
+
+// --- Audio ---
+class AudioManager {
+    constructor() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0.3;
+        this.masterGain.connect(this.ctx.destination);
+    }
+    resume() { if(this.ctx.state === 'suspended') this.ctx.resume(); }
+    play(type) {
+        if(this.ctx.state === 'suspended') return;
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        if (type === 'jump') {
+            osc.frequency.setValueAtTime(150, t); osc.frequency.exponentialRampToValueAtTime(600, t + 0.1);
+            gain.gain.setValueAtTime(0.5, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+        } else if (type === 'land') {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(50, t + 0.1);
+            gain.gain.setValueAtTime(0.8, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+        } else if (type === 'crash') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(10, t + 0.4);
+            gain.gain.setValueAtTime(1.0, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+        }
+        osc.connect(gain); gain.connect(this.masterGain); osc.start(); osc.stop(t + 0.5);
+    }
+}
+
+// --- Scene ---
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xaaccff);
+scene.fog = new THREE.FogExp2(0xaaccff, 0.0015);
+
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 3000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+dirLight.position.set(100, 500, 100);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048,2048);
+dirLight.shadow.camera.top = 400; dirLight.shadow.camera.bottom = -400;
+dirLight.shadow.camera.left = -400; dirLight.shadow.camera.right = 400;
+dirLight.shadow.camera.far = 1000;
+scene.add(dirLight);
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+// --- Terrain & Track ---
+function pseudoNoise(x, z) {
+    return Math.sin(x * 0.01) * 5 + Math.cos(z * 0.008) * 10 + Math.sin(x*0.05 + z*0.05)*2;
+}
+function getTrackX(z) {
+    // A wandering sine wave for the "track center"
+    return Math.sin(z * 0.004) * 80 + Math.sin(z * 0.01) * 20;
+}
+function getTerrainHeight(x, z) {
+    let y = -z * 0.40;
+    y += pseudoNoise(x, z);
+    // Bowl shape limits (Gentle walls so NPCs don't get stuck)
+    if (Math.abs(x) > 150) y += Math.pow((Math.abs(x) - 150) * 0.15, 2);
+    return y;
+}
+
+const geo = new THREE.PlaneGeometry(800, 4000, 100, 400);
+geo.rotateX(-Math.PI / 2);
+const pos = geo.attributes.position;
+for(let i=0; i<pos.count; i++) pos.setY(i, getTerrainHeight(pos.getX(i), pos.getZ(i)));
+geo.computeVertexNormals();
+const terrain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.8}));
+terrain.receiveShadow = true;
+scene.add(terrain);
+
+// --- Environment ---
+const treeGeo = new THREE.ConeGeometry(4, 15, 6);
+const treeMat = new THREE.MeshStandardMaterial({color: 0x1a4d2e});
+const trees = new THREE.InstancedMesh(treeGeo, treeMat, 500);
+scene.add(trees);
+
+const flagGeo = new THREE.CylinderGeometry(0.2, 0.2, 6);
+const flagMatRed = new THREE.MeshBasicMaterial({color: 0xff0000});
+const flagMatBlue = new THREE.MeshBasicMaterial({color: 0x0000ff});
+const flagsRed = new THREE.InstancedMesh(flagGeo, flagMatRed, 300);
+const flagsBlue = new THREE.InstancedMesh(flagGeo, flagMatBlue, 300);
+scene.add(flagsRed); scene.add(flagsBlue);
+
+function setupEnvironment() {
+    const dummy = new THREE.Object3D();
+
+    // Trees
+    let tIdx = 0;
+    for(let z = START_Z; z < FINISH_Z; z += 30) {
+        if(tIdx < 500) {
+            const side = Math.random() > 0.5 ? 1 : -1;
+            const tx = getTrackX(z);
+            const x = tx + side * (60 + Math.random() * 100);
+            const y = getTerrainHeight(x, z);
+            dummy.position.set(x, y + 7.5, z);
+            dummy.scale.setScalar(0.8 + Math.random()*0.5);
+            dummy.rotation.set(0, Math.random()*3, 0);
+            dummy.updateMatrix();
+            trees.setMatrixAt(tIdx++, dummy.matrix);
+        }
+    }
+    trees.instanceMatrix.needsUpdate = true;
+
+    // Flags
+    let fIdx = 0;
+    for(let z = START_Z; z < FINISH_Z; z += 80) {
+        if(fIdx < 300) {
+            const cx = getTrackX(z);
+            const yRed = getTerrainHeight(cx - 15, z);
+            const yBlue = getTerrainHeight(cx + 15, z);
+
+            dummy.position.set(cx - 15, yRed + 3, z);
+            dummy.scale.set(1,1,1); dummy.rotation.set(0,0,0); dummy.updateMatrix();
+            flagsRed.setMatrixAt(fIdx, dummy.matrix);
+
+            dummy.position.set(cx + 15, yBlue + 3, z);
+            dummy.updateMatrix();
+            flagsBlue.setMatrixAt(fIdx, dummy.matrix);
+            fIdx++;
+        }
+    }
+    flagsRed.instanceMatrix.needsUpdate = true;
+    flagsBlue.instanceMatrix.needsUpdate = true;
+}
+
+// --- Trail System (FIXED) ---
+class Trail {
+    constructor(scene, color) {
+        this.maxPoints = 80; // Longer trails
+        this.geo = new THREE.BufferGeometry();
+        this.pos = new Float32Array(this.maxPoints * 3 * 2);
+        this.geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
+        const indices = [];
+        for(let i=0; i<this.maxPoints-1; i++) {
+            indices.push(i*2, i*2+1, i*2+2, i*2+2, i*2+1, i*2+3);
+        }
+        this.geo.setIndex(indices);
+        // Ensure material is double sided and has depth write false for transparency
+        this.material = new THREE.MeshBasicMaterial({color:color, opacity:0.6, transparent:true, side:THREE.DoubleSide, depthWrite:false});
+        this.mesh = new THREE.Mesh(this.geo, this.material);
+        this.mesh.frustumCulled = false; // Critical fix
+        scene.add(this.mesh);
+        this.points = [];
+    }
+    update(pos, rot, onGround) {
+        if(!onGround) return;
+        const w = 0.5; // Wider trails
+        const cx = Math.cos(rot)*w, cz = Math.sin(rot)*w;
+        // Bump Y slightly to avoid z-fighting with snow
+        const yOff = 0.2;
+        this.points.unshift(pos.x - cx, pos.y + yOff, pos.z + cz, pos.x + cx, pos.y + yOff, pos.z - cz);
+
+        if(this.points.length > this.maxPoints * 6) this.points.splice(this.points.length - 6, 6);
+
+        const arr = this.geo.attributes.position.array;
+        for(let i=0; i<this.points.length; i++) arr[i] = this.points[i];
+
+        // Zero out remaining buffer
+        for(let i=this.points.length; i<arr.length; i++) arr[i] = 0;
+
+        this.geo.attributes.position.needsUpdate = true;
+        this.geo.setDrawRange(0, (this.points.length / 3));
+    }
+    reset() {
+        this.points = [];
+        const arr = this.geo.attributes.position.array;
+        arr.fill(0);
+        this.geo.attributes.position.needsUpdate = true;
+    }
+}
+
+// --- Rider Class ---
+class Rider {
+    constructor(isPlayer, color) {
+        this.isPlayer = isPlayer;
+        this.mesh = new THREE.Group();
+        const board = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 4), new THREE.MeshStandardMaterial({color:0x333333})); board.castShadow = true; this.mesh.add(board);
+        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.5, 1.4, 4, 8), new THREE.MeshStandardMaterial({color:color})); body.position.y = 0.8; body.castShadow = true; this.mesh.add(body);
+        scene.add(this.mesh);
+
+        this.skill = isPlayer ? 1.0 : 0.9 + Math.random() * 0.2;
+        this.trail = new Trail(scene, isPlayer ? 0x00d2ff : 0xdddddd); // Init Trail
+        this.reset();
+    }
+
+    reset() {
+        const spawnX = this.isPlayer ? 0 : (Math.random()-0.5) * 30;
+        this.pos = new THREE.Vector3(spawnX, 0, START_Z);
+        this.pos.y = getTerrainHeight(this.pos.x, this.pos.z) + 5;
+        this.vel = new THREE.Vector3(0,0,0);
+        this.rotY = 0;
+        this.onGround = false;
+        this.crashed = false;
+        this.crashTimer = 0;
+        this.score = this.isPlayer ? 0 : Math.floor(Math.random()*1000);
+        this.trickBuffer = 0;
+        this.jumpCharge = 0;
+        this.charging = false;
+        this.mesh.visible = true;
+        this.mesh.rotation.set(0,0,0);
+        this.trail.reset();
+    }
+
+    update(dt, input, playerZ) {
+        if (this.crashed) {
+            this.crashTimer -= dt;
+            if(this.crashTimer <= 0) this.respawn(); else return;
+        }
+
+        this.vel.y += GRAVITY * dt;
+        const nextPos = this.pos.clone().addScaledVector(this.vel, dt);
+        const groundH = getTerrainHeight(nextPos.x, nextPos.z);
+
+        if (nextPos.y <= groundH + 1.0) {
+            if(!this.onGround && this.isPlayer) this.checkLanding();
+            this.onGround = true;
+            this.pos.copy(nextPos);
+            this.pos.y = groundH;
+            this.vel.y = 0;
+
+            const slopeAccel = 55.0;
+            let speedMod = this.skill;
+
+            // Rubber Banding
+            if(!this.isPlayer) {
+                const dist = playerZ - this.pos.z;
+                if(dist > 250) speedMod = 1.4;
+                if(dist < -300) speedMod = 0.8;
+            }
+
+            this.vel.z += Math.cos(this.rotY) * slopeAccel * speedMod * dt;
+            this.vel.x += Math.sin(this.rotY) * slopeAccel * speedMod * dt;
+
+            // Jump Logic
+            if(this.isPlayer) {
+                if(input.space) {
+                    this.charging = true;
+                    this.jumpCharge = Math.min(this.jumpCharge + dt * 40, 40);
+                    document.getElementById('charge-bar-container').style.display = 'block';
+                    document.getElementById('charge-bar').style.width = (this.jumpCharge * 2.5) + '%';
+                } else if(this.charging && !input.space) {
+                    this.vel.y = 15 + this.jumpCharge;
+                    this.onGround = false;
+                    this.charging = false;
+                    this.jumpCharge = 0;
+                    document.getElementById('charge-bar-container').style.display = 'none';
+                    audio.play('jump');
+                    this.pos.y += 0.5;
+                }
+            } else if (Math.random() < 0.005) {
+                 this.vel.y = 18; this.onGround = false; this.pos.y += 0.5;
+            }
+
+            this.rotY -= input.x * 2.5 * dt;
+            this.vel.multiplyScalar(0.995);
+            this.mesh.rotation.set(-0.4, this.rotY, -input.x * 0.4);
+        } else {
+            this.onGround = false;
+            this.pos.copy(nextPos);
+            const spin = 5.0;
+            this.mesh.rotation.y -= input.x * spin * dt;
+            this.mesh.rotation.x += input.y * spin * dt;
+            if(this.isPlayer && (Math.abs(input.x)>0.1 || Math.abs(input.y)>0.1)) this.trickBuffer += 20;
+        }
+
+        // Safety
+        const gh = getTerrainHeight(this.pos.x, this.pos.z);
+        if(this.pos.y < gh) { this.pos.y = gh; this.vel.y = 0; this.onGround = true; }
+
+        this.mesh.position.copy(this.pos);
+
+        // Update Trail
+        this.trail.update(this.pos, this.rotY, this.onGround);
+    }
+
+    checkLanding() {
+        const up = new THREE.Vector3(0,1,0).applyQuaternion(this.mesh.quaternion);
+        if(up.dot(new THREE.Vector3(0,1,0)) < 0.4) this.crash();
+        else if(this.trickBuffer > 0) {
+            this.score += this.trickBuffer;
+            const el = document.getElementById('msg-label');
+            el.innerText = `LANDED! +${this.trickBuffer}`; el.style.color='#00ff00'; el.style.display='block';
+            setTimeout(()=>el.style.display='none', 1000);
+            this.trickBuffer = 0; audio.play('land');
+        }
+    }
+
+    crash() {
+        this.crashed = true; this.crashTimer = 2.0; this.vel.set(0,0,0); this.trickBuffer=0;
+        this.mesh.visible = false; audio.play('crash');
+        const el = document.getElementById('msg-label');
+        el.innerText = "WIPEOUT!"; el.style.color='#ff0000'; el.style.display='block';
+        setTimeout(()=>el.style.display='none', 1000);
+    }
+
+    respawn() {
+        this.crashed = false; this.mesh.visible = true; this.mesh.rotation.set(0,0,0); this.rotY = 0;
+        this.pos.y = getTerrainHeight(this.pos.x, this.pos.z) + 10; this.vel.set(0,0,20);
+        this.trail.reset();
+    }
+}
+
+// --- Main ---
+const audio = new AudioManager();
+const player = new Rider(true, 0xff5500);
+const npcs = Array(30).fill().map(() => new Rider(false, Math.random() * 0xffffff));
+
+const input = { x: 0, y: 0, space: false };
+const keys = {};
+window.addEventListener('keydown', e => { keys[e.code] = true; if(e.code === 'Space') input.space = true; });
+window.addEventListener('keyup', e => { keys[e.code] = false; if(e.code === 'Space') input.space = false; });
+
+let gameTime = 120;
+let gameActive = false;
+
+setupEnvironment();
+
+function resetGame() {
+    audio.resume();
+    gameTime = 120;
+    player.reset();
+    npcs.forEach(n => n.reset());
+    camera.position.set(0, 100, START_Z - 100);
+    gameActive = true;
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('start-btn').innerText = "DROP IN AGAIN";
+    document.getElementById('start-screen').querySelector('h1').innerText = "ALPINE FLOW";
+}
+
+document.getElementById('start-btn').addEventListener('click', resetGame);
+
+const clock = new THREE.Clock();
+
+function animate() {
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.05);
+
+    if(gameActive) {
+        input.x = 0; input.y = 0;
+        if(keys['KeyA'] || keys['ArrowLeft']) input.x = -1;
+        if(keys['KeyD'] || keys['ArrowRight']) input.x = 1;
+        if(keys['KeyW'] || keys['ArrowUp']) input.y = -1;
+        if(keys['KeyS'] || keys['ArrowDown']) input.y = 1;
+
+        player.update(dt, input, player.pos.z);
+
+        // --- IMPROVED NPC AI ---
+        npcs.forEach(n => {
+            // Calculate where the track center is ahead of us
+            const targetX = getTrackX(n.pos.z + 60);
+
+            // Calculate error from track center
+            const error = targetX - n.pos.x;
+
+            // Determine Steering Force
+            // Proportional steering towards center
+            let steer = error * 0.02;
+
+            // Add some wander to make them look human
+            steer += Math.sin(Date.now() * 0.003 + n.pos.z) * 0.3;
+
+            // Critical: If they are WAY off (e.g. error > 50), steer HARD back
+            if(Math.abs(error) > 80) steer = Math.sign(error) * 1.5;
+
+            // Clamp input
+            steer = THREE.MathUtils.clamp(steer, -1.0, 1.0);
+
+            n.update(dt, {x: steer, y: 0, space: false}, player.pos.z);
+        });
+
+        const camOff = new THREE.Vector3(0, 30, -50);
+        camOff.applyAxisAngle(new THREE.Vector3(0,1,0), player.rotY);
+        const camTarget = player.pos.clone().add(camOff);
+        camera.position.lerp(camTarget, 0.1);
+        camera.lookAt(player.pos.x, player.pos.y - 5, player.pos.z + 50);
+
+        if(player.pos.z > terrain.position.z + 400) terrain.position.z += 400;
+
+        gameTime -= dt;
+        if(player.pos.z > FINISH_Z || gameTime <= 0) {
+            gameActive = false;
+            document.getElementById('start-screen').style.display = 'flex';
+            document.querySelector('#start-screen h1').innerText = player.pos.z > FINISH_Z ? "FINISH LINE!" : "TIME UP";
+            document.querySelector('#start-screen p').innerText = `Final Score: ${player.score}`;
+        }
+
+        document.getElementById('score-val').innerText = player.score;
+        document.getElementById('time-val').innerText = Math.floor(gameTime);
+
+        if(Math.random() < 0.1) {
+            const all = [{n:'YOU', s:player.score, m:true}, ...npcs.map((n,i)=>({n:'CPU '+(i+1), s:n.score, m:false}))];
+            all.sort((a,b)=>b.s - a.s);
+            let h = '';
+            for(let i=0; i<5; i++) h += `<div class="lb-row ${all[i].m?'me':''}"><span>${i+1}. ${all[i].n}</span><span>${all[i].s}</span></div>`;
+            document.getElementById('lb-content').innerHTML = h;
+        }
+    }
+
+    renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+</script>
+</body>
+</html>
