@@ -89,7 +89,10 @@ def get_file_metadata(filepath, filename, category_dir):
         elif "pomodoro" in path_lower or "timer" in path_lower:
             icon = "fa-hourglass-half"
             if not description: description = "Zen glass sand timer for focused work sessions."
-        elif "studio" in path_lower or "html" in path_lower:
+        elif "gta" in path_lower or "timeline" in path_lower:
+            icon = "fa-timeline"
+            if not description: description = "Definitive interactive DLC timeline for GTA V & GTA Online (2013–2026)."
+        elif "studio" in path_lower:
             icon = "fa-code"
             if not description: description = "Live in-browser HTML & CSS code playground."
         else:
@@ -154,7 +157,7 @@ if os.path.exists(INDEX_HTML):
         json_js = f'<script id="portal-data">window.PORTAL_FILES = {json.dumps(index_data, indent=2)};</script>'
         
         if '<script id="portal-data">' in html_content:
-            html_content = re.sub(r'<script id="portal-data">.*?</script>', json_js, html_content, flags=re.DOTALL)
+            html_content = re.sub(r'<script id="portal-data">.*?</script>', lambda m: json_js, html_content, flags=re.DOTALL)
         else:
             html_content = html_content.replace('</head>', f'    {json_js}\n</head>')
             

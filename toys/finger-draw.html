@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Kid-friendly webcam index finger drawing app with magic brushes, color keys 1-0, tool keys Q/E, Spacebar draw, and sound effects.">
+    <title>✨ Finger Paint Playground - Webcam Drawing for Kids</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- MediaPipe Hands & Camera Utils CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0f111a;
+            --panel-bg: rgba(22, 26, 42, 0.75);
+            --panel-border: rgba(255, 255, 255, 0.12);
+            --accent-glow: #ff2a6d;
+            --active-color: #ff2a6d;
+            --text-main: #f0f3fe;
+            --text-sub: #a0a5c0;
+            --font-family: 'Fredoka', 'Outfit', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            font-family: var(--font-family);
+            color: var(--text-main);
+        }
+
+        /* App Container */
+        #app-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle at center, #1b1e30 0%, #0a0b12 100%);
+        }
+
+        /* Main Drawing Canvas */
+        #draw-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            cursor: crosshair;
+        }
+
+        /* Particle Overlay Canvas */
+        #fx-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Top Header UI */
+        header {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            padding: 10px 24px;
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 42, 109, 0.15);
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title-group h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff2a6d, #ffb800, #00f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background-color: #ffaa00;
+            box-shadow: 0 0 8px #ffaa00;
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.active {
+            background-color: #00ff66;
+            box-shadow: 0 0 10px #00ff66;
+        }
+
+        .status-dot.mouse {
+            background-color: #00f0ff;
+            box-shadow: 0 0 10px #00f0ff;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .btn-icon:active {
+            transform: scale(0.95);
+        }
+
+        .btn-icon.active {
+            background: var(--accent-glow);
+            color: #fff;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        /* Floating Video Preview Panel */
+        #webcam-panel {
+            position: absolute;
+            bottom: 130px;
+            right: 20px;
+            z-index: 10;
+            width: 180px;
+            height: 135px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 2px solid var(--panel-border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        #webcam-panel.minimized {
+            transform: scale(0);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #webcam-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror camera */
+        }
+
+        #webcam-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            transform: scaleX(-1);
+        }
+
+        .webcam-badge {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            pointer-events: none;
+        }
+
+        /* Floating Controls & Dock UI */
+        #control-dock {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 92%;
+            max-width: 900px;
+        }
+
+        /* Tool Switcher Strip */
+        .dock-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            padding: 8px 16px;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .dock-bar::-webkit-scrollbar { display: none; }
+
+        .key-badge {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 2px 7px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #ffea00;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .tool-btn {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px 12px;
+            min-width: 70px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .tool-btn i {
+            font-size: 1.2rem;
+        }
+
+        .tool-btn span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .tool-btn.active {
+            background: linear-gradient(135deg, rgba(255, 42, 109, 0.8), rgba(157, 78, 221, 0.8));
+            border-color: rgba(255, 255, 255, 0.5);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 42, 109, 0.5);
+            transform: translateY(-4px) scale(1.05);
+        }
+
+        /* Color Palette Bar */
+        .color-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            padding: 8px 20px;
+            border-radius: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .color-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .color-item .key-num {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .color-item:hover .color-swatch {
+            transform: scale(1.2);
+        }
+
+        .color-item.active .color-swatch {
+            transform: scale(1.3);
+            border-color: #ffffff;
+            box-shadow: 0 0 16px var(--swatch-color, #ffffff);
+        }
+
+        /* Brush Size Control */
+        .size-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .size-control input[type="range"] {
+            width: 90px;
+            accent-color: var(--accent-glow);
+            cursor: pointer;
+        }
+
+        /* Custom Finger Pointer Overlay */
+        #finger-pointer {
+            position: absolute;
+            top: -100px;
+            left: -100px;
+            width: 40px;
+            height: 40px;
+            z-index: 100;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s ease;
+        }
+
+        .pointer-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid var(--active-color);
+            box-shadow: 0 0 15px var(--active-color);
+            animation: ringPulse 1.5s infinite alternate ease-in-out;
+            transition: all 0.2s ease;
+        }
+
+        .pointer-ring.painting {
+            border-color: #00ff66;
+            box-shadow: 0 0 20px #00ff66;
+            transform: scale(1.3);
+        }
+
+        .pointer-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+
+        .pointer-icon {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            font-size: 1rem;
+            color: #ffea00;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+        }
+
+        .pointer-status-tag {
+            position: absolute;
+            bottom: -25px;
+            white-space: nowrap;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #ffea00;
+            pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        @keyframes ringPulse {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Help Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #161a2a;
+            border: 2px solid var(--panel-border);
+            border-radius: 28px;
+            padding: 30px;
+            width: 90%;
+            max-width: 540px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 42, 109, 0.2);
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ff2a6d, #00f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-card p {
+            color: var(--text-sub);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .shortcut-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 14px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .btn-modal-close {
+            background: linear-gradient(135deg, #ff2a6d, #9d4edd);
+            border: none;
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 42, 109, 0.4);
+            transition: transform 0.2s ease;
+        }
+
+        .btn-modal-close:hover {
+            transform: scale(1.05);
+        }
+
+        /* Toast notification */
+        #toast-msg {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            z-index: 99;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid var(--accent-glow);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+
+        #toast-msg.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <!-- Main Drawing Canvas -->
+    <canvas id="draw-canvas"></canvas>
+    <!-- FX & Particle Canvas -->
+    <canvas id="fx-canvas"></canvas>
+
+    <!-- Top Navigation Header -->
+    <header>
+        <div class="title-group">
+            <i class="fa-solid fa-hand-pointer" style="color: #ff2a6d; font-size: 1.4rem;"></i>
+            <h1>Finger Paint Playground</h1>
+        </div>
+
+        <div class="status-pill" id="status-pill">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Connecting Camera...</span>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn-icon active" id="btn-space-mode" title="Toggle Spacebar Draw Mode (Space)"><i class="fa-solid fa-keyboard"></i></button>
+            <button class="btn-icon" id="btn-camera" title="Toggle Webcam Overlay (C)"><i class="fa-solid fa-video"></i></button>
+            <button class="btn-icon active" id="btn-audio" title="Toggle Sound (M)"><i class="fa-solid fa-volume-high"></i></button>
+            <button class="btn-icon" id="btn-clear" title="Clear Canvas (Del)"><i class="fa-solid fa-trash-can"></i></button>
+            <button class="btn-icon" id="btn-save" title="Save Picture (S)"><i class="fa-solid fa-floppy-disk"></i></button>
+            <button class="btn-icon" id="btn-help" title="Instructions (?)"><i class="fa-solid fa-circle-question"></i></button>
+        </div>
+    </header>
+
+    <!-- Floating Camera View -->
+    <div id="webcam-panel">
+        <div class="webcam-badge">INDEX FINGER FEED</div>
+        <video id="webcam-video" playsinline muted></video>
+        <canvas id="webcam-canvas"></canvas>
+    </div>
+
+    <!-- Control Dock UI -->
+    <div id="control-dock">
+        <!-- Tools Bar -->
+        <div class="dock-bar">
+            <span class="key-badge">Q</span>
+            <div id="tools-container" style="display: flex; gap: 8px; width: 100%; overflow-x: auto; scrollbar-width: none;">
+                <!-- Tools rendered via JS -->
+            </div>
+            <span class="key-badge">E</span>
+        </div>
+
+        <!-- Color Bar & Size -->
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <div class="color-bar" id="color-bar">
+                <!-- Colors 1-0 rendered via JS -->
+            </div>
+
+            <div class="size-control">
+                <i class="fa-solid fa-circle-dot" style="font-size: 0.8rem; color: var(--text-sub);"></i>
+                <input type="range" id="brush-size" min="4" max="60" value="18">
+                <i class="fa-solid fa-circle-dot" style="font-size: 1.3rem; color: var(--text-sub);"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Cursor Overlay -->
+    <div id="finger-pointer">
+        <div class="pointer-ring" id="pointer-ring"></div>
+        <div class="pointer-dot"></div>
+        <i class="fa-solid fa-wand-magic-sparkles pointer-icon" id="pointer-tool-icon"></i>
+        <div class="pointer-status-tag" id="pointer-status-tag">HOLD [SPACE] TO PAINT</div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-msg">Hold SPACEBAR & point finger to draw!</div>
+
+    <!-- Instructions Modal -->
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal-card">
+            <h2>🎨 How to Play & Draw</h2>
+            <p>Point your finger at the camera and hold <b>SPACEBAR</b> to draw!</p>
+            <div class="shortcut-grid">
+                <div class="shortcut-item">
+                    <span class="key-badge">Spacebar</span>
+                    <span>Hold to Draw / Release to Stop</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="key-badge">1 - 0</span>
+                    <span>Change Paint Colors</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="key-badge">Q / E</span>
+                    <span>Cycle Drawing Tools</span>
+                </div>
+                <div class="shortcut-item">
+                    <span class="key-badge">Del / C</span>
+                    <span>Clear Screen & Confetti</span>
+                </div>
+            </div>
+            <button class="btn-modal-close" id="btn-close-modal">Let's Draw! 🚀</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- APP STATE & CONFIG ---
+    const COLORS = [
+        { name: 'Red', hex: '#FF2A6D', key: '1' },
+        { name: 'Orange', hex: '#FF7000', key: '2' },
+        { name: 'Yellow', hex: '#FFD700', key: '3' },
+        { name: 'Neon Green', hex: '#00FF66', key: '4' },
+        { name: 'Cyan', hex: '#00F0FF', key: '5' },
+        { name: 'Blue', hex: '#4D5BCE', key: '6' },
+        { name: 'Purple', hex: '#9D4EDD', key: '7' },
+        { name: 'Hot Pink', hex: '#FF007F', key: '8' },
+        { name: 'White', hex: '#FFFFFF', key: '9' },
+        { name: 'Black', hex: '#161a2a', key: '0' }
+    ];
+
+    const TOOLS = [
+        { id: 'crayon', name: 'Crayon', icon: 'fa-pencil', sound: 440 },
+        { id: 'rainbow', name: 'Rainbow', icon: 'fa-rainbow', sound: 523 },
+        { id: 'neon', name: 'Neon Pipe', icon: 'fa-bolt', sound: 587 },
+        { id: 'sparkles', name: 'Stars', icon: 'fa-wand-magic-sparkles', sound: 659 },
+        { id: 'emojis', name: 'Stamp Party', icon: 'fa-face-smile-beam', sound: 698 },
+        { id: 'bubbles', name: 'Bubbles', icon: 'fa-circle-nodes', sound: 784 },
+        { id: 'glitter', name: 'Glitter', icon: 'fa-sparkles', sound: 880 },
+        { id: 'kaleidoscope', name: 'Mirror Magic', icon: 'fa-snowflake', sound: 987 },
+        { id: 'splatter', name: 'Monster Paint', icon: 'fa-fill-drip', sound: 1046 },
+        { id: 'eraser', name: 'Magic Eraser', icon: 'fa-eraser', sound: 330 }
+    ];
+
+    const EMOJIS = ['🐶', '🐱', '🦄', '🚀', '⭐️', '🎨', '🌈', '🍕', '🍦', '🎈', '🐸', '👾', '💖'];
+
+    let activeColorIndex = 0;
+    let activeToolIndex = 0;
+    let brushSize = 18;
+    let isAudioEnabled = true;
+
+    // Spacebar Draw State
+    let isSpacePressed = false;
+    let requireSpaceToDraw = true; // Hold Spacebar to draw by default!
+
+    // Tracking State
+    let isDrawing = false;
+    let lastX = 0, lastY = 0;
+    let currentX = 0, currentY = 0;
+    let smoothedX = 0, smoothedY = 0;
+    let trackingMode = 'connecting'; // 'webcam', 'mouse', 'connecting'
+
+    // Canvas Elements
+    const drawCanvas = document.getElementById('draw-canvas');
+    const drawCtx = drawCanvas.getContext('2d', { willReadFrequently: true });
+    const fxCanvas = document.getElementById('fx-canvas');
+    const fxCtx = fxCanvas.getContext('2d');
+
+    // UI Elements
+    const pointer = document.getElementById('finger-pointer');
+    const pointerRing = document.getElementById('pointer-ring');
+    const pointerIcon = document.getElementById('pointer-tool-icon');
+    const pointerStatusTag = document.getElementById('pointer-status-tag');
+    const webcamVideo = document.getElementById('webcam-video');
+    const webcamCanvas = document.getElementById('webcam-canvas');
+    const webcamCtx = webcamCanvas.getContext('2d');
+    const webcamPanel = document.getElementById('webcam-panel');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+
+    // Audio Context (Web Audio API Synthesizer)
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playTone(freq = 440, type = 'sine', duration = 0.12, volume = 0.15) {
+        if (!isAudioEnabled) return;
+        try {
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+    }
+
+    function playChime(freqs = [523, 659, 784]) {
+        if (!isAudioEnabled) return;
+        freqs.forEach((f, idx) => {
+            setTimeout(() => playTone(f, 'triangle', 0.2, 0.1), idx * 60);
+        });
+    }
+
+    // --- RESIZE CANVAS ---
+    function resizeCanvas() {
+        drawCanvas.width = window.innerWidth;
+        drawCanvas.height = window.innerHeight;
+        fxCanvas.width = window.innerWidth;
+        fxCanvas.height = window.innerHeight;
+
+        // Redraw dark background on main canvas
+        drawCtx.fillStyle = '#0f111a';
+        drawCtx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // --- RENDER HUD DOCK & COLOR BAR ---
+    function setupHUD() {
+        const toolsContainer = document.getElementById('tools-container');
+        toolsContainer.innerHTML = '';
+        TOOLS.forEach((tool, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `tool-btn ${idx === activeToolIndex ? 'active' : ''}`;
+            btn.innerHTML = `<i class="fa-solid ${tool.icon}"></i><span>${tool.name}</span>`;
+            btn.onclick = () => selectTool(idx);
+            toolsContainer.appendChild(btn);
+        });
+
+        const colorBar = document.getElementById('color-bar');
+        colorBar.innerHTML = '';
+        COLORS.forEach((col, idx) => {
+            const item = document.createElement('div');
+            item.className = `color-item ${idx === activeColorIndex ? 'active' : ''}`;
+            item.style.setProperty('--swatch-color', col.hex);
+            item.innerHTML = `
+                <span class="key-num">${col.key}</span>
+                <div class="color-swatch" style="background-color: ${col.hex};"></div>
+            `;
+            item.onclick = () => selectColor(idx);
+            colorBar.appendChild(item);
+        });
+
+        document.getElementById('brush-size').addEventListener('input', (e) => {
+            brushSize = parseInt(e.target.value);
+        });
+    }
+
+    function selectColor(index) {
+        activeColorIndex = (index + COLORS.length) % COLORS.length;
+        document.querySelectorAll('.color-item').forEach((el, i) => {
+            el.classList.toggle('active', i === activeColorIndex);
+        });
+        const activeHex = COLORS[activeColorIndex].hex;
+        document.documentElement.style.setProperty('--active-color', activeHex);
+        playTone(300 + activeColorIndex * 60, 'sine', 0.1);
+        showToast(`Color: ${COLORS[activeColorIndex].name}`);
+    }
+
+    function selectTool(index) {
+        activeToolIndex = (index + TOOLS.length) % TOOLS.length;
+        document.querySelectorAll('.tool-btn').forEach((el, i) => {
+            el.classList.toggle('active', i === activeToolIndex);
+        });
+        const currentTool = TOOLS[activeToolIndex];
+        pointerIcon.className = `fa-solid ${currentTool.icon} pointer-icon`;
+        playTone(currentTool.sound, 'triangle', 0.15);
+        showToast(`Tool: ${currentTool.name}`);
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast-msg');
+        toast.innerText = msg;
+        toast.classList.add('show');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function updateSpaceIndicator() {
+        if (!requireSpaceToDraw) {
+            pointerRing.classList.add('painting');
+            pointerStatusTag.innerText = 'ALWAYS PAINTING';
+            return;
+        }
+
+        if (isSpacePressed) {
+            pointerRing.classList.add('painting');
+            pointerStatusTag.innerText = 'PAINTING ✨';
+        } else {
+            pointerRing.classList.remove('painting');
+            pointerStatusTag.innerText = 'HOLD [SPACE] TO PAINT';
+        }
+    }
+
+    // --- KEYBOARD LISTENERS ---
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.key === ' ') {
+            e.preventDefault();
+            if (!isSpacePressed) {
+                isSpacePressed = true;
+                playTone(600, 'sine', 0.08, 0.12);
+                updateSpaceIndicator();
+            }
+            return;
+        }
+
+        if (e.key >= '0' && e.key <= '9') {
+            const idx = e.key === '0' ? 9 : parseInt(e.key) - 1;
+            selectColor(idx);
+        } else if (e.key.toLowerCase() === 'q') {
+            selectTool(activeToolIndex - 1);
+        } else if (e.key.toLowerCase() === 'e') {
+            selectTool(activeToolIndex + 1);
+        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+            clearCanvas();
+        } else if (e.key.toLowerCase() === 'm') {
+            toggleAudio();
+        } else if (e.key.toLowerCase() === 'c') {
+            toggleWebcamView();
+        } else if (e.key.toLowerCase() === 's') {
+            saveImage();
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.code === 'Space' || e.key === ' ') {
+            e.preventDefault();
+            isSpacePressed = false;
+            playTone(350, 'sine', 0.08, 0.08);
+            updateSpaceIndicator();
+        }
+    });
+
+    // --- PARTICLES & FX ENGINE ---
+    const particles = [];
+    const bubbles = [];
+
+    class Particle {
+        constructor(x, y, color, type = 'star') {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.type = type;
+            this.size = Math.random() * 12 + 6;
+            this.vx = (Math.random() - 0.5) * 4;
+            this.vy = (Math.random() - 0.5) * 4;
+            this.life = 1.0;
+            this.decay = Math.random() * 0.02 + 0.015;
+            this.rotation = Math.random() * Math.PI * 2;
+            this.emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life -= this.decay;
+            if (this.type === 'glitter') {
+                this.vy += 0.1; // gravity
+            }
+        }
+
+        draw(ctx) {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, this.life);
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+
+            if (this.type === 'star') {
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * this.size, -Math.sin((18 + i * 72) * Math.PI / 180) * this.size);
+                    ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * (this.size / 2), -Math.sin((54 + i * 72) * Math.PI / 180) * (this.size / 2));
+                }
+                ctx.closePath();
+                ctx.fill();
+            } else if (this.type === 'glitter') {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size / 3, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (this.type === 'emoji') {
+                ctx.font = `${this.size * 2}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.emoji, 0, 0);
+            }
+
+            ctx.restore();
+        }
+    }
+
+    class Bubble {
+        constructor(x, y, radius) {
+            this.x = x;
+            this.y = y;
+            this.r = radius;
+            this.vx = (Math.random() - 0.5) * 2;
+            this.vy = -Math.random() * 1.5 - 0.5;
+            this.hue = Math.random() * 360;
+            this.life = 1.0;
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life -= 0.005;
+        }
+
+        draw(ctx) {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, this.life * 0.8);
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${this.hue}, 80%, 60%, 0.25)`;
+            ctx.fill();
+            ctx.strokeStyle = `hsla(${this.hue}, 90%, 75%, 0.8)`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Bubble highlight
+            ctx.beginPath();
+            ctx.arc(this.x - this.r * 0.3, this.y - this.r * 0.3, this.r * 0.2, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    function renderFXLoop() {
+        fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+        // Update & Draw Particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.update();
+            p.draw(fxCtx);
+            if (p.life <= 0) particles.splice(i, 1);
+        }
+
+        // Update & Draw Bubbles
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+            const b = bubbles[i];
+            b.update();
+            b.draw(fxCtx);
+
+            // Pop bubble if finger touches it
+            const dist = Math.hypot(smoothedX - b.x, smoothedY - b.y);
+            if (dist < b.r + 15 || b.life <= 0) {
+                // Pop effect
+                for (let k = 0; k < 6; k++) {
+                    particles.push(new Particle(b.x, b.y, `hsl(${b.hue}, 90%, 70%)`, 'glitter'));
+                }
+                playTone(b.hue + 400, 'sine', 0.08, 0.1);
+                bubbles.splice(i, 1);
+            }
+        }
+
+        // Smooth cursor pointer tracking
+        smoothedX += (currentX - smoothedX) * 0.35;
+        smoothedY += (currentY - smoothedY) * 0.35;
+
+        if (trackingMode === 'webcam' || trackingMode === 'mouse') {
+            pointer.style.opacity = '1';
+            pointer.style.left = `${smoothedX}px`;
+            pointer.style.top = `${smoothedY}px`;
+        }
+
+        requestAnimationFrame(renderFXLoop);
+    }
+    renderFXLoop();
+
+    // --- DRAWING LOGIC ---
+    let hueCycle = 0;
+
+    function drawStroke(x1, y1, x2, y2) {
+        const tool = TOOLS[activeToolIndex].id;
+        const color = COLORS[activeColorIndex].hex;
+
+        drawCtx.save();
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+
+        if (tool === 'crayon') {
+            drawCtx.strokeStyle = color;
+            drawCtx.lineWidth = brushSize;
+            drawCtx.beginPath();
+            drawCtx.moveTo(x1, y1);
+            drawCtx.lineTo(x2, y2);
+            drawCtx.stroke();
+        } 
+        else if (tool === 'rainbow') {
+            hueCycle = (hueCycle + 4) % 360;
+            drawCtx.strokeStyle = `hsl(${hueCycle}, 100%, 55%)`;
+            drawCtx.shadowColor = `hsl(${hueCycle}, 100%, 55%)`;
+            drawCtx.shadowBlur = 12;
+            drawCtx.lineWidth = brushSize;
+            drawCtx.beginPath();
+            drawCtx.moveTo(x1, y1);
+            drawCtx.lineTo(x2, y2);
+            drawCtx.stroke();
+        } 
+        else if (tool === 'neon') {
+            // Translucent Outer Glow
+            drawCtx.strokeStyle = color;
+            drawCtx.shadowColor = color;
+            drawCtx.shadowBlur = 20;
+            drawCtx.lineWidth = brushSize * 1.4;
+            drawCtx.globalAlpha = 0.4;
+            drawCtx.beginPath();
+            drawCtx.moveTo(x1, y1);
+            drawCtx.lineTo(x2, y2);
+            drawCtx.stroke();
+
+            // Inner Core Line
+            drawCtx.strokeStyle = '#ffffff';
+            drawCtx.lineWidth = brushSize * 0.5;
+            drawCtx.globalAlpha = 1.0;
+            drawCtx.stroke();
+        } 
+        else if (tool === 'sparkles') {
+            drawCtx.strokeStyle = color;
+            drawCtx.lineWidth = brushSize * 0.4;
+            drawCtx.beginPath();
+            drawCtx.moveTo(x1, y1);
+            drawCtx.lineTo(x2, y2);
+            drawCtx.stroke();
+
+            // Emit sparkle particles
+            if (Math.random() < 0.6) {
+                particles.push(new Particle(x2, y2, color, 'star'));
+                playTone(800 + Math.random() * 400, 'triangle', 0.05, 0.05);
+            }
+        } 
+        else if (tool === 'emojis') {
+            const dist = Math.hypot(x2 - x1, y2 - y1);
+            if (dist > 30) {
+                particles.push(new Particle(x2, y2, color, 'emoji'));
+                playTone(600, 'sine', 0.08, 0.1);
+            }
+        } 
+        else if (tool === 'bubbles') {
+            const dist = Math.hypot(x2 - x1, y2 - y1);
+            if (dist > 25) {
+                bubbles.push(new Bubble(x2, y2, Math.random() * 15 + brushSize));
+                playTone(500 + Math.random() * 300, 'sine', 0.05, 0.08);
+            }
+        } 
+        else if (tool === 'glitter') {
+            drawCtx.strokeStyle = color;
+            drawCtx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                const rx = x2 + (Math.random() - 0.5) * brushSize * 1.5;
+                const ry = y2 + (Math.random() - 0.5) * brushSize * 1.5;
+                particles.push(new Particle(rx, ry, color, 'glitter'));
+            }
+        } 
+        else if (tool === 'kaleidoscope') {
+            const cx = drawCanvas.width / 2;
+            const cy = drawCanvas.height / 2;
+            const numSlices = 8;
+            drawCtx.strokeStyle = color;
+            drawCtx.lineWidth = brushSize * 0.8;
+
+            for (let i = 0; i < numSlices; i++) {
+                const angle = (Math.PI * 2 / numSlices) * i;
+                drawCtx.save();
+                drawCtx.translate(cx, cy);
+                drawCtx.rotate(angle);
+                drawCtx.beginPath();
+                drawCtx.moveTo(x1 - cx, y1 - cy);
+                drawCtx.lineTo(x2 - cx, y2 - cy);
+                drawCtx.stroke();
+                drawCtx.restore();
+            }
+        } 
+        else if (tool === 'splatter') {
+            drawCtx.fillStyle = color;
+            drawCtx.beginPath();
+            drawCtx.arc(x2, y2, brushSize, 0, Math.PI * 2);
+            drawCtx.fill();
+
+            // Splatter droplets
+            for (let i = 0; i < 5; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * brushSize * 2.5;
+                const dropX = x2 + Math.cos(angle) * radius;
+                const dropY = y2 + Math.sin(angle) * radius;
+                const dropR = Math.random() * (brushSize * 0.3) + 2;
+
+                drawCtx.beginPath();
+                drawCtx.arc(dropX, dropY, dropR, 0, Math.PI * 2);
+                drawCtx.fill();
+            }
+        } 
+        else if (tool === 'eraser') {
+            drawCtx.fillStyle = '#0f111a';
+            drawCtx.beginPath();
+            drawCtx.arc(x2, y2, brushSize * 1.5, 0, Math.PI * 2);
+            drawCtx.fill();
+        }
+
+        drawCtx.restore();
+    }
+
+    // --- MOUSE & TOUCH FALLBACK ---
+    let isMouseDown = false;
+
+    drawCanvas.addEventListener('mousedown', (e) => {
+        if (trackingMode === 'webcam') return;
+        trackingMode = 'mouse';
+        isMouseDown = true;
+        currentX = e.clientX;
+        currentY = e.clientY;
+        lastX = currentX;
+        lastY = currentY;
+        updateStatus('mouse', 'Mouse Drawing Mode');
+    });
+
+    drawCanvas.addEventListener('mousemove', (e) => {
+        if (trackingMode === 'webcam') return;
+        currentX = e.clientX;
+        currentY = e.clientY;
+        if (isMouseDown) {
+            drawStroke(lastX, lastY, currentX, currentY);
+            lastX = currentX;
+            lastY = currentY;
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (trackingMode === 'mouse') isMouseDown = false;
+    });
+
+    // --- MEDIAPIPE WEBCAM HAND TRACKING ---
+    function initMediaPipe() {
+        if (typeof Hands === 'undefined') {
+            updateStatus('mouse', 'MediaPipe CDN offline - Mouse Mode');
+            return;
+        }
+
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.6,
+            minTrackingConfidence: 0.6
+        });
+
+        hands.onResults(onHandResults);
+
+        const camera = new Camera(webcamVideo, {
+            onFrame: async () => {
+                await hands.send({ image: webcamVideo });
+            },
+            width: 640,
+            height: 480
+        });
+
+        camera.start().then(() => {
+            trackingMode = 'webcam';
+            updateStatus('active', 'Webcam Tracking Active ☝️');
+            showToast('Hold SPACEBAR & point finger to draw!');
+        }).catch((err) => {
+            console.warn('Camera failed or permission denied:', err);
+            trackingMode = 'mouse';
+            updateStatus('mouse', 'Camera Unavailable - Mouse Mode');
+            showToast('Webcam unavailable. Mouse drawing active!');
+        });
+    }
+
+    function onHandResults(results) {
+        webcamCtx.save();
+        webcamCtx.clearRect(0, 0, webcamCanvas.width, webcamCanvas.height);
+
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            const landmarks = results.multiHandLandmarks[0];
+
+            // Index Tip is Landmark 8
+            const indexTip = landmarks[8];
+
+            // Map normalized webcam coords (0..1) to window size
+            // Mirror X coordinate since camera is mirrored
+            currentX = (1 - indexTip.x) * window.innerWidth;
+            currentY = indexTip.y * window.innerHeight;
+
+            // Draw Landmark indicator on webcam preview video
+            webcamCtx.fillStyle = isSpacePressed ? '#00ff66' : '#ff2a6d';
+            webcamCtx.beginPath();
+            webcamCtx.arc(indexTip.x * webcamCanvas.width, indexTip.y * webcamCanvas.height, 8, 0, Math.PI * 2);
+            webcamCtx.fill();
+
+            // Determine if drawing should occur:
+            const canPaint = requireSpaceToDraw ? isSpacePressed : true;
+
+            if (canPaint) {
+                if (!isDrawing) {
+                    isDrawing = true;
+                    lastX = currentX;
+                    lastY = currentY;
+                } else {
+                    drawStroke(lastX, lastY, currentX, currentY);
+                    lastX = currentX;
+                    lastY = currentY;
+                }
+            } else {
+                isDrawing = false;
+            }
+
+            if (requireSpaceToDraw) {
+                updateStatus('active', isSpacePressed ? 'Painting (Space Held) ✨' : 'Finger Tracked (Hold Space to Paint)');
+            } else {
+                updateStatus('active', 'Index Finger Painting ✨');
+            }
+        } else {
+            isDrawing = false;
+            updateStatus('active', 'Looking for hand...');
+        }
+
+        webcamCtx.restore();
+    }
+
+    function updateStatus(state, text) {
+        statusDot.className = `status-dot ${state}`;
+        statusText.innerText = text;
+    }
+
+    function toggleSpaceMode() {
+        requireSpaceToDraw = !requireSpaceToDraw;
+        const btn = document.getElementById('btn-space-mode');
+        btn.classList.toggle('active', requireSpaceToDraw);
+        updateSpaceIndicator();
+        showToast(requireSpaceToDraw ? 'Mode: Hold SPACE to Paint ⌨️' : 'Mode: Always Paint ☝️');
+    }
+
+    // --- BUTTON ACTIONS ---
+    function clearCanvas() {
+        drawCtx.fillStyle = '#0f111a';
+        drawCtx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+
+        // Confetti burst on clear
+        for (let i = 0; i < 40; i++) {
+            particles.push(new Particle(window.innerWidth / 2, window.innerHeight / 2, COLORS[i % COLORS.length].hex, 'star'));
+        }
+        playChime([523, 659, 784, 1046]);
+        showToast('Canvas Cleared!');
+    }
+
+    function toggleAudio() {
+        isAudioEnabled = !isAudioEnabled;
+        const btn = document.getElementById('btn-audio');
+        btn.classList.toggle('active', isAudioEnabled);
+        btn.innerHTML = `<i class="fa-solid ${isAudioEnabled ? 'fa-volume-high' : 'fa-volume-xmark'}"></i>`;
+        showToast(isAudioEnabled ? 'Sound ON 🔊' : 'Sound Muted 🔇');
+    }
+
+    function toggleWebcamView() {
+        webcamPanel.classList.toggle('minimized');
+        const isMin = webcamPanel.classList.contains('minimized');
+        document.getElementById('btn-camera').classList.toggle('active', !isMin);
+    }
+
+    function saveImage() {
+        const link = document.createElement('a');
+        link.download = `finger-paint-${Date.now()}.png`;
+        link.href = drawCanvas.toDataURL('image/png');
+        link.click();
+        playChime([784, 987, 1174]);
+        showToast('Masterpiece Saved! 🖼️');
+    }
+
+    // --- HELP MODAL ---
+    const helpModal = document.getElementById('help-modal');
+    document.getElementById('btn-help').onclick = () => helpModal.classList.add('open');
+    document.getElementById('btn-close-modal').onclick = () => {
+        helpModal.classList.remove('open');
+        initAudio();
+    };
+
+    document.getElementById('btn-space-mode').onclick = toggleSpaceMode;
+    document.getElementById('btn-clear').onclick = clearCanvas;
+    document.getElementById('btn-audio').onclick = toggleAudio;
+    document.getElementById('btn-camera').onclick = toggleWebcamView;
+    document.getElementById('btn-save').onclick = saveImage;
+
+    // INITIALIZE
+    setupHUD();
+    updateSpaceIndicator();
+    setTimeout(() => {
+        initMediaPipe();
+    }, 500);
+</script>
+</body>
+</html>
