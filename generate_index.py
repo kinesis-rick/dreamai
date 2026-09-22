@@ -75,6 +75,9 @@ def get_file_metadata(filepath, filename, category_dir):
         elif "wheel" in path_lower or "motor" in path_lower:
             icon = "fa-car-side"
             if not description: description = "High-speed open wheel motorsports racing."
+        elif "hellpang" in path_lower:
+            icon = "fa-gamepad"
+            if not description: description = "Pop the bouncy sentient Bobas with your harpoon!"
         else:
             icon = "fa-gamepad"
             if not description: description = "Interactive web game experience."
@@ -136,11 +139,21 @@ for item in sorted(os.listdir(BASE_DIR)):
 
     if os.path.isdir(folder_path) and item not in IGNORE_FOLDERS and not item.startswith('.'):
         for file in sorted(os.listdir(folder_path)):
-            filename, ext = os.path.splitext(file)
-            if ext.lower() in VALID_EXTENSIONS and file not in IGNORE_FILES:
-                filepath = os.path.join(folder_path, file)
-                meta = get_file_metadata(filepath, file, item)
-                index_data.append(meta)
+            sub_path = os.path.join(folder_path, file)
+            if os.path.isfile(sub_path):
+                filename, ext = os.path.splitext(file)
+                if ext.lower() in VALID_EXTENSIONS and file not in IGNORE_FILES:
+                    filepath = os.path.join(folder_path, file)
+                    meta = get_file_metadata(filepath, file, item)
+                    index_data.append(meta)
+            elif os.path.isdir(sub_path) and file not in IGNORE_FOLDERS:
+                entry_html = os.path.join(sub_path, 'index.html')
+                if os.path.exists(entry_html):
+                    meta = get_file_metadata(entry_html, file, item)
+                    meta['path'] = f"{item}/{file}/index.html"
+                    if not meta['name'] or meta['name'].lower() == 'index':
+                        meta['name'] = file.replace('_', ' ').replace('-', ' ').title()
+                    index_data.append(meta)
 
 # Write files.json
 with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:

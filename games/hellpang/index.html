@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HELLPANG - Boba Splatter Arcade</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Entry Title Screen Overlay -->
+    <div id="title-screen" class="overlay-screen title-screen-overlay">
+      <div class="title-bg-art" style="background-image: url('title_screen.jpg');"></div>
+      <div class="title-vignette"></div>
+
+      <div class="title-content-box">
+        <div class="title-badge">★ HELLPANG ARCADE TITLE MUSIC ★</div>
+        <h1 class="game-title title-hero">HELLPANG</h1>
+        <p class="subtitle title-sub">Pop the Bouncy Sentient Bobas with your Harpoon!</p>
+
+        <div style="display: flex; gap: 15px; margin: 15px 0 10px 0; align-items: center; flex-wrap: wrap; justify-content: center;">
+          <button id="btn-title-play-audio" class="btn" style="background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); padding: 14px 28px; font-size: 1.05rem;">
+            🎵 PLAY TITLE MUSIC
+          </button>
+          <button id="btn-title-enter-menu" class="btn btn-secondary" style="padding: 14px 28px; font-size: 1.05rem;">
+            ⚡ ENTER MAIN MENU
+          </button>
+        </div>
+
+        <div id="title-audio-status" class="audio-notice-text">
+          🎵 Click <strong>"PLAY TITLE MUSIC"</strong> or click anywhere to listen!
+        </div>
+      </div>
+
+      <div class="game-version">v1.8.0</div>
+    </div>
+
+    <!-- Main Start Menu Overlay -->
+    <div id="menu-screen" class="overlay-screen hidden">
+      <h1 class="game-title">HELLPANG</h1>
+      <p class="subtitle">Pop the Bouncy Sentient Bobas with your Harpoon!</p>
+
+      <div class="mode-selector">
+        <div id="btn-1p" class="mode-card active">
+          <div class="mode-icon">🧋</div>
+          <div class="mode-title">1 Player</div>
+          <p style="font-size:0.85rem; color:#b388ff; margin-top:6px;">Move: A/D | Harpoon: W</p>
+        </div>
+        <div id="btn-2p" class="mode-card">
+          <div class="mode-icon">🧋🧋</div>
+          <div class="mode-title">2 Player Co-op</div>
+          <p style="font-size:0.85rem; color:#18ffff; margin-top:6px;">P2 Move: ←/→ | Harpoon: ↑</p>
+        </div>
+      </div>
+
+      <div class="controls-info">
+        <div class="control-group">
+          <span class="key-cap">A</span><span class="key-cap">D</span> Move P1
+        </div>
+        <div class="control-group">
+          <span class="key-cap">W</span> Fire Harpoon (P1)
+        </div>
+        <div class="control-group">
+          <span class="key-cap">S</span> Cancel/Retract (P1)
+        </div>
+        <div class="control-group">
+          <span class="key-cap">↓</span> Cancel/Retract (P2)
+        </div>
+      </div>
+
+      <!-- Custom Desktop Background Uploader, Load Game & Leaderboard -->
+      <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap;">
+        <button id="btn-title-menu" style="font-size: 0.8rem; font-family:'Fredoka'; padding: 6px 12px; background: rgba(179, 136, 255, 0.2); border: 1px solid rgba(179, 136, 255, 0.5); border-radius: 20px; color: #b388ff; cursor: pointer; font-weight: 600;">
+          📺 Title Screen
+        </button>
+        <button id="btn-custom-bg" style="font-size: 0.8rem; font-family:'Fredoka'; padding: 6px 12px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 20px; color: #fff; cursor: pointer;">
+          🖼️ Load Background (1280x720)
+        </button>
+        <button id="btn-load-game-menu" style="font-size: 0.8rem; font-family:'Fredoka'; padding: 6px 12px; background: rgba(105, 240, 174, 0.2); border: 1px solid rgba(105, 240, 174, 0.5); border-radius: 20px; color: #69f0ae; cursor: pointer; font-weight: 600;">
+          📂 Load Code
+        </button>
+        <button id="btn-leaderboard-menu" style="font-size: 0.8rem; font-family:'Fredoka'; padding: 6px 12px; background: rgba(255, 215, 0, 0.2); border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 20px; color: #ffd700; cursor: pointer; font-weight: 600;">
+          🏆 Leaderboard
+        </button>
+      </div>
+
+      <!-- Game Version Badge -->
+      <div class="game-version" id="menu-game-version">v1.8.0</div>
+    </div>
+
+    <!-- Leaderboard Modal Overlay -->
+    <div id="leaderboard-modal" class="overlay-screen hidden">
+      <h1 class="game-title" style="font-size: 2.4rem; color: var(--accent-yellow); text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);">HALL OF FAME</h1>
+      <p style="font-size: 0.9rem; color: #b388ff; margin-bottom: 15px;">Top Scores & High Waves Survived</p>
+
+      <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,215,0,0.3); border-radius: 12px; padding: 16px 24px; width: 380px; margin-bottom: 20px;">
+        <div id="menu-highscore-board">
+          <!-- Populated by main.js -->
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:15px; justify-content:center;">
+          <button id="btn-export-scores-modal" style="font-size:0.75rem; padding:6px 12px; cursor:pointer; background:rgba(24,255,255,0.2); color:#18ffff; border:1px solid #18ffff; border-radius:6px; font-weight:600; font-family:'Fredoka';">💾 BACKUP SCORES</button>
+          <button id="btn-import-scores-modal" style="font-size:0.75rem; padding:6px 12px; cursor:pointer; background:rgba(105,240,174,0.2); color:#69f0ae; border:1px solid #69f0ae; border-radius:6px; font-weight:600; font-family:'Fredoka';">📂 RESTORE SCORES</button>
+        </div>
+      </div>
+
+      <button id="btn-close-leaderboard" class="btn btn-secondary">CLOSE</button>
+    </div>
+
+    <!-- Pause Menu Screen Overlay -->
+    <div id="pause-screen" class="overlay-screen hidden">
+      <h1 class="game-title" style="font-size: 2.5rem; color: var(--accent-cyan); text-shadow: 0 0 20px rgba(24, 255, 255, 0.6);">GAME PAUSED</h1>
+      <p style="font-size: 0.95rem; color: #b388ff; margin-bottom: 15px;">Press ESC or P to Resume</p>
+
+      <!-- Run Summary Stats -->
+      <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 14px 20px; width: 420px; margin-bottom: 15px; text-align: center;">
+        <div style="display:flex; justify-content:space-around; font-size:1.05rem; margin-bottom: 10px;">
+          <div>Wave: <span id="pause-wave" style="color:var(--accent-yellow); font-weight:700;">1</span></div>
+          <div>Score: <span id="pause-score" style="color:var(--accent-green); font-weight:700;">0</span></div>
+          <div>Level: <span id="pause-level" style="color:var(--accent-cyan); font-weight:700;">1</span></div>
+        </div>
+
+        <h4 style="font-size: 0.8rem; font-family:'Press Start 2P'; color: var(--accent-purple); margin: 10px 0 6px 0;">ACQUIRED CARD LOADOUT</h4>
+        <div id="pause-cards-loadout" style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-height: 80px; overflow-y:auto; padding:4px;">
+          <span style="font-size:0.8rem; color:#888;">No cards acquired yet</span>
+        </div>
+      </div>
+
+      <!-- Level Code Copy Container -->
+      <div style="background: rgba(255,255,255,0.06); border: 1px dashed rgba(24,255,255,0.4); border-radius: 10px; padding: 12px; width: 420px; margin-bottom: 15px; text-align: center;">
+        <p style="font-size: 0.85rem; color: #fff; margin-bottom: 8px;">📋 <strong>Save & Step Away:</strong> Copy Level Code to resume later!</p>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="pause-code-input" readonly placeholder="Generating code..." style="flex:1; background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.2); color:#18ffff; padding:6px 10px; border-radius:6px; font-family:monospace; font-size:0.8rem;">
+          <button id="btn-copy-code" style="padding:6px 12px; background:var(--accent-cyan); color:#000; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-family:'Fredoka'; font-size:0.85rem;">COPY CODE</button>
+        </div>
+        <div id="copy-status-msg" style="font-size: 0.75rem; color: #69f0ae; margin-top: 6px; display: none;">✓ Code copied to clipboard!</div>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button id="btn-resume-game" class="btn">RESUME GAME</button>
+        <button id="btn-pause-mainmenu" class="btn btn-secondary">MAIN MENU</button>
+      </div>
+    </div>
+
+    <!-- Load Game Modal Overlay -->
+    <div id="load-modal" class="overlay-screen hidden">
+      <h2 style="font-family:'Press Start 2P'; font-size: 1.5rem; color: var(--accent-green); margin-bottom: 10px;">LOAD GAME</h2>
+      <p style="font-size: 0.9rem; color: #b388ff; margin-bottom: 15px;">Paste your saved Level Code below to restore your run:</p>
+
+      <div style="width: 400px; margin-bottom: 20px;">
+        <textarea id="load-code-textarea" rows="3" placeholder="Paste Level Code here..." style="width:100%; background:rgba(0,0,0,0.7); border:1px solid rgba(105,240,174,0.5); color:#69f0ae; padding:10px; border-radius:8px; font-family:monospace; font-size:0.85rem; resize:none;"></textarea>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button id="btn-submit-load" class="btn" style="background: linear-gradient(135deg, var(--accent-green), #00e676);">RESTORE RUN</button>
+        <button id="btn-cancel-load" class="btn btn-secondary">CANCEL</button>
+      </div>
+    </div>
+
+    <!-- Vampire Survivors Style Card Draft Modal -->
+    <div id="card-modal" class="overlay-screen hidden">
+      <h2 class="card-modal-title">LEVEL UP!</h2>
+      <p class="card-modal-subtitle">Choose an Upgrade (Press 1, 2, 3 or Click)</p>
+      
+      <!-- Current Loadout & Stacked Stat Summary Container -->
+      <div id="card-loadout-summary" class="card-loadout-summary"></div>
+
+      <div id="cards-container" class="cards-container">
+        <!-- Upgrade cards generated dynamically by js/cards.js -->
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="overlay-screen hidden">
+      <h1 class="game-title" style="color: var(--accent-pink); font-size: 2.5rem; margin-bottom: 4px;">GAME OVER</h1>
+      <p style="font-size: 0.95rem; margin-bottom: 10px; color: var(--accent-purple);">The Boba Swarm Overwhelmed You!</p>
+
+      <!-- Stats & 4-Char Name Entry Card -->
+      <div id="gameover-name-box" style="background: rgba(255, 64, 129, 0.15); border: 2px solid var(--accent-pink); border-radius: 12px; padding: 12px 18px; width: 360px; margin-bottom: 10px; text-align: center; box-shadow: 0 0 15px rgba(255,64,129,0.3);">
+        <div style="display: flex; justify-content: space-around; font-size: 1rem; margin-bottom: 8px;">
+          <div>Final Score: <span id="final-score" style="color: var(--accent-yellow); font-weight:700;">0</span></div>
+          <div>Wave: <span id="final-wave" style="color: var(--accent-cyan); font-weight:700;">1</span></div>
+        </div>
+
+        <label for="player-name-input" style="display: block; font-family: 'Press Start 2P', cursive; font-size: 0.72rem; color: var(--accent-yellow); margin-bottom: 6px; text-shadow: 0 0 6px rgba(255,215,0,0.5);">
+          ENTER INITIALS (4 CHARS)
+        </label>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
+          <input type="text" id="player-name-input" maxlength="4" placeholder="HERO" value="HERO" autocomplete="off" spellcheck="false"
+            style="width: 130px; text-align: center; font-family: 'Press Start 2P', monospace; font-size: 1.15rem; letter-spacing: 4px; text-transform: uppercase; background: rgba(0,0,0,0.85); color: var(--accent-cyan); border: 2px solid var(--accent-cyan); border-radius: 8px; padding: 6px 8px; outline: none; box-shadow: 0 0 10px rgba(24,255,255,0.4);" />
+          <button id="btn-save-name" style="font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 0.85rem; padding: 7px 14px; border: 2px solid var(--accent-green); border-radius: 8px; background: rgba(105,240,174,0.25); color: var(--accent-green); cursor: pointer; transition: all 0.2s ease; box-shadow: 0 0 10px rgba(105,240,174,0.3);">
+            💾 SAVE
+          </button>
+        </div>
+        <div id="name-save-status" style="font-size: 0.75rem; color: var(--accent-green); margin-top: 4px; height: 16px; font-weight: 600;"></div>
+      </div>
+
+      <!-- High Score Leaderboard -->
+      <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 10px 16px; width: 360px; margin-bottom: 10px;">
+        <h3 style="font-size: 0.85rem; font-family: 'Press Start 2P'; color: var(--accent-yellow); text-align: center; margin-bottom: 8px;">TOP HALL OF FAME</h3>
+        <div id="highscore-board">
+          <!-- Populated by main.js -->
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:8px; justify-content:center;">
+          <button id="btn-export-scores" style="font-size:0.75rem; padding:4px 8px; cursor:pointer; background:rgba(24,255,255,0.2); color:#18ffff; border:1px solid #18ffff; border-radius:6px;">💾 BACKUP SCORES</button>
+          <button id="btn-import-scores" style="font-size:0.75rem; padding:4px 8px; cursor:pointer; background:rgba(105,240,174,0.2); color:#69f0ae; border:1px solid #69f0ae; border-radius:6px;">📂 RESTORE SCORES</button>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button id="btn-restart" class="btn" style="padding: 10px 24px; font-size: 1rem;">RETRY RUN</button>
+        <button id="btn-mainmenu" class="btn btn-secondary" style="padding: 10px 24px; font-size: 1rem;">MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/config.js?v=1.9.1"></script>
+  <script src="js/audio.js?v=1.9.1"></script>
+  <script src="js/input.js?v=1.9.1"></script>
+  <script src="js/entities.js?v=1.9.1"></script>
+  <script src="js/cards.js?v=1.9.1"></script>
+  <script src="js/main.js?v=1.9.1"></script>
+</body>
+</html>
