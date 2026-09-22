@@ -1,0 +1,563 @@
+/* Hellpang - Neon-Pastel Arcade Styling */
+
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Press+Start+2P&display=swap');
+
+:root {
+  --bg-dark: #0f0a1c;
+  --panel-bg: rgba(26, 18, 48, 0.85);
+  --accent-pink: #ff4081;
+  --accent-purple: #b388ff;
+  --accent-cyan: #18ffff;
+  --accent-yellow: #ffd700;
+  --accent-green: #69f0ae;
+  --text-light: #f5f5f5;
+  --card-hover: rgba(255, 64, 129, 0.25);
+  --shadow-glow: 0 0 20px rgba(255, 64, 129, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  background-color: var(--bg-dark);
+  background-image: 
+    radial-gradient(circle at 50% 20%, rgba(179, 136, 255, 0.15) 0%, transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(255, 64, 129, 0.12) 0%, transparent 50%);
+  color: var(--text-light);
+  font-family: 'Fredoka', sans-serif;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#game-container {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  height: 100%;
+  max-height: 720px;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(179, 136, 255, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Canvas Styling */
+canvas#gameCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background-color: #120c24;
+}
+
+/* UI Overlays */
+.overlay-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 10, 28, 0.92);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+  padding: 16px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Game Version Badge on Main Menu */
+.game-version {
+  position: absolute;
+  bottom: 16px;
+  right: 22px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  letter-spacing: 1px;
+}
+
+/* Titles & Headers */
+.game-title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 3.8rem;
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-yellow), var(--accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(255, 64, 129, 0.6);
+  margin-bottom: 10px;
+  letter-spacing: -2px;
+  animation: pulse-title 2s infinite alternate;
+}
+
+.subtitle {
+  font-size: 1.3rem;
+  color: var(--accent-purple);
+  margin-bottom: 30px;
+  letter-spacing: 1px;
+}
+
+@keyframes pulse-title {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.03); }
+}
+
+/* Buttons */
+.btn {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  padding: 14px 36px;
+  border: 3px solid var(--accent-pink);
+  border-radius: 50px;
+  background: linear-gradient(135deg, rgba(255, 64, 129, 0.3), rgba(179, 136, 255, 0.3));
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 15px rgba(255, 64, 129, 0.4);
+  margin: 10px;
+  outline: none;
+}
+
+.btn:hover, .btn.selected {
+  transform: translateY(-3px) scale(1.05);
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+  box-shadow: 0 0 30px rgba(255, 64, 129, 0.8);
+  border-color: #fff;
+}
+
+.btn-secondary {
+  border-color: var(--accent-cyan);
+  background: linear-gradient(135deg, rgba(24, 255, 255, 0.2), rgba(105, 240, 174, 0.2));
+  box-shadow: 0 0 15px rgba(24, 255, 255, 0.3);
+}
+
+.btn-secondary:hover, .btn-secondary.selected {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+  box-shadow: 0 0 30px rgba(24, 255, 255, 0.8);
+}
+
+/* Mode Selection Cards */
+.mode-selector {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.mode-card {
+  background: var(--panel-bg);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 20px 30px;
+  text-align: center;
+  cursor: pointer;
+  width: 220px;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mode-card:hover, .mode-card.active {
+  border-color: var(--accent-pink);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-glow);
+  background: rgba(40, 25, 70, 0.95);
+}
+
+.mode-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.mode-title {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+/* Card Drafting Modal (Vampire Survivors Style) */
+.card-modal-title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.8rem;
+  color: var(--accent-yellow);
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  margin-bottom: 10px;
+}
+
+.card-modal-subtitle {
+  font-size: 1.1rem;
+  color: var(--accent-cyan);
+  margin-bottom: 16px;
+}
+
+/* Card Draft Loadout Summary & Live Stats Panel */
+.card-loadout-summary {
+  width: 100%;
+  max-width: 950px;
+  background: linear-gradient(135deg, rgba(25, 16, 48, 0.95), rgba(12, 8, 28, 0.98));
+  border: 2px solid var(--accent-green);
+  border-radius: 18px;
+  padding: 16px 22px;
+  margin-bottom: 22px;
+  box-shadow: 0 0 25px rgba(105, 240, 174, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.loadout-summary-header {
+  font-size: 0.85rem;
+  font-family: 'Press Start 2P', cursive;
+  color: var(--accent-yellow);
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.loadout-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.loadout-badge {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(105, 240, 174, 0.5);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.loadout-badge .badge-count {
+  background: linear-gradient(135deg, var(--accent-yellow), #ffa000);
+  color: #120c24;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.loadout-stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 10px;
+}
+
+.loadout-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.loadout-stat-pill span {
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.card-stack-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(105, 240, 174, 0.2);
+  border: 1px solid var(--accent-green);
+  color: var(--accent-green);
+  border-radius: 12px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.card-stack-badge.new {
+  background: rgba(255, 64, 129, 0.2);
+  border-color: var(--accent-pink);
+  color: var(--accent-pink);
+}
+
+.cards-container {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  max-width: 950px;
+}
+
+.upgrade-card {
+  flex: 1;
+  background: linear-gradient(160deg, rgba(35, 24, 60, 0.95), rgba(18, 12, 36, 0.98));
+  border: 3px solid rgba(179, 136, 255, 0.4);
+  border-radius: 20px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.upgrade-card:hover, .upgrade-card.focused {
+  transform: translateY(-10px) scale(1.04);
+  border-color: var(--accent-yellow);
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
+  background: linear-gradient(160deg, rgba(60, 40, 100, 0.95), rgba(30, 18, 60, 0.98));
+}
+
+.upgrade-card .card-key {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.upgrade-card .card-icon {
+  font-size: 3.5rem;
+  margin: 15px 0;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+}
+
+.upgrade-card .card-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.upgrade-card .card-desc {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+  margin-bottom: 15px;
+}
+
+.upgrade-card .card-synergy-badge {
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Controls Info Panel */
+.controls-info {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 15px 25px;
+  margin: 15px 0 25px 0;
+  display: flex;
+  gap: 30px;
+  font-size: 0.95rem;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.key-cap {
+  background: #2a1f42;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  color: var(--accent-yellow);
+}
+
+/* CRT Overlay Effect */
+.crt-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+  background-size: 100% 4px;
+  z-index: 5;
+  opacity: 0.4;
+}
+
+/* Card Loadout Item Badge */
+.loadout-badge {
+  background: rgba(179, 136, 255, 0.2);
+  border: 1px solid rgba(179, 136, 255, 0.4);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* --- Entry Title Screen Overlay Styling --- */
+.title-screen-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 12;
+}
+
+.title-bg-art {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.85) contrast(1.1);
+  transform: scale(1.02);
+  transition: transform 10s ease-out;
+  z-index: 1;
+}
+
+.title-screen-overlay:hover .title-bg-art {
+  transform: scale(1.05);
+}
+
+.title-vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(15, 10, 28, 0.35) 0%, rgba(15, 10, 28, 0.88) 85%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.title-content-box {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 45px;
+  background: rgba(15, 10, 28, 0.55);
+  backdrop-filter: blur(6px);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(255, 64, 129, 0.4);
+}
+
+.title-badge {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.7rem;
+  color: var(--accent-yellow);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.title-hero {
+  font-size: 4.2rem;
+  text-shadow: 0 0 35px rgba(255, 64, 129, 0.9), 0 0 15px rgba(24, 255, 255, 0.7);
+  margin-bottom: 8px;
+}
+
+.title-sub {
+  font-size: 1.15rem;
+  color: var(--accent-cyan);
+  margin-bottom: 25px;
+  text-shadow: 0 0 10px rgba(24, 255, 255, 0.5);
+}
+
+.pulsing-bar {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.05rem;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, rgba(255, 64, 129, 0.95), rgba(179, 136, 255, 0.95));
+  color: #ffffff;
+  border-radius: 50px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 25px rgba(255, 64, 129, 0.8), 0 0 10px rgba(255, 255, 255, 0.6);
+  animation: pulse-start-btn 1.4s infinite alternate;
+  letter-spacing: 1px;
+}
+
+@keyframes pulse-start-btn {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 64, 129, 0.7);
+  }
+  100% {
+    transform: scale(1.06);
+    box-shadow: 0 0 35px rgba(24, 255, 255, 0.9), 0 0 15px rgba(255, 255, 255, 0.9);
+  }
+}
+
+.audio-notice-text {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+}
+
+/* 4-Character Arcade Name Input Styling */
+#player-name-input:focus {
+  border-color: var(--accent-yellow) !important;
+  color: var(--accent-yellow) !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6) !important;
+}
+
+#btn-save-name:hover {
+  background: var(--accent-green) !important;
+  color: #000 !important;
+  box-shadow: 0 0 15px rgba(105, 240, 174, 0.8) !important;
+}
+
+
