@@ -1,0 +1,634 @@
+PC Building Empire
+Game Design Document (GDD)
+
+1. Executive Summary & Vision
+●
+●
+●
+
+Title / Working Name: PC Building Empire (Tux's Rig Empire)
+Genre: 2D Isometric Simulation / Time Management / "Spinning Plates" Tycoon
+Target Platform: HTML5 (Browser-native via WebGL / Phaser 3), Desktop packaging
+via Tauri / Electron
+
+●
+
+Visual Style: Cute 2D isometric pixel art (similar to Stardew Valley / Overcooked),
+featuring animated penguin characters
+
+●
+
+Core Philosophy: A tactile, multi-tasking management loop where manual actions
+gradually transition into automated logistics, periodically disrupted by high-stakes
+customer support crises.
+
+2. Controls & Input Architecture
+The game supports single-player and couch co-op out of the box with flexible input schemes:
+
+2.1 Control Mapping
+●
+
+Player 1 (Lead Penguin):
+
+○
+○
+●
+
+●
+
+Movement: W, A, S, D (8-directional isometric navigation)
+Action / Interact: E
+
+Player 2 (Free Penguin Helper):
+
+○
+
+Movement: Arrow Keys (↑, ↓, ←, →)
+
+○
+○
+
+Action / Interact: Numpad 0 (Fallback: Enter or Right Shift)
+Upkeep Cost: $0 wages (Player 2 acts as a free, manual human partner)
+
+Controller Support (HTML5 Gamepad API):
+
+○
+
+Full compatibility with Xbox (A to interact), PlayStation (Cross to interact),
+Steam Controller, Steam Deck, and generic gamepads.
+
+○
+
+Mixed input support: Play with 2 controllers, 1 controller + 1 keyboard, or 2
+players on 1 keyboard.
+
+○
+
+Analog stick deadzone filtering (0.2 threshold) and normalized diagonal
+movement.
+
+2.2 Co-op Interaction Rules
+●
+
+Station Mutex: Each desk or terminal permits only one penguin at a time to prevent
+race conditions.
+
+●
+
+Item Passing: Finished boxed PCs can be picked up, dropped, and transferred
+between players before reaching the dispatch zone.
+
+●
+
+Shared Economy: Players share a common cash balance, debt liability, and company
+star rating.
+
+3. Core Micro-Loop (Single PC
+Lifecycle)
+Every computer follows a strict 8-step finite state machine:
+
+1. Buy Parts: Player interacts with desk ($1,200 component cost, 1s active click).
+2. Assemble Hardware: Player holds action key at the desk (4s active hold).
+3. Install Linux OS: Boot PC and trigger installation (5s passive progress bar; player is free
+to leave the desk).
+
+4. List for Sale: Turn off PC, interact with the Admin Terminal (1s active click).
+5. Buyer Matching: Background sales algorithm finds a buyer (10s passive countdown).
+6. Box & Label: Player packs the sold PC into a shipping box and applies a label (3s active
+hold).
+
+7. Carry to Dispatch: Player carries the box to the shipping placement bay (~2s travel
+time).
+
+8. Delivery Collection: Delivery van arrives, loads the PC, and credits cash (15s passive
+timer).
+
+●
+●
+●
+
+Total Elapsed Time per PC: ~41 seconds
+Active Hands-On Time: ~11 seconds
+Design Purpose: Passive timers create natural windows for players to "spin plates"
+across multiple desks.
+
+4. Economic Balancing & Unit
+Economics
+4.1 Base Unit Economics
+●
+●
+●
+●
+
+Component Cost: $1,200.00
+Base Sale Price: $1,320.00 (+10% base margin)
+Base Net Profit: $120.00 per PC
+Starting Capital: $2,500.00 (ensures working capital buffer for 2 concurrent builds)
+
+4.2 Early Game Walkthrough (Desks 1 to 2)
+●
+●
+●
+●
+●
+
+PC #1: Spend $1,200 -> Sell for $1,320 -> Balance: $2,620
+PC #2: Spend $1,200 -> Sell for $1,320 -> Balance: $2,740
+PC #3: Spend $1,200 -> Sell for $1,320 -> Balance: $2,860
+Desk 2 Unlock Cost: $400.00
+After purchasing Desk 2, player has $2,460 remaining—exactly enough to buy parts for
+both Desk 1 and Desk 2 simultaneously ($2,400) with a $60 buffer.
+
+4.3 Scale Modifiers (1 to 200 Desks)
+●
+●
+●
+
+Component Bulk Discount: -0.15% per desk (Capped at -30%)
+Reputational Markup: +0.20% per desk (Capped at +40%)
+At Desk 10 (Garage Cap): Parts $1,182.00 (-1.5%), Sale $1,346.40 (+2.0%), Profit:
+$164.40/PC
+
+●
+
+At Desk 100 (Warehouse 2): Parts $1,020.00 (-15.0%), Sale $1,584.00 (+20.0%), Profit:
+$564.00/PC
+
+●
+
+At Desk 200 (Industrial HQ): Parts $840.00 (-30.0%), Sale $1,848.00 (+40.0%), Profit:
+$1,008.00/PC
+
+5. Building Tiers & Capacity
+Progression
+Building Tier
+
+Max Build Desks
+
+Max Helpdesks
+
+Garage
+
+10
+
+1
+
+Warehouse Tier 1
+
+50
+
+5
+
+Warehouse Tier 2
+
+100
+
+10
+
+Industrial Complex
+
+200
+
+20
+
+5.1 Garage Desk Unlocks
+●
+●
+●
+●
+
+Desk 1: Free
+Desk 2: $400
+Desk 3: $900
+Desk 4: $1,600
+
+●
+●
+●
+●
+●
+●
+
+Desk 5: $2,600
+Desk 6: $4,000
+Desk 7: $6,000
+Desk 8: $8,500 (Unlocks Penguin Hiring)
+Desk 9: $12,000
+Desk 10: $16,500 (Unlocks Helpdesk & Station 1)
+
+6. Automation: Penguin Helpers
+Unlocked at Desk 8. Each helper automates a specific task in the production pipeline.
+
+6.1 Roles & Wages (120-Second Day Cycle)
+●
+●
+●
+●
+
+Buyer Penguin: Hire: $2,000 | Wage: $150/day — Orders parts for idle desks.
+Builder Penguin: Hire: $3,500 | Wage: $250/day — Assembles hardware on desks.
+Installer Penguin: Hire: $2,800 | Wage: $200/day — Boots and installs Linux OS.
+Seller Penguin: Hire: $2,500 | Wage: $180/day — Lists ready PCs at the Admin
+Terminal.
+
+●
+
+Dispatcher Penguin: Hire: $3,200 | Wage: $220/day — Boxes, labels, and carries PCs
+to dispatch bay.
+
+●
+
+Support Tech Penguin: Hire: $5,500 | Wage: $400/day — Automatically answers and
+resolves Helpdesk tickets.
+
+6.2 Payroll & Bankruptcy Risk
+Penguin wages are deducted automatically at the end of each 120-second day cycle. Hiring
+excessive workers without matching desk throughput drains cash and leads to insolvency.
+
+7. The Helpdesk System & Review
+Ratings
+Unlocked at 10 desks. Phone calls and ticket beeps introduce operational friction.
+
+7.1 Mechanics
+●
+●
+
+Ticket Trigger: Random incoming ticket alert with a 10-second countdown to answer.
+Frequency: 1 ticket every 75–90s base, scaling with desk count (+1 ticket frequency
+tier per 10 desks).
+
+●
+
+Resolution Lock: Requires 20 seconds of continuous progress bar interaction.
+
+7.2 Rating & Penalty Matrix
+●
+●
+●
+●
+●
+
+≤ 6s to answer: 5 Stars -> +$200 cash bonus
+7s to answer: 4 Stars -> +$100 cash bonus
+8s to answer: 3 Stars -> +$40 cash bonus
+9s to answer: 2 Stars -> $0 bonus
+10s (Missed): 1 Star -> -10% sale price penalty on next 3 PCs sold
+
+○
+○
+○
+
+Sale price drops from $1,320 to $1,188 (-$132).
+Since parts cost $1,200, the player loses -$12 per PC on those 3 sales.
+Penalties stack: multiple missed calls compound losses, creating a potential
+bankruptcy spiral.
+
+8. Technical Architecture (HTML5 &
+WebGL)
+●
+
+Rendering: WebGL 2D Isometric projection using sprite sheets and dynamic Y-sorting
+(screenY = (x + y) * (tileHeight / 2)).
+
+●
+
+AI Pathfinding: EasyStar.js / A* grid navigation with collision masking around active
+desks.
+
+●
+
+Input Management: Unified input merger reading keyboard state map and
+navigator.getGamepads().
+
+●
+
+State & Economy: Decoupled fixed-rate simulation tick (20 Hz) with local storage
+persistence (localStorage / IndexedDB).
+
+●
+
+Optimization: Viewport culling and sprite batching to maintain 60 FPS up to 200 desks
+and dozens of penguins.
+
+9. Graphic Asset Manifest & 2D Isometric Sprite Atlas
+9.1 Technical Specifications
+●
+
+Perspective: Standard 2:1 Dimetric/Isometric projection (e.g. 64px width × 32px height
+floor diamonds).
+
+●
+●
+●
+
+Base Cell Size: 64 × 64 pixels (uniform grid cell for sorting and sprite slicing).
+Atlas Texture Dimensions: 512 × 256 pixels (8 columns × 4 rows of 64×64 frames).
+Color Palette (16-Bit Nostalgic / Stardew Aesthetic):
+
+○
+○
+○
+○
+○
+○
+
+Tuxedo Black (#181425 / #222034), Clean White (#F5F5FA / #E6EBF0)
+Beak & Feet Orange (#FF961E / #D26414)
+Player 1 Red Tie (#DC323C), Player 2 Blue Bandana (#288CF0)
+Workbench Wood (#B48250 / #8C5F37 / #644123)
+Computer Metal (#BEC8D2 / #828C9B / #4B505F)
+Linux Terminal Glow (#3CDC78), Cardboard Box (#D2AF7D / #A58255)
+
+○
+
+Dispatch Hazard Stripes (#F5CD23 / #2D2D32)
+
+9.2 Sprite Atlas Grid Coordinates (512 × 256)
+Row 0 (Y: 0 – 63) — Characters & Workforce
+
+●
+●
+●
+●
+●
+●
+●
+●
+
+[0, 0]: Player 1 (Tux) Idle — Red bowtie, centered posture.
+[1, 0]: Player 1 Walk Frame 1 — Right foot forward, flipper sway.
+[2, 0]: Player 1 Walk Frame 2 — Left foot forward, alternate sway.
+[3, 0]: Player 2 (Co-op) Idle — Blue bandana, distinct nametag slot.
+[4, 0]: Player 2 Walk Frame — Co-op helper walking cycle.
+[5, 0]: Builder Penguin — Yellow construction hardhat.
+[6, 0]: Support Tech Penguin — Pink headset with boom microphone.
+[7, 0]: Buyer / Dispatcher Penguin — Logistics cap / formal apron.
+
+Row 1 (Y: 64 – 127) — Workstations & PC Lifecycle
+
+●
+●
+●
+●
+
+[0, 1]: Empty Build Desk — Clean wooden workbench with metal legs and desk mat.
+[1, 1]: Desk with Parts Box — Unopened component boxes and GPU/RAM trays.
+[2, 1]: Assembled PC — Open mid-tower chassis seated on desk with keyboard.
+[3, 1]: Installing Linux OS — CRT/LCD monitor active with phosphor green terminal
+progress bar.
+
+●
+
+[4, 1]: Boxed & Labeled PC — Sealed brown shipping carton with white barcode
+label.
+
+●
+●
+
+[5, 1]: Admin Computer Station — Dual-monitor sales desk with analytical charts.
+[6, 1]: Helpdesk Station (Idle) — Counter with vintage red rotary telephone and CRT
+monitor.
+
+●
+
+[7, 1]: Helpdesk Station (Active Alert) — Flashing red siren light and vibrating
+telephone ringer.
+
+Row 2 (Y: 128 – 191) — Environment & Logistics
+
+●
+●
+●
+●
+
+[0, 2]: Garage Floor Tile — 64×32 isometric concrete tile.
+[1, 2]: Warehouse Floor Tile — 64×32 polished wooden plank tile.
+[2, 2]: Dispatch Loading Pad — Yellow and black diagonal hazard warning floor pad.
+[3, 2] & [4, 2]: Delivery Courier Van — Isometric delivery truck with blue cargo
+bay.
+
+Row 3 (Y: 192 – 255) — UI Icons & Badges
+
+●
+●
+●
+●
+
+[0, 3]: Review Star Icon — Gold 5-star rating icon.
+[1, 3]: Shipping Carton Icon — Small inventory icon.
+[2, 3]: Terminal Prompt Icon — Monospace >_ icon.
+[3, 3]: Cash Currency Badge — Green circular dollar badge.
+
+10. Room Backgrounds & Environment Architecture
+10.1 Environment Design Guidelines
+●
+
+Cutaway Isometric Dihedral: Rooms are constructed with two visible back walls
+(Northwest and Northeast) and an open foreground cutaway to maximize playability
+and prevent occlusion of player characters and workstations.
+
+●
+
+Aspect Ratio & Resolution: 1280 × 720 px (native 16:9 720p HD canvas), scaling
+responsively in modern web viewports.
+
+●
+
+Tile Metrics: 2:1 isometric diamond projection.
+
+○
+○
+
+Garage Grid: 10 × 10 tiles (72px × 36px tile dimensions).
+Warehouse Grid: 16 × 16 tiles (60px × 30px tile dimensions).
+
+10.2 Garage Environment (Tier 1: Starter to 10 Desks)
+●
+
+Northwest Wall:
+
+○
+
+Blue industrial roller shutter garage door opening directly out to the asphalt
+driveway and grass lawn where the courier van arrives.
+
+○
+●
+
+Northeast Wall:
+
+○
+○
+○
+●
+
+High four-pane garage window allowing ambient daylight into the workshop.
+Exposed brickwork lines and dark skirting board.
+Workshop tool pegboard with wrenches, screwdrivers, and sticky notes.
+Framed Linux Tux poster inspiring the penguin team.
+
+Floor Plan & Designated Zones:
+
+○
+○
+
+Concrete slab floor with subtle alternating tile shading and grid alignment lines.
+Dispatch Bay (gy: 7–9, gx: 0–1): Yellow and black diagonal hazard safety
+striping positioned directly beside the roller door for rapid box offloading.
+
+○
+
+Admin Terminal (gy: 1–2, gx: 0–1): Blue-accented floor zone near the back
+corner.
+
+○
+
+Helpdesk Station (gy: 0–1, gx: 8–9): Purple-tinted corner reserved for the
+support desk unlocked at Desk 10.
+
+○
+
+10 Desk Slot Footprints (D1–D10): Three rows of three desks plus one extra
+bay, marked with blue boundary outlines for clear spatial orientation.
+
+●
+
+Ambiance: Dual hanging industrial fluorescent tube fixtures casting soft downlight
+cones across the assembly floor.
+
+10.3 Warehouse Tier 1 (Tier 2: Up to 50 Desks & 5 Helpdesks)
+●
+
+Structural Elements:
+
+○
+○
+○
+●
+
+High corrugated steel paneling with dark vertical I-beams.
+Overhead heavy industrial ventilation ducting running across the ceiling rafters.
+Triple high-elevation industrial skylights along the upper Northeast wall.
+
+Logistics & Departmental Layout:
+
+○
+
+Dual Shipping Bays (gy: 5–14, gx: 0–2): Expanded hazard loading dock with
+two heavy-duty roller doors to accommodate higher van turnover.
+
+○
+
+Customer Support Wing (gy: 0–4, gx: 12–15): Dedicated department floor
+space for up to 5 concurrent Helpdesk stations.
+
+○
+
+Main Assembly Hall (gy: 2–15, gx: 3–11): High-density grid floor supporting
+scalable placement of up to 50 active build desks.
+
+11. Penguin Animation System & Directional Perspectives
+11.1 Isometric View Perspectives
+To match the 2:1 isometric projection of the room, characters navigate across four primary
+isometric diagonals:
+
+●
+
+South-West (SW / Down-Left): Front 3/4 perspective facing toward the bottom-left of
+the screen. Shows facial expressions, beak, eyes, and white chest belly.
+
+●
+●
+
+South-East (SE / Down-Right): Front 3/4 perspective facing toward the bottom-right.
+North-West (NW / Up-Left): Back 3/4 perspective facing away from the camera
+toward the top-left. Features back plumage, silhouette of beak, and rear foot lift.
+
+●
+
+North-East (NE / Up-Right): Back 3/4 perspective facing away toward the top-right.
+
+11.2 Animation Cycles & Frame Timing
+●
+
+Base Frame Rate: 6.6 FPS (150 ms per frame) for walking, producing an exaggerated,
+cute penguin waddle.
+
+●
+
+Idle Cycle (2 Frames, 400 ms/frame): Subtle breathing motion and resting flipper
+position.
+
+●
+
+Walk Cycle (4 Frames per Direction):
+
+○
+
+Frame 0 (Left Foot Plant): Left webbed foot steps forward, right foot trailing,
+body tilts slightly.
+
+○
+
+Frame 1 (Passing / Mid-Waddle): Weight transfers, body bobs upward by 1–2
+pixels, flippers counter-balance.
+
+○
+
+Frame 2 (Right Foot Plant): Right webbed foot steps forward, left foot trailing,
+opposite body lean.
+
+○
+●
+
+Frame 3 (Passing / Mid-Waddle): Weight transfers back with upward bob.
+
+Interacting / Assembling Cycle (2 Frames, 200 ms/frame): Rapid flipper tapping and
+tool motion used during desk assembly, Linux installation, and admin listing.
+
+●
+
+Carrying Box Walk Cycle (4 Directions): Penguin holds a sealed cardboard shipping
+box in both flippers at chest height while executing the 4-direction walk cycle to the
+dispatch placement bay.
+
+11.3 Animation Sprite Sheet Atlas (512 × 512, 8×8 Grid)
+●
+
+Row 0: Player 1 (Tux / Red Bowtie) — South-West (Idle: Col 0–1, Walk: Col 2–5,
+Interact: Col 6–7).
+
+●
+
+Row 1: Player 1 (Tux / Red Bowtie) — South-East (Idle: Col 0–1, Walk: Col 2–5, Interact:
+Col 6–7).
+
+●
+
+Row 2: Player 1 (Tux / Red Bowtie) — North-West (Back) (Idle: Col 0–1, Walk: Col 2–5,
+Interact: Col 6–7).
+
+●
+
+Row 3: Player 1 (Tux / Red Bowtie) — North-East (Back) (Idle: Col 0–1, Walk: Col 2–5,
+Interact: Col 6–7).
+
+●
+
+Row 4: Box-Carrying Walk Cycle across all 4 directions (SW: Col 0–1, SE: Col 2–3, NW:
+Col 4–5, NE: Col 6–7).
+
+●
+●
+
+Row 5: Player 2 (Co-op Helper / Blue Bandana) — SW and SE Walk Cycles (Col 0–7).
+Row 6: Player 2 (Co-op Helper / Blue Bandana) — NW and NE Back Walk Cycles (Col
+0–7).
+
+●
+
+Row 7: AI Worker Penguins (Yellow Construction Hardhat) across all 4 walking
+directions.
+
+

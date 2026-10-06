@@ -8,8 +8,12 @@ OUTPUT_FILE = os.path.join(BASE_DIR, 'files.json')
 INDEX_HTML = os.path.join(BASE_DIR, 'index.html')
 
 VALID_EXTENSIONS = ['.html', '.htm']
-IGNORE_FOLDERS = ['.git', '__pycache__', 'assets', 'css', 'js', 'icons', 'scratch']
-IGNORE_FILES = ['index.html', '404.html', '500.html']
+IGNORE_FOLDERS = [
+    '.git', '__pycache__', 'assets', 'css', 'js', 'icons', 'scratch',
+    'lib', 'libs', 'vendor', 'node_modules', 'dist', 'build', 'img', 'images',
+    'audio', 'sound', 'sounds', 'fonts', 'includes'
+]
+IGNORE_FILES = ['404.html', '500.html']
 
 class TitleParser(HTMLParser):
     def __init__(self):
@@ -35,7 +39,7 @@ class TitleParser(HTMLParser):
         if self.in_title:
             self.title += data
 
-def get_file_metadata(filepath, filename, category_dir):
+def get_file_metadata(filepath, filename, category_dir, rel_path):
     parser = TitleParser()
     try:
         with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
@@ -48,11 +52,15 @@ def get_file_metadata(filepath, filename, category_dir):
     if raw_title:
         clean_title = re.sub(r'(\s*-\s*Slow Start|\s*,\s*by\s+.*|\s*\(Stability Fix.*?\))', '', raw_title, flags=re.IGNORECASE)
     else:
-        clean_name = os.path.splitext(filename)[0].replace('_', ' ').replace('-', ' ')
+        if filename.lower() in ['index.html', 'index.htm']:
+            parent_dir = os.path.basename(os.path.dirname(filepath))
+            clean_name = parent_dir.replace('_', ' ').replace('-', ' ')
+        else:
+            clean_name = os.path.splitext(filename)[0].replace('_', ' ').replace('-', ' ')
         clean_title = re.sub(r'([a-z])([A-Z])', r'\1 \2', clean_name).title()
 
     description = parser.description.strip()
-    path_lower = filename.lower()
+    path_lower = rel_path.lower()
     cat_lower = category_dir.lower()
 
     icon = "fa-compass"
@@ -75,9 +83,12 @@ def get_file_metadata(filepath, filename, category_dir):
         elif "wheel" in path_lower or "motor" in path_lower:
             icon = "fa-car-side"
             if not description: description = "High-speed open wheel motorsports racing."
-        elif "hellpang" in path_lower:
-            icon = "fa-gamepad"
+        elif "hell" in path_lower or "pang" in path_lower:
+            icon = "fa-ghost"
             if not description: description = "Pop the bouncy sentient Bobas with your harpoon!"
+        elif "penguin" in path_lower or "pc" in path_lower:
+            icon = "fa-desktop"
+            if not description: description = "2D Isometric PC building simulation & tycoon game."
         else:
             icon = "fa-gamepad"
             if not description: description = "Interactive web game experience."
@@ -126,7 +137,7 @@ def get_file_metadata(filepath, filename, category_dir):
     return {
         "category": category_dir.capitalize(),
         "name": clean_title,
-        "path": f"{category_dir}/{filename}",
+        "path": rel_path,
         "type": category_dir.lower().rstrip('s') if category_dir.lower().endswith('s') else category_dir.lower(),
         "icon": icon,
         "description": description
@@ -138,21 +149,26 @@ for item in sorted(os.listdir(BASE_DIR)):
     folder_path = os.path.join(BASE_DIR, item)
 
     if os.path.isdir(folder_path) and item not in IGNORE_FOLDERS and not item.startswith('.'):
-        for file in sorted(os.listdir(folder_path)):
-            sub_path = os.path.join(folder_path, file)
-            if os.path.isfile(sub_path):
+        for root, dirs, files in os.walk(folder_path, topdown=True):
+            # Exclude ignored directories in-place so os.walk does not descend into them
+            dirs[:] = [d for d in sorted(dirs) if d not in IGNORE_FOLDERS and not d.startswith('.') and not d.startswith('_')]
+
+            # Check if index.html / index.htm exists in this directory
+            has_index = any(f.lower() in ['index.html', 'index.htm'] for f in files)
+
+            for file in sorted(files):
+                filepath = os.path.join(root, file)
+                if os.path.abspath(filepath) == os.path.abspath(INDEX_HTML):
+                    continue
+
                 filename, ext = os.path.splitext(file)
                 if ext.lower() in VALID_EXTENSIONS and file not in IGNORE_FILES:
-                    filepath = os.path.join(folder_path, file)
-                    meta = get_file_metadata(filepath, file, item)
-                    index_data.append(meta)
-            elif os.path.isdir(sub_path) and file not in IGNORE_FOLDERS:
-                entry_html = os.path.join(sub_path, 'index.html')
-                if os.path.exists(entry_html):
-                    meta = get_file_metadata(entry_html, file, item)
-                    meta['path'] = f"{item}/{file}/index.html"
-                    if not meta['name'] or meta['name'].lower() == 'index':
-                        meta['name'] = file.replace('_', ' ').replace('-', ' ').title()
+                    # If this directory has an index.html, skip other non-index html files in this directory
+                    if has_index and filename.lower() not in ['index', 'index.htm']:
+                        continue
+
+                    rel_path = os.path.relpath(filepath, BASE_DIR).replace('\\', '/')
+                    meta = get_file_metadata(filepath, file, item, rel_path)
                     index_data.append(meta)
 
 # Write files.json
@@ -166,14 +182,14 @@ if os.path.exists(INDEX_HTML):
     try:
         with open(INDEX_HTML, 'r', encoding='utf-8') as f:
             html_content = f.read()
-        
+
         json_js = f'<script id="portal-data">window.PORTAL_FILES = {json.dumps(index_data, indent=2)};</script>'
-        
+
         if '<script id="portal-data">' in html_content:
             html_content = re.sub(r'<script id="portal-data">.*?</script>', lambda m: json_js, html_content, flags=re.DOTALL)
         else:
             html_content = html_content.replace('</head>', f'    {json_js}\n</head>')
-            
+
         with open(INDEX_HTML, 'w', encoding='utf-8') as f:
             f.write(html_content)
         print("Updated inline PORTAL_FILES dataset in index.html!")

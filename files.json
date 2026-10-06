@@ -17,14 +17,6 @@
   },
   {
     "category": "Games",
-    "name": "HELLPANG - Boba Splatter Arcade",
-    "path": "games/hellpang/index.html",
-    "type": "game",
-    "icon": "fa-gamepad",
-    "description": "Pop the bouncy sentient Bobas with your harpoon!"
-  },
-  {
-    "category": "Games",
     "name": "Mega Monkee Bonk",
     "path": "games/monkee.html",
     "type": "game",
@@ -54,6 +46,22 @@
     "type": "game",
     "icon": "fa-keyboard",
     "description": "Defend your base with fast typing skills."
+  },
+  {
+    "category": "Games",
+    "name": "HELLPANG - Boba Splatter Arcade",
+    "path": "games/hellpang/index.html",
+    "type": "game",
+    "icon": "fa-ghost",
+    "description": "Pop the bouncy sentient Bobas with your harpoon!"
+  },
+  {
+    "category": "Games",
+    "name": "PC Building Empire - Tux's Rig Empire",
+    "path": "games/penguinpc/index.html",
+    "type": "game",
+    "icon": "fa-desktop",
+    "description": "2D Isometric Simulation Tycoon game. Build PCs, install Linux, manage penguin workers, resolve helpdesk tickets, and grow your PC empire!"
   },
   {
     "category": "Music",

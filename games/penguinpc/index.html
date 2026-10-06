@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PC Building Empire - Tux's Rig Empire</title>
+  <meta name="description" content="2D Isometric Simulation Tycoon game. Build PCs, install Linux, manage penguin workers, resolve helpdesk tickets, and grow your PC empire!">
+  
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Phaser 3 Game Engine -->
+  <script src="phaser.min.js"></script>
+</head>
+<body>
+
+  <div id="game-container">
+    <!-- Phaser WebGL Canvas -->
+    <canvas id="phaser-canvas"></canvas>
+
+    <!-- HTML UI Overlay -->
+    <div id="ui-overlay">
+
+      <!-- Top HUD Bar -->
+      <div class="hud-top-bar">
+        <div class="hud-group">
+          <!-- Cash Card -->
+          <div class="hud-card cash">
+            <span class="icon">💵</span>
+            <div>
+              <div class="label">Cash</div>
+              <div class="value" id="hud-cash">$2,500.00</div>
+            </div>
+          </div>
+
+          <!-- Review Stars Card -->
+          <div class="hud-card stars">
+            <span class="icon">⭐</span>
+            <div>
+              <div class="label">Rating</div>
+              <div class="value" id="hud-stars">★ 5.0</div>
+            </div>
+          </div>
+
+          <!-- Desks Capacity Card -->
+          <div class="hud-card desks">
+            <span class="icon">🖥️</span>
+            <div>
+              <div class="label">Desks</div>
+              <div class="value" id="hud-desks">1/10</div>
+            </div>
+          </div>
+
+          <!-- Building Tier Card -->
+          <div class="hud-card tier">
+            <span class="icon">🏭</span>
+            <div>
+              <div class="label">Facility</div>
+              <div class="value" id="hud-tier">Garage</div>
+            </div>
+          </div>
+
+          <!-- Day Cycle Timer -->
+          <div class="hud-card timer">
+            <span class="icon">⏱️</span>
+            <div>
+              <div class="label">Day Cycle</div>
+              <div class="value" id="hud-timer">Day 1 (2:00)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="hud-actions">
+          <button class="btn-icon-label" onclick="window.economySystem.unlockAssemblyDesk()">
+            <span>🔧</span>
+            <span class="label">+ Build ($<span id="next-assembly-cost">200</span>)</span>
+          </button>
+          <button class="btn-icon-label" onclick="window.economySystem.unlockTestingDesk()">
+            <span>🖥️</span>
+            <span class="label">+ Test ($<span id="next-testing-cost">200</span>)</span>
+          </button>
+          <button class="btn-icon-label" id="btn-hire">
+            <span>🐧</span>
+            <span class="label">Staff</span>
+          </button>
+          <button class="btn-icon-label" id="btn-upgrade">
+            <span>🏗️</span>
+            <span class="label">Upgrade</span>
+          </button>
+          <div class="hud-dropdown-wrapper">
+            <button class="btn-icon-label" id="btn-toggle-labels">
+              <span>⚙️</span>
+              <span class="label">Options ▾</span>
+            </button>
+            <div class="dropdown-menu" id="labels-dropdown-menu">
+              <div class="dropdown-header">
+                <span>⚙️ Options & Display Settings</span>
+                <div class="dropdown-quick-actions">
+                  <button class="btn-text-tiny" id="btn-labels-all-on">All ON</button>
+                  <button class="btn-text-tiny" id="btn-labels-all-off">All OFF</button>
+                </div>
+              </div>
+              <div class="dropdown-body">
+                <!-- Section 1: System Quick Controls -->
+                <div class="dropdown-section-title">SYSTEM & GAMEPLAY</div>
+                <div class="dropdown-btn-grid">
+                  <button class="btn-dropdown-action" id="btn-dropdown-save">
+                    <span>💾</span> Save & Load
+                  </button>
+                  <button class="btn-dropdown-action" id="btn-dropdown-pause">
+                    <span>⏸️</span> Pause Game
+                  </button>
+                </div>
+                <div class="dropdown-btn-grid" style="margin-top: 4px;">
+                  <button class="btn-dropdown-action" id="btn-dropdown-coop">
+                    <span>🎮</span> Toggle Co-op (P2)
+                  </button>
+                  <button class="btn-dropdown-action" id="btn-dropdown-mute">
+                    <span>🔊</span> Mute Sound
+                  </button>
+                </div>
+                <div class="dropdown-btn-grid" style="margin-top: 4px;">
+                  <button class="btn-dropdown-action" id="btn-dropdown-tutorial">
+                    <span>❓</span> Beginner Guide
+                  </button>
+                </div>
+
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-section-title">DISPLAY & INDICATOR TOGGLES</div>
+
+                <label class="dropdown-toggle-item">
+                  <div class="toggle-info">
+                    <span class="toggle-title">🐧 Staff Role Labels</span>
+                    <span class="toggle-desc">Show job titles (Builder, Tester, Dispatcher) above staff</span>
+                  </div>
+                  <input type="checkbox" id="chk-staff-roles" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+
+                <label class="dropdown-toggle-item">
+                  <div class="toggle-info">
+                    <span class="toggle-title">🖥️ Desk & Station Labels</span>
+                    <span class="toggle-desc">Show station banners and build/test desk department headers</span>
+                  </div>
+                  <input type="checkbox" id="chk-desk-labels" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+
+                <label class="dropdown-toggle-item">
+                  <div class="toggle-info">
+                    <span class="toggle-title">⏳ Idle Bottleneck Labels</span>
+                    <span class="toggle-desc">Highlight computers waiting for action to spot workflow delays</span>
+                  </div>
+                  <input type="checkbox" id="chk-idle-labels" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+
+                <label class="dropdown-toggle-item">
+                  <div class="toggle-info">
+                    <span class="toggle-title">📊 Progress Bars</span>
+                    <span class="toggle-desc">Show active assembly, OS install, and support call progress bars</span>
+                  </div>
+                  <input type="checkbox" id="chk-progress-bars" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+
+                <label class="dropdown-toggle-item">
+                  <div class="toggle-info">
+                    <span class="toggle-title">💵 Money Popups (+$ / -$)</span>
+                    <span class="toggle-desc">Show floating cash gained/spent text animations</span>
+                  </div>
+                  <input type="checkbox" id="chk-money-notifications" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+
+                <label class="dropdown-toggle-item">
+                  <div class="toggle-info">
+                    <span class="toggle-title">🔔 Activity Notifications</span>
+                    <span class="toggle-desc">Show alert notification banners at bottom of screen</span>
+                  </div>
+                  <input type="checkbox" id="chk-activity-alerts" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert Notification Banner -->
+      <div id="alert-banner">
+        <span>⚠️</span>
+        <span id="alert-text">Welcome to PC Building Empire!</span>
+      </div>
+
+      <!-- Bottom Controls Info Bar -->
+      <div class="hud-bottom-bar">
+        <div class="controls-hint-box">
+          <div class="key-item">
+            <span class="key-badge">W A S D</span>
+            <span>Player 1 Move</span>
+          </div>
+          <div class="key-item">
+            <span class="key-badge">E / SPACE</span>
+            <span>Interact / Hold Action</span>
+          </div>
+          <div class="key-item">
+            <span class="key-badge">LINE</span>
+            <span>Parts Store ➔ Build Line ➔ Test Line ➔ Dispatch</span>
+          </div>
+          <div class="key-item">
+            <span class="key-badge">P / ESC</span>
+            <span>Pause Game</span>
+          </div>
+          <div class="key-item">
+            <span class="key-badge">M</span>
+            <span>Mute / Unmute</span>
+          </div>
+          <div class="key-item">
+            <span class="key-badge">L</span>
+            <span>Toggle Labels</span>
+          </div>
+          <div class="key-item">
+            <span class="key-badge">ARROWS</span>
+            <span>P2 Move</span>
+          </div>
+          <div class="key-item">
+            <span class="key-badge">NUMPAD 0</span>
+            <span>P2 Interact</span>
+          </div>
+          <div class="key-item">
+            <span class="key-badge">GAMEPAD</span>
+            <span>Xbox / PlayStation Controller</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Pause Menu Overlay -->
+  <div id="pause-overlay">
+    <div class="pause-box">
+      <h2>⏸️ GAME PAUSED</h2>
+
+      <div class="pause-stats">
+        <div class="pause-stat-item">
+          <span class="lbl">Day & Time</span>
+          <span class="val" id="pause-stat-day">Day 1</span>
+        </div>
+        <div class="pause-stat-item">
+          <span class="lbl">Company Cash</span>
+          <span class="val" id="pause-stat-cash">$2,500.00</span>
+        </div>
+        <div class="pause-stat-item">
+          <span class="lbl">Review Score</span>
+          <span class="val" id="pause-stat-stars">★ 5.0</span>
+        </div>
+        <div class="pause-stat-item">
+          <span class="lbl">Active Desks</span>
+          <span class="val" id="pause-stat-desks">1/10</span>
+        </div>
+      </div>
+
+      <div class="pause-actions">
+        <button class="btn-primary" id="btn-resume-game">▶️ Resume Game</button>
+        <button class="btn-icon-label" id="btn-pause-labels" style="width:100%; justify-content:center;">🏷️ Display & Label Settings</button>
+        <button class="btn-icon-label" id="btn-pause-save" style="width:100%; justify-content:center;">💾 Save & Load Game</button>
+        <button class="btn-icon-label" id="btn-toggle-mute" style="width:100%; justify-content:center;">🔊 Mute Sound</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Windows -->
+  <!-- Save & Load Game Modal -->
+  <div class="modal-overlay" id="modal-save">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h2>💾 Save & Load Game State</h2>
+        <button class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Section 1: Browser Storage -->
+        <div class="save-section-card">
+          <div class="save-section-header">
+            <h3>🌐 Browser Storage (Auto-Save)</h3>
+            <span class="save-badge-status" id="browser-save-status">Auto-saves every 10s</span>
+          </div>
+          <p class="save-desc">Progress is automatically saved in your browser. Refreshing the page keeps your empire intact.</p>
+          <div class="save-btn-row">
+            <button class="btn-primary" id="btn-save-local">💾 Save Now</button>
+            <button class="btn-icon-label" id="btn-load-local">🔄 Restore Last Auto-Save</button>
+          </div>
+        </div>
+
+        <!-- Section 2: File Save (.json Export / Import) -->
+        <div class="save-section-card">
+          <div class="save-section-header">
+            <h3>📁 Save to File (.json)</h3>
+          </div>
+          <p class="save-desc">Download a backup save file to your computer or load a previously saved file.</p>
+          <div class="save-btn-row">
+            <button class="btn-primary" id="btn-export-file">📥 Export JSON File</button>
+            <input type="file" id="import-file-input" accept=".json" style="display: none;">
+            <button class="btn-icon-label" id="btn-import-file">📤 Import JSON File</button>
+          </div>
+        </div>
+
+        <!-- Section 3: Keycode Passcode Save -->
+        <div class="save-section-card">
+          <div class="save-section-header">
+            <h3>🔑 Keycode Save Code</h3>
+          </div>
+          <p class="save-desc">Generate or paste a text keycode to transfer save state across devices or keep on record.</p>
+
+          <div class="keycode-box">
+            <div class="keycode-label">Your Current Save Keycode:</div>
+            <div class="keycode-input-row">
+              <input type="text" id="keycode-export-input" readonly placeholder="Click Generate to view code...">
+              <button class="btn-primary" id="btn-generate-keycode">Generate</button>
+              <button class="btn-icon-label" id="btn-copy-keycode">📋 Copy</button>
+            </div>
+          </div>
+
+          <div class="keycode-box" style="margin-top: 10px;">
+            <div class="keycode-label">Load From Keycode:</div>
+            <div class="keycode-input-row">
+              <input type="text" id="keycode-import-input" placeholder="Paste your TUX1-... keycode string here">
+              <button class="btn-primary" id="btn-load-keycode">🚀 Load Code</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Danger Zone -->
+        <div class="save-section-card danger">
+          <div class="save-section-header">
+            <h3 style="color: var(--accent-red);">⚠️ Reset Empire</h3>
+          </div>
+          <p class="save-desc">Discard save game data, wipe all browser storage, and restart your PC Empire from scratch.</p>
+          <button class="btn-danger" id="btn-reset-game">🗑️ Discard Save & Reset Empire</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Hire Penguins Modal -->
+  <div class="modal-overlay" id="modal-hire">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h2>🐧 Penguin Staff & Automation</h2>
+        <button class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body" id="hire-modal-body">
+        <!-- Rendered dynamically by UI system -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Facility Upgrade Modal -->
+  <div class="modal-overlay" id="modal-upgrade">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h2>🏭 Facility Expansion Tiers</h2>
+        <button class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body" id="upgrade-modal-body">
+        <!-- Rendered dynamically by UI system -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Display & Label Settings Modal -->
+  <div class="modal-overlay" id="modal-display-settings">
+    <div class="modal-window" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2>🏷️ Display & Label Settings</h2>
+        <button class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body" id="display-settings-modal-body">
+        <!-- Rendered by UI system or copied from toggles -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Beginner Tutorial Modal -->
+  <div class="modal-overlay" id="modal-tutorial">
+    <div class="modal-window tutorial-window">
+      <div class="modal-header">
+        <h2>🎮 HOW TO PLAY - BEGINNER'S GUIDE</h2>
+        <button class="btn-close" id="btn-close-tutorial">&times;</button>
+      </div>
+      <div class="modal-body tutorial-body">
+        
+        <div class="tutorial-intro">
+          Welcome to <strong>PC Building Empire</strong>! Build PCs, install Linux OS, fulfill orders, and grow your computer empire!
+        </div>
+
+        <div class="tutorial-grid">
+          <!-- Step 1 -->
+          <div class="tutorial-card">
+            <div class="tutorial-card-header">
+              <span class="step-badge">STEP 1</span>
+              <span class="step-icon">📦</span>
+            </div>
+            <h4>Buy Parts</h4>
+            <p>Walk up to the <strong>Parts Store</strong> counter at top-left to purchase component boxes ($1,200 each).</p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="tutorial-card">
+            <div class="tutorial-card-header">
+              <span class="step-badge">STEP 2</span>
+              <span class="step-icon">🔧</span>
+            </div>
+            <h4>Assemble PC</h4>
+            <p>Carry parts to a <strong>Build Desk</strong> (<code>[BUILD #1]</code>). Press and hold <code>E</code> / <code>SPACE</code> to assemble the rig.</p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="tutorial-card">
+            <div class="tutorial-card-header">
+              <span class="step-badge">STEP 3</span>
+              <span class="step-icon">🖥️</span>
+            </div>
+            <h4>Test & Install OS</h4>
+            <p>Carry the assembled PC to your <strong>Testing Desk</strong> (<code>[TEST #1]</code>). Hold <code>E</code> / <code>SPACE</code> to boot & install Linux!</p>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="tutorial-card">
+            <div class="tutorial-card-header">
+              <span class="step-badge">STEP 4</span>
+              <span class="step-icon">💵</span>
+            </div>
+            <h4>Sell & Dispatch</h4>
+            <p>Take the tested PC to the <strong>Admin Terminal</strong> to list it, then drop the boxed PC off at the <strong>Dispatch Bay</strong>!</p>
+          </div>
+        </div>
+
+        <!-- Automation & Support Notes -->
+        <div class="tutorial-info-box">
+          <div class="info-row">
+            <span class="info-icon">🐧</span>
+            <div>
+              <strong>Staff Automation:</strong> Open the <strong>Staff</strong> menu to hire Purchaser, Builder, Tester, Seller, and Dispatcher penguins to run your facility automatically!
+            </div>
+          </div>
+          <div class="info-row" style="margin-top: 8px;">
+            <span class="info-icon">📞</span>
+            <div>
+              <strong>Support Calls:</strong> Gated until you expand to <strong>5 desks</strong>! At 5 desks, you get a gifted Helpdesk to handle incoming support calls.
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Cheat Sheet -->
+        <div class="tutorial-controls-bar">
+          <div class="ctrl-tag"><span class="kbd">W A S D</span> Move</div>
+          <div class="ctrl-tag"><span class="kbd">E / SPACE</span> Interact / Hold</div>
+          <div class="ctrl-tag"><span class="kbd">P</span> Pause</div>
+          <div class="ctrl-tag"><span class="kbd">M</span> Mute</div>
+        </div>
+
+        <div class="tutorial-action">
+          <button class="btn-primary btn-tutorial-start" id="btn-got-it-tutorial">🚀 Got It! Let's Build Rigs</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/economy.js"></script>
+  <script src="js/controls.js"></script>
+  <script src="js/entities/Desk.js"></script>
+  <script src="js/entities/Helpdesk.js"></script>
+  <script src="js/entities/Penguin.js"></script>
+  <script src="js/entities/DeliveryVan.js"></script>
+  <script src="js/saveSystem.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+
+</body>
+</html>
