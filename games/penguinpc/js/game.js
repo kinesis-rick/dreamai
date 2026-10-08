@@ -40,6 +40,7 @@ class MainGameScene extends Phaser.Scene {
     this.desks = [];
     this.helpdesks = [];
     this.penguins = [];
+    this.floorItems = [];
     this.boxedPCItemsCount = 0; // Count of boxes on dispatch pad
 
     // Display & Label Granular Settings
@@ -90,6 +91,16 @@ class MainGameScene extends Phaser.Scene {
     const isoX = this.isoOriginX + (gx - gy) * (tileW / 2);
     const isoY = this.isoOriginY + (gx + gy) * (tileH / 2);
     return { x: isoX, y: isoY };
+  }
+
+  isoToGrid(isoX, isoY) {
+    const tileW = 64;
+    const tileH = 32;
+    const dx = (isoX - this.isoOriginX) / (tileW / 2);
+    const dy = (isoY - this.isoOriginY) / (tileH / 2);
+    const gx = (dy + dx) / 2;
+    const gy = (dy - dx) / 2;
+    return { gx, gy };
   }
 
   screenToIsoVelocity(moveX, moveY) {
@@ -349,6 +360,13 @@ class MainGameScene extends Phaser.Scene {
     for (const penguin of this.penguins) {
       if (penguin.badgeText) penguin.badgeText.setVisible(s.staffRoles);
     }
+
+    // Floor item labels
+    if (this.floorItems) {
+      for (const item of this.floorItems) {
+        if (item.nameText) item.nameText.setVisible(s.deskLabels);
+      }
+    }
   }
 
   setLabelSetting(key, enabled) {
@@ -499,6 +517,13 @@ class MainGameScene extends Phaser.Scene {
         return;
       }
     }
+
+    // Priority 5: Pick up nearby floor item if carrying nothing and interacting
+    if (!character.carryingItem && isJustPressed && this.floorItems && this.floorItems.length > 0) {
+      if (this.handlePickupItem(character)) {
+        return;
+      }
+    }
   }
 
   releaseInteract(character) {
@@ -508,6 +533,183 @@ class MainGameScene extends Phaser.Scene {
     for (const helpdesk of this.helpdesks) {
       helpdesk.releaseLock(character);
     }
+  }
+
+  canDropAt(x, y) {
+    // 1. Playable room boundary / floor checks
+    const grid = this.isoToGrid(x, y);
+    const econ = window.economySystem;
+    const tier = econ ? econ.buildingTier : 0;
+    const maxGx = (tier === 0) ? 8.8 : 14.5;
+    const maxGy = (tier === 0) ? 8.8 : 11.5;
+
+    if (grid.gx < 0.2 || grid.gy < 0.4 || grid.gx > maxGx || grid.gy > maxGy) {
+      return { ok: false, reason: 'Cannot drop outside room boundaries!' };
+    }
+
+    if (x < 60 || x > 1220 || y < 100 || y > 670) {
+      return { ok: false, reason: 'Cannot drop outside room boundaries!' };
+    }
+
+    // 2. Collision with visible Desks
+    for (const desk of this.desks) {
+      if (!desk.container || !desk.container.visible) continue;
+      const dx = Math.abs(x - desk.x);
+      const dy = Math.abs(y - desk.y);
+      const isoDist = Math.hypot(dx, dy * 1.8);
+      if (isoDist < 32) {
+        return { ok: false, reason: 'Blocked by workstation desk!' };
+      }
+    }
+
+    // 3. Collision with Helpdesks
+    for (const hd of this.helpdesks) {
+      if (!hd.container || !hd.container.visible) continue;
+      const dx = Math.abs(x - hd.x);
+      const dy = Math.abs(y - hd.y);
+      const isoDist = Math.hypot(dx, dy * 1.8);
+      if (isoDist < 32) {
+        return { ok: false, reason: 'Blocked by helpdesk station!' };
+      }
+    }
+
+    // 4. Collision with Admin Terminal
+    if (this.adminStationContainer) {
+      const dx = Math.abs(x - this.adminStationContainer.x);
+      const dy = Math.abs(y - this.adminStationContainer.y);
+      const isoDist = Math.hypot(dx, dy * 1.8);
+      if (isoDist < 32) {
+        return { ok: false, reason: 'Blocked by Admin Terminal!' };
+      }
+    }
+
+    // 5. Collision with Parts Store
+    if (this.partsStorePos) {
+      const dx = Math.abs(x - this.partsStorePos.x);
+      const dy = Math.abs(y - this.partsStorePos.y);
+      const isoDist = Math.hypot(dx, dy * 1.8);
+      if (isoDist < 34) {
+        return { ok: false, reason: 'Blocked by Parts Store!' };
+      }
+    }
+
+    // 6. Collision with Dispatch Loading Pad
+    if (this.dispatchPadPos) {
+      const dx = Math.abs(x - this.dispatchPadPos.x);
+      const dy = Math.abs(y - this.dispatchPadPos.y);
+      const isoDist = Math.hypot(dx, dy * 1.8);
+      if (isoDist < 32) {
+        return { ok: false, reason: 'Blocked by Dispatch Loading Pad!' };
+      }
+    }
+
+    // 7. Collision with existing Floor Items
+    if (this.floorItems) {
+      for (const item of this.floorItems) {
+        const dx = Math.abs(x - item.x);
+        const dy = Math.abs(y - item.y);
+        const isoDist = Math.hypot(dx, dy * 1.8);
+        if (isoDist < 22) {
+          return { ok: false, reason: 'Floor space is already occupied by an item!' };
+        }
+      }
+    }
+
+    return { ok: true };
+  }
+
+  getItemDisplayName(itemType) {
+    switch (itemType) {
+      case 'pc_parts': return 'PC Parts';
+      case 'assembled_pc': return 'Assembled PC';
+      case 'boxed_pc': return 'Boxed PC';
+      default: return 'Item';
+    }
+  }
+
+  spawnFloorItem(itemType, x, y) {
+    const id = 'floor_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const item = new FloorItem(id, itemType, x, y, this);
+    this.floorItems.push(item);
+    return item;
+  }
+
+  removeFloorItem(item) {
+    const idx = this.floorItems.indexOf(item);
+    if (idx !== -1) {
+      this.floorItems.splice(idx, 1);
+    }
+    item.destroy();
+  }
+
+  handleDropOrPickup(character) {
+    if (character.carryingItem) {
+      this.handleDropItem(character);
+    } else {
+      this.handlePickupItem(character);
+    }
+  }
+
+  handleDropItem(character) {
+    if (!character.carryingItem) return false;
+
+    const check = this.canDropAt(character.x, character.y);
+    if (!check.ok) {
+      if (window.soundSystem && window.soundSystem.playBlocked) {
+        window.soundSystem.playBlocked();
+      }
+      if (!character.isAI && window.uiSystem) {
+        window.uiSystem.showAlert('⚠️ ' + check.reason);
+      }
+      return false;
+    }
+
+    const itemType = character.carryingItem;
+    character.carryingItem = null;
+    this.spawnFloorItem(itemType, character.x, character.y);
+
+    if (window.soundSystem) {
+      if (window.soundSystem.playDrop) window.soundSystem.playDrop();
+      else window.soundSystem.playBox();
+    }
+
+    if (!character.isAI && window.uiSystem) {
+      window.uiSystem.showAlert(`Dropped ${this.getItemDisplayName(itemType)} on floor!`);
+    }
+    return true;
+  }
+
+  handlePickupItem(character) {
+    if (character.carryingItem) return false;
+    if (!this.floorItems || this.floorItems.length === 0) return false;
+
+    let closestItem = null;
+    let minDist = 50; // Pickup distance in pixels
+    for (const item of this.floorItems) {
+      const dist = Phaser.Math.Distance.Between(character.x, character.y, item.x, item.y);
+      if (dist < minDist) {
+        minDist = dist;
+        closestItem = item;
+      }
+    }
+
+    if (closestItem) {
+      const pickedType = closestItem.itemType;
+      character.carryingItem = pickedType;
+      this.removeFloorItem(closestItem);
+
+      if (window.soundSystem) {
+        if (window.soundSystem.playPickup) window.soundSystem.playPickup();
+        else window.soundSystem.playBuy();
+      }
+
+      if (!character.isAI && window.uiSystem) {
+        window.uiSystem.showAlert(`Picked up ${this.getItemDisplayName(pickedType)}!`);
+      }
+      return true;
+    }
+
+    return false;
   }
 
   addBoxToDispatchPad() {
@@ -821,6 +1023,13 @@ class MainGameScene extends Phaser.Scene {
     // Update Delivery Van
     if (this.deliveryVan) {
       this.deliveryVan.update(deltaSeconds);
+    }
+
+    // Update Floor Items
+    if (this.floorItems) {
+      for (const item of this.floorItems) {
+        item.update(deltaSeconds);
+      }
     }
 
     // Update UI HUD

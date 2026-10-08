@@ -189,6 +189,11 @@ class Penguin {
       // Release any locks held on workstations if key released
       this.scene.releaseInteract(this);
     }
+
+    // Check Drop or Pick Up item on floor (Key Q)
+    if (ctrl.dropJustPressed) {
+      this.scene.handleDropOrPickup(this);
+    }
   }
 
   playAnim(state) {

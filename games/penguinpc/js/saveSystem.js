@@ -64,6 +64,11 @@ class SaveSystem {
       helpdesks: helpdeskData,
       game: {
         boxedPCItemsCount: scene.boxedPCItemsCount,
+        floorItems: (scene.floorItems || []).map(item => ({
+          itemType: item.itemType,
+          x: item.x,
+          y: item.y
+        })),
         p1: p1Data,
         p2: p2Data
       },
@@ -163,11 +168,28 @@ class SaveSystem {
         });
       }
 
-      // 4. Restore Dispatch Pad visual count
+      // 4. Restore Dispatch Pad visual count & Floor Items
       if (data.game) {
         scene.boxedPCItemsCount = data.game.boxedPCItemsCount || 0;
         if (scene.updateDispatchBoxStack) {
           scene.updateDispatchBoxStack();
+        }
+
+        // Restore Floor Items
+        if (scene.floorItems) {
+          while (scene.floorItems.length > 0) {
+            const item = scene.floorItems.pop();
+            item.destroy();
+          }
+        } else {
+          scene.floorItems = [];
+        }
+        if (data.game.floorItems && Array.isArray(data.game.floorItems)) {
+          data.game.floorItems.forEach(savedItem => {
+            if (scene.spawnFloorItem) {
+              scene.spawnFloorItem(savedItem.itemType, savedItem.x, savedItem.y);
+            }
+          });
         }
 
         // Restore Player 1 position & carrying item

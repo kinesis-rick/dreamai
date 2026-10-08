@@ -7,12 +7,14 @@ class InputSystem {
     this.keys = {};
 
     // P1 Vector
-    this.p1 = { x: 0, y: 0, action: false, actionJustPressed: false };
+    this.p1 = { x: 0, y: 0, action: false, actionJustPressed: false, drop: false, dropJustPressed: false };
     // P2 Vector
-    this.p2 = { x: 0, y: 0, action: false, actionJustPressed: false };
+    this.p2 = { x: 0, y: 0, action: false, actionJustPressed: false, drop: false, dropJustPressed: false };
 
     this.prevActionP1 = false;
     this.prevActionP2 = false;
+    this.prevDropP1 = false;
+    this.prevDropP2 = false;
 
     this.bindKeyboard();
   }
@@ -39,7 +41,8 @@ class InputSystem {
     if (this.keys['KeyA']) p1x -= 1;
     if (this.keys['KeyD']) p1x += 1;
 
-    const p1ActionHold = !!(this.keys['KeyE'] || this.keys['Space']);
+    let p1ActionHold = !!(this.keys['KeyE'] || this.keys['Space']);
+    let p1DropHold = !!(this.keys['KeyQ']);
 
     // Player 2 Keyboard: Arrow Keys & Numpad0 / Enter / ShiftRight
     let p2x = 0;
@@ -49,7 +52,8 @@ class InputSystem {
     if (this.keys['ArrowLeft']) p2x -= 1;
     if (this.keys['ArrowRight']) p2x += 1;
 
-    const p2ActionHold = !!(this.keys['Numpad0'] || this.keys['Enter'] || this.keys['ShiftRight']);
+    let p2ActionHold = !!(this.keys['Numpad0'] || this.keys['Enter'] || this.keys['ShiftRight']);
+    let p2DropHold = !!(this.keys['NumpadDecimal'] || this.keys['Period'] || this.keys['Slash'] || this.keys['Delete']);
 
     // Poll Gamepads (HTML5 Gamepad API)
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -73,6 +77,10 @@ class InputSystem {
       if (gp0.buttons[0] && gp0.buttons[0].pressed) {
         p1ActionHold = true;
       }
+      // Button X (2) or B (1) or Y (3) to Drop / Pick Up
+      if ((gp0.buttons[2] && gp0.buttons[2].pressed) || (gp0.buttons[1] && gp0.buttons[1].pressed)) {
+        p1DropHold = true;
+      }
     }
 
     if (gp1 && gp1.connected && this.coopEnabled) {
@@ -84,6 +92,9 @@ class InputSystem {
 
       if (gp1.buttons[0] && gp1.buttons[0].pressed) {
         p2ActionHold = true;
+      }
+      if ((gp1.buttons[2] && gp1.buttons[2].pressed) || (gp1.buttons[1] && gp1.buttons[1].pressed)) {
+        p2DropHold = true;
       }
     }
 
@@ -106,11 +117,19 @@ class InputSystem {
     this.p1.actionJustPressed = p1ActionHold && !this.prevActionP1;
     this.prevActionP1 = p1ActionHold;
 
+    this.p1.drop = p1DropHold;
+    this.p1.dropJustPressed = p1DropHold && !this.prevDropP1;
+    this.prevDropP1 = p1DropHold;
+
     this.p2.x = p2x;
     this.p2.y = p2y;
     this.p2.action = p2ActionHold;
     this.p2.actionJustPressed = p2ActionHold && !this.prevActionP2;
     this.prevActionP2 = p2ActionHold;
+
+    this.p2.drop = p2DropHold;
+    this.p2.dropJustPressed = p2DropHold && !this.prevDropP2;
+    this.prevDropP2 = p2DropHold;
   }
 }
 

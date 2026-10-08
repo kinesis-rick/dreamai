@@ -79,6 +79,20 @@ class AudioSystem {
     this.playTone(150, 'sawtooth', 0.08, 0.15);
   }
 
+  playDrop() {
+    this.playTone(220, 'triangle', 0.06, 0.12);
+    setTimeout(() => this.playTone(150, 'sine', 0.09, 0.1), 40);
+  }
+
+  playPickup() {
+    this.playTone(330, 'sine', 0.06, 0.1);
+    setTimeout(() => this.playTone(493.88, 'triangle', 0.08, 0.12), 45);
+  }
+
+  playBlocked() {
+    this.playTone(130, 'sawtooth', 0.12, 0.12);
+  }
+
   playVanArrive() {
     this.playTone(180, 'sawtooth', 0.25, 0.15);
     setTimeout(() => this.playTone(240, 'sawtooth', 0.35, 0.15), 150);
