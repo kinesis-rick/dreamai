@@ -3959,6 +3959,14 @@ function specTargets(){
   }else if(!sameTeam(a,player))continue;
   out.push(a);
  }
+ if(!out.length){
+  for(let i=0;i<agents.length;i++){
+   const a=agents[i];
+   if(!a||a===player||!a.alive||a.onboard)continue;
+   if(net.role==='guest'&&a.i===gSelfIdx)continue;
+   out.push(a);
+  }
+ }
  return out;
 }
 function cycleSpec(dir){
