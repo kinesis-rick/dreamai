@@ -147,6 +147,11 @@ let hostNaming=false, hostTyping=false, hostBuf='';
 addEventListener('keydown',e=>{
  if(e.repeat)return;
  keys[e.code]=true;
+  if(player&&!player.alive&&(state==='play'||state==='drop')&&(BINDS.left.includes(e.code)||BINDS.right.includes(e.code))){
+   e.preventDefault();
+   cycleSpec(BINDS.left.includes(e.code)?-1:1);
+   return;
+  }
   if(rebindA&&(state==='pause'||(state==='menu'&&menuSettings))){
    if(e.code==='Backspace'){
     BINDS[rebindA][rebindSlot]=null;
@@ -986,6 +991,8 @@ function guestStart(d){
  genWorld();
  agents=[];player=null;
  gAgents={};gItems={};gSelfIdx=d.my;gAct=[];
+ gHumanIdx=new Set((d.players||[]).map(p=>p.i));
+ specRef=null;
  gStructIdx=new Map();
   storm={ph:0,mode:'wait',t:60,lw:0,rw:WORLD_W,tlw:0,trw:WORLD_W,cx:WORLD_W/2,dps:1};
  bus={x:-600,y:200,v:360};
@@ -1589,6 +1596,7 @@ function startMatch(seed){
  bus={x:-600,y:200,v:360};
  matchT=0;
  deathStamp=0;
+ specRef=null;
  mapOpen=false;
  state='drop';
  cam.zoom=1;cam.shake=0;
@@ -2327,6 +2335,11 @@ function updateFX(dt){
 function updateCam(dt){
  let fx,fy;
  if(state==='drop'&&player&&player.onboard){fx=bus.x;fy=bus.y;}
+ else if(player&&!player.alive&&specTargets().length){
+  const sp=specTargets();
+  if(!specRef||!specRef.alive||specRef.onboard||!sp.includes(specRef))specRef=sp[0];
+  fx=specRef.x+specRef.w/2;fy=specRef.y+specRef.h/2;
+ }
  else if(player){fx=player.x+player.w/2;fy=player.y+player.h/2;}
  else{fx=cam.x+SW/2;fy=cam.y+SH/2;}
  const zoomT=mouse.r&&state==='play'&&player.alive?(curWeapon(player)&&curWeapon(player).t==='sniper'?1.5:1.28):1;
@@ -3349,10 +3362,13 @@ function drawDeath(){
  ctx.fillText('ELIMINATED — #'+(player.placement||aliveCount+1),SW/2,SH*0.34);
  ctx.font='18px monospace';ctx.fillStyle='#fff';
  ctx.fillText(player.kills+' eliminations',SW/2,SH*0.34+36);
+ const sp=specTargets();
+ const sf=sp.length?(' \u2014 SPECTATING '+((specRef&&sp.includes(specRef))?specRef.name:sp[0].name)):'';
+ const line2=sf?sf+(sp.length>1?' \u2022 A/D or RIGHT-CLICK to switch':''):' ';
  ctx.font='14px monospace';ctx.fillStyle='#bbb';
- ctx.fillText('spectating the match...',SW/2,SH*0.34+64);
+ ctx.fillText(line2,SW/2,SH*0.34+64);
   ctx.font='bold 16px monospace';ctx.fillStyle='#ffd54f';
-  ctx.fillText(deathGraceLeft()>0?('BACK to lobby in '+Math.ceil(deathGraceLeft()/1000)+'s'):'CLICK to return to the menu',SW/2,SH*0.34+100);
+  ctx.fillText(deathGraceLeft()>0?('BACK to lobby in '+Math.ceil(deathGraceLeft()/1000)+'s'):(sp.length>1&&mouse.rEdge?' ':'CLICK to return to the menu'),SW/2,SH*0.34+100);
  ctx.textAlign='left';
 }
 function drawEnd(){
@@ -3924,7 +3940,7 @@ function handleClicks(){
   }
  }
 }
-let lastT=0,deathStamp=0;
+let lastT=0,deathStamp=0,specRef=null;
 const DEATH_FREEZE_GRACE=2600;
 function noteDeath(){
  if(!deathStamp)deathStamp=performance.now();
@@ -3932,12 +3948,41 @@ function noteDeath(){
 function deathGraceLeft(){
  return Math.max(0,DEATH_FREEZE_GRACE-(performance.now()-deathStamp));
 }
+function specTargets(){
+ const out=[];
+ for(let i=0;i<agents.length;i++){
+  const a=agents[i];
+  if(!a||a===player||!a.alive||a.onboard)continue;
+  if(net.role==='guest'){
+   if(a.i===gSelfIdx)continue;
+   if(!(gHumanIdx&&gHumanIdx.has(i)))continue;
+  }else if(!sameTeam(a,player))continue;
+  out.push(a);
+ }
+ if(!out.length){
+  for(let i=0;i<agents.length;i++){
+   const a=agents[i];
+   if(!a||a===player||!a.alive||a.onboard)continue;
+   if(net.role==='guest'&&a.i===gSelfIdx)continue;
+   out.push(a);
+  }
+ }
+ return out;
+}
+function cycleSpec(dir){
+ const t=specTargets();
+ if(!t.length)return;
+ const i=t.indexOf(specRef);
+ specRef=t[((i<0?0:i+dir)+t.length)%t.length];
+ sfx('swap');
+}
 function frame(t){
  const dt=Math.min(0.05,(t-lastT)/1000||0.016);
  lastT=t;
- cvs.style.cursor=(state==='play'||state==='drop')?'none':'default';
- try{
-   if(mouse.lEdge&&state!=='play'&&state!=='drop')handleClicks();
+  cvs.style.cursor=(state==='play'||state==='drop')?'none':'default';
+  try{
+    if(mouse.rEdge&&player&&!player.alive&&(state==='play'||state==='drop')){cycleSpec(1);mouse.rEdge=false;}
+    if(mouse.lEdge&&state!=='play'&&state!=='drop')handleClicks();
    else if(mouse.lEdge&&player&&!player.alive)handleClicks();
    else if(mouse.lEdge&&player&&player.buildMenu)handleClicks();
     update(dt);
