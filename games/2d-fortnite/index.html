@@ -814,7 +814,7 @@ function netHostStart(custom){
  net.peer=p;
  p.on('open',()=>{
   net.busy=false;net.role='host';net.code=usedCode;
-  net.members=[{name:'YOU',host:true,col:wardrobe.p}];
+  net.members=[{name:cleanName(myName),host:true,col:wardrobe.p}];
   hostNaming=false;hostTyping=false;
  });
  p.on('connection',conn=>{
@@ -1536,7 +1536,7 @@ function spawnAgents(){
   b.teamId=tid++;
   agents.push(b);
  }
- player=new Agent('YOU',true);
+ player=new Agent(cleanName(myName),true);
  player.teamId=0;
  player.col=wardrobe.p;
  agents.push(player);
