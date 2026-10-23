@@ -441,8 +441,8 @@ function shade(hex,f){
  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
 }
 function lockerGeom(){
- const pw=520,ph=340;
- const bx=Math.round(SW/2-pw/2),by=Math.max(20,Math.round(SH/2-ph/2));
+ const pw=520,ph=460;
+ const bx=Math.round(SW/2-pw/2),by=Math.max(16,Math.round(SH/2-ph/2));
  return{bx,by,pw,ph,sw:40,gap:8};
 }
  function shopGeom(){
@@ -734,16 +734,63 @@ function drawLocker(){
    ctx.fillStyle='#cfd8dc';ctx.fillRect(rsx+18,rsy+20,4,7);
   }
   ctx.textAlign='left';
+  ctx.textAlign='left';
   ctx.fillStyle='#9fb4c9';ctx.font='12px monospace';
   ctx.fillText(owned?'Rainbow skin owned \u2014 click to equip / remove':'Locked \u2014 buy the Rainbow Skin in the ITEM SHOP',rsx+g.sw+14,yy+26);
+  ctx.fillStyle='#a5d6a7';ctx.font='bold 14px monospace';
+  ctx.fillText('PARTY',g.bx+30,yy+94);
+  ctx.textAlign='right';
+  ctx.fillStyle='#9fb4c9';ctx.font='12px monospace';
+  ctx.fillText(net.role==='host'?'Recolour anyone in the lobby':(net.role==='guest'?'Click your own colour': 'Live colour for your online party'),g.bx+g.pw-30,yy+94);
+  ctx.textAlign='left';
+  const pRows=lockerPartyRows(g,yy+110);
+  for(const p of pRows){
+   ctx.fillStyle=p.host?'#ffd54f':'#c3d3e3';ctx.font='bold 13px monospace';
+   ctx.fillText(p.name,g.bx+30,p.y+16);
+   for(let i=0;i<LOCKER_COLORS.length;i++){
+    const c=LOCKER_COLORS[i];
+    const sx=g.bx+165+i*(20+3);
+    const sy=p.y;
+    const sel=c===p.col;
+    const hov=mouse.x>=sx&&mouse.x<=sx+20&&mouse.y>=sy&&mouse.y<=sy+20;
+    ctx.fillStyle=isRedHue(c)?'rgba(255,255,255,0.06)':c;
+    rrPath(sx,sy,20,20,5);ctx.fill();
+    ctx.lineWidth=sel?3:2;
+    ctx.strokeStyle=sel?'#ffd54f':(hov?'#fff':'rgba(0,0,0,0.4)');
+    ctx.stroke();
+   }
+  }
  ctx.textAlign='center';
  ctx.fillStyle='#9fb4c9';ctx.font='12px monospace';
- ctx.fillText('Click a colour to equip \u2022 blue foes remain untouched \u2022 you look like this in every match',g.bx+g.pw/2,g.by+g.ph-58);
+ ctx.fillText('Click a colour to equip \u2022 red stays reserved for foes \u2022 colours live-sync in parties',g.bx+g.pw/2,g.by+g.ph-36);
  ctx.fillStyle='#6f7f95';ctx.font='11px monospace';
- ctx.fillText('SQUAD colours also apply to party friends',g.bx+g.pw/2,g.by+g.ph-36);
+ ctx.fillText(net.role?'(HOST colours everyone \u2022 guests recolour themselves)':( 'SQUAD colours also apply to party friends'),g.bx+g.pw/2,g.by+g.ph-22);
  ctx.fillStyle='#9fb4c9';ctx.font='bold 13px monospace';
- ctx.fillText('ESC to close',g.bx+g.pw/2,g.by+g.ph-14);
+ ctx.fillText('ESC to close',g.bx+g.pw/2,g.by+g.ph-6);
  ctx.textAlign='left';
+}
+function lockerPartyRows(g,y0){
+ const out=[];
+ let yy=y0;
+ if(net.role==='host'){
+  for(const m of net.members){
+   out.push({name:m.name||'GUEST',host:!!m.host,self:!!m.host,col:m.host?wardrobe.p:((m.conn&&m.conn.tcol)||wardrobe.a),y:yy,conn:m.conn||null});
+   yy+=30;
+  }
+ }else if(net.role==='guest'){
+  for(const m of net.members){
+   const self=!m.host&&m.name===myName;
+   out.push({name:m.name||'?',host:!!m.host,self,col:m.col||((!m.host&&self===true)?wardrobe.p:wardrobe.a),y:yy});
+   yy+=30;
+  }
+  if(!out.some(r=>r.self)){
+   out.push({name:'YOU',host:false,self:true,col:wardrobe.p,y:yy});
+   yy+=30;
+  }
+ }else{
+  out.push({name:'YOU',host:true,self:true,col:wardrobe.p,y:yy});
+ }
+ return out;
 }let gameFill=false, raceFill=false;
 try{gameFill=localStorage.getItem('fn2d_fill')==='1';}catch(e){}let pausePrev='play';
 let menuReady=false, readyT=0, menuSettings=false;
@@ -767,7 +814,7 @@ function netHostStart(custom){
  net.peer=p;
  p.on('open',()=>{
   net.busy=false;net.role='host';net.code=usedCode;
-  net.members=[{name:'YOU',host:true}];
+  net.members=[{name:'YOU',host:true,col:wardrobe.p}];
   hostNaming=false;hostTyping=false;
  });
  p.on('connection',conn=>{
@@ -791,6 +838,7 @@ function hostDropConn(conn){
  }
  const mi=net.members.findIndex(m=>m.conn===conn);
  if(mi>=0)net.members.splice(mi,1);
+ netLobbySync();
 }
 let guestIdx=0;
 function netJoinStart(code){
@@ -826,6 +874,13 @@ function netDisband(){
 }
 function teardownGuest(msg){netBanner={txt:msg,t:4,c:'#ef5350'};}
 let netBanner=null;
+function netLobbyCols(){
+ return net.members.map(m=>({name:m.name,host:!!m.host,col:m.host?wardrobe.p:((m.conn&&m.conn.tcol)||wardrobe.a)}));
+}
+function netLobbySync(){netBroadcast({t:'lobby',code:net.code,members:netLobbyCols()});}
+function learnCol(c){
+ return LOCKER_COLORS.includes(c)?c:null;
+}
 
 // ---- host data / stream ----
 function hostOnData(conn,d){
@@ -833,8 +888,17 @@ function hostOnData(conn,d){
  if(d.t==='hello'){
   if(conn.guestName)return;
   conn.guestName=cleanName(typeof d.name==='string'?d.name:'');
-  net.members.push({conn,name:conn.guestName,gi:-1});
-  netBroadcast({t:'lobby',code:net.code,members:net.members.map(m=>({name:m.name,host:!!m.host}))});
+  net.members.push({conn,name:conn.guestName,gi:-1,col:wardrobe.a});
+  netLobbySync();
+  return;
+ }
+ if(d.t==='col'){
+  const c=learnCol(d.c);
+  if(c){
+   conn.tcol=c;
+   if(conn.agent)conn.agent.col=c;
+   netLobbySync();
+  }
   return;
  }
  if(d.t==='ctl'){
@@ -861,7 +925,7 @@ function netStreamStart(){
 function netStreamStop(){if(netStreamT){clearInterval(netStreamT);netStreamT=null;}}
 function netStreamTick(){
  if(net.role!=='host'){netStreamStop();return;}
- if(state==='menu'||state==='pause'){return;}
+  if(state==='menu'||(state==='pause'&&(!player||player.alive)))return;
  netTickN++;
  const ag=[],nm=[];
  for(let i=0;i<agents.length;i++){
@@ -870,7 +934,7 @@ function netStreamTick(){
   nm.push(a.name||'');
   const ck=a.cast?(a.cast.kind==='potS'?1:a.cast.kind==='potB'?2:3):0;
   ag.push([i,Math.round(a.x),Math.round(a.y),a.face||1,Math.max(0,Math.round(a.hp)),Math.round(a.shield),
-   a.alive?1:0,a.onboard?1:0,a.dropping?1:0,a.cur,a.build?1:0,Math.round(a.aimA*100)/100,a.hitT<3?1:0,ck,Math.round((a.cast?a.cast.t:0)*100)/100]);
+   a.alive?1:0,a.onboard?1:0,a.dropping?1:0,a.cur,a.build?1:0,Math.round(a.aimA*100)/100,a.hitT<3?1:0,ck,Math.round((a.cast?a.cast.t:0)*100)/100,a.col||null]);
  }
  const bl=[];
  for(const b of bullets)bl.push([Math.round(b.x),Math.round(b.y),b.vx|0,b.vy|0,b.r]);
@@ -925,17 +989,23 @@ function guestStart(d){
  gStructIdx=new Map();
   storm={ph:0,mode:'wait',t:60,lw:0,rw:WORLD_W,tlw:0,trw:WORLD_W,cx:WORLD_W/2,dps:1};
  bus={x:-600,y:200,v:360};
- matchT=0;mapOpen=false;
- cam.zoom=1;cam.shake=0;cam.x=WORLD_W/2-SW/4;cam.y=WORLD_H/2;
- state='drop';
- sfx('horn');
+  matchT=0;mapOpen=false;
+  cam.zoom=1;cam.shake=0;cam.x=WORLD_W/2-SW/4;cam.y=WORLD_H/2;
+  deathStamp=0;
+  state='drop';
+  sfx('horn');
  if(!gCtlT)gCtlT=setInterval(gCtlTick,50);
 }
 function guestOnData(d){
  if(!d||typeof d!=='object')return;
  if(d.t==='full'){net.err='Lobby is full';return;}
  if(d.t==='closed'){net.role=null;net.conns=[];net.members=[];net.code='';guestLeaveWorld('Lobby was closed by the host');return;}
- if(d.t==='lobby'){net.members=d.members;return;}
+  if(d.t==='lobby'){net.members=d.members;return;}
+  if(d.t==='col'){
+   const c=learnCol(d.c);
+   if(c){wardrobe.p=c;saveWardrobe();sfx('pickup');}
+   return;
+  }
  if(d.t==='start'){guestStart(d);return;}
  if(d.t==='s')applySnap(d);
  else if(d.t==='o')applyOwn(d);
@@ -982,12 +1052,15 @@ function applySnap(d){
   m.tx=a[1];m.ty=a[2];m.face=a[3];m.hp=a[4];m.shield=a[5];
   m.alive=!!a[6];m.onboard=!!a[7];m.dropping=!!a[8];
   m.cur=a[9];m.build=!!a[10];m.aimA=a[11];m.hitT=a[12]?0:99;
-  m.cast=a[13]?{kind:a[13]===1?'potS':a[13]===2?'potB':'med',t:a[14],dur:a[13]===1?0.8:a[13]===2?1.1:1.6}:null;
+   m.cast=a[13]?{kind:a[13]===1?'potS':a[13]===2?'potB':'med',t:a[14],dur:a[13]===1?0.8:a[13]===2?1.1:1.6}:null;
+   if(a[15])m.col=a[15];
   if(d.agN)m.name=d.agN[k]||m.name;
   if(m.x===undefined){m.x=a[1];m.y=a[2];}
  }
  agents=agents.filter(a=>seen[a.i]);
- if(gAgents[gSelfIdx]){player=gAgents[gSelfIdx];player.isPlayer=true;}
+  if(gAgents[gSelfIdx]){player=gAgents[gSelfIdx];player.isPlayer=true;
+   if(player&&!player.alive)noteDeath();
+  }
  if(player&&!player.onboard&&state==='drop')state='play';
  if(player&&!player.alive&&player.onboard)player.onboard=false;
  // items
@@ -1465,12 +1538,14 @@ function spawnAgents(){
  }
  player=new Agent('YOU',true);
  player.teamId=0;
+ player.col=wardrobe.p;
  agents.push(player);
  if(net.role==='host'){
   for(const conn of net.conns){
    const g=new Agent(conn.guestName||('P'+(guestIdx++)),false);
    g.human=true;g.ctl=null;g.act=[];
    g.teamId=0;
+   g.col=conn.tcol||wardrobe.a;
    g.dropX=clamp((player.dropX+(fill?ri(-400,400):1200))+rnd()*600,200,WORLD_W-200);
    agents.push(g);
    conn.agent=g;
@@ -1483,6 +1558,7 @@ function spawnAgents(){
   const t=new Agent(BOTNAMES[(j*7+3)%BOTNAMES.length],false);
   t.skill=rr(0.9,1.3);
   t.teamId=0;
+  t.col=wardrobe.a;
   t.name=t.name+' (FILL)';
   t.dropX=clamp(player.dropX+(j+1)*90*(rnd()<0.5?-1:1),60,WORLD_W-60);
   agents.push(t);
@@ -1512,6 +1588,7 @@ function startMatch(seed){
   storm={ph:0,mode:'wait',t:60,lw:0,rw:WORLD_W,tlw:0,trw:WORLD_W,cx:WORLD_W/2,dps:1};
  bus={x:-600,y:200,v:360};
  matchT=0;
+ deathStamp=0;
  mapOpen=false;
  state='drop';
  cam.zoom=1;cam.shake=0;
@@ -1789,7 +1866,8 @@ function damageAgent(a,dmg,src,crit,noShield){
   }
   if(a.isPlayer||a.human){
    a.placement=aliveCount+1;
-    if(a.isPlayer){
+   if(a.isPlayer){
+     noteDeath();
      records.best=records.best?Math.min(records.best,a.placement):a.placement;
      records.bestKills=Math.max(records.bestKills,a.kills);
      records.deaths++;
@@ -2530,12 +2608,12 @@ function drawAgent(a){
  ctx.fillStyle='#37474f';
  ctx.fillRect(x+4,y+h-10,w-8,10);
   const rb=a.isPlayer&&wardrobe.rb&&wardrobe.rbOn;
-  const bodyC=rb?rainbowC(0):(a.isPlayer?wardrobe.p:ally?wardrobe.a:'#c62828');
+  const bodyC=rb?rainbowC(0):(a.col?a.col:(a.isPlayer?wardrobe.p:ally?wardrobe.a:'#c62828'));
   ctx.fillStyle=bodyC;
   ctx.fillRect(x+2,y+14,w-4,h-26);
   ctx.fillStyle='#ffcc80';
   ctx.beginPath();ctx.arc(x+w/2,y+9,9,0,7);ctx.fill();
-  const capC=rb?rainbowC(0.08,40):a.isPlayer?shade(wardrobe.p,0.75):ally?shade(wardrobe.a,0.75):'#8e0000';
+  const capC=rb?rainbowC(0.08,40):a.col?shade(a.col,0.75):a.isPlayer?shade(wardrobe.p,0.75):ally?shade(wardrobe.a,0.75):'#8e0000';
  ctx.fillStyle=capC;
  ctx.fillRect(x+2,y+2,w-4,7);
  ctx.strokeStyle='#3e2723';ctx.lineWidth=4;
@@ -3274,7 +3352,7 @@ function drawDeath(){
  ctx.font='14px monospace';ctx.fillStyle='#bbb';
  ctx.fillText('spectating the match...',SW/2,SH*0.34+64);
   ctx.font='bold 16px monospace';ctx.fillStyle='#ffd54f';
-  ctx.fillText('CLICK to return to the menu',SW/2,SH*0.34+100);
+  ctx.fillText(deathGraceLeft()>0?('BACK to lobby in '+Math.ceil(deathGraceLeft()/1000)+'s'):'CLICK to return to the menu',SW/2,SH*0.34+100);
  ctx.textAlign='left';
 }
 function drawEnd(){
@@ -3740,6 +3818,33 @@ function handleClicks(){
       if(wardrobe.rb){wardrobe.rbOn=!wardrobe.rbOn;saveWardrobe();sfx('pickup');}
       else sfx('empty');
      }
+     const pRowsH=lockerPartyRows(g,g.by+66+2*(g.sw+40)+110);
+     pClick:for(const p of pRowsH){
+      for(let i=0;i<LOCKER_COLORS.length;i++){
+       const c=LOCKER_COLORS[i];
+       const sx=g.bx+165+i*(20+3),sy=p.y;
+       if(mouse.x>=sx&&mouse.x<=sx+20&&mouse.y>=sy&&mouse.y<=sy+20){
+        if(isRedHue(c)){sfx('empty');break pClick;}
+        if(net.role==='host'){
+         if(p.self){
+          wardrobe.p=c;if(player)player.col=c;
+         }else{
+          p.conn.tcol=c;
+          if(p.conn.agent)p.conn.agent.col=c;
+          netSend(p.conn,{t:'col',c});
+         }
+         netLobbySync();
+        }else if(net.role==='guest'&&p.self){
+         wardrobe.p=c;saveWardrobe();
+         if(net.conns[0])netSend(net.conns[0],{t:'col',c});
+        }else{
+         wardrobe.p=c;saveWardrobe();
+        }
+        sfx('pickup');
+        break pClick;
+       }
+      }
+     }
      mouse.lEdge=false;
      return;
     }
@@ -3799,6 +3904,7 @@ function handleClicks(){
    return;
   }
   if(player&&!player.alive){
+   if(deathGraceLeft()>0){mouse.lEdge=false;return;}
    if(net.role==='host'&&net.conns.some(c=>c.open)){
     for(const c of net.conns){
      if(c.open)netSend(c,{t:'end',win:false,place:(c.agent&&c.agent.placement)||aliveCount+1,kills:(c.agent&&c.agent.kills)||0,dth:(c.agent&&c.agent.alive)?0:1});
@@ -3818,7 +3924,14 @@ function handleClicks(){
   }
  }
 }
-let lastT=0;
+let lastT=0,deathStamp=0;
+const DEATH_FREEZE_GRACE=2600;
+function noteDeath(){
+ if(!deathStamp)deathStamp=performance.now();
+}
+function deathGraceLeft(){
+ return Math.max(0,DEATH_FREEZE_GRACE-(performance.now()-deathStamp));
+}
 function frame(t){
  const dt=Math.min(0.05,(t-lastT)/1000||0.016);
  lastT=t;
