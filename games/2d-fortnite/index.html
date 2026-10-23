@@ -373,6 +373,24 @@ const MODES={
  squads:{name:'SQUADS',bots:47,sub:'48 PLAYERS \u2022 FULL SQUADS'}
 };
 let selectedMode='solo', modeOpen=false, modeHov=null;
+const MODE_FOR_SIZE={'1':'solo','2':'duos','3':'trios'};
+function partySizeCount(){
+ let n=0;
+ for(const m of net.members){
+  if(!m.conn||m.conn.open)n++;
+ }
+ return n;
+}
+function partyAutoMode(announce){
+ if(net.role!=='host')return null;
+ const n=partySizeCount();
+ const mode=(MODE_FOR_SIZE[n]||'squads');
+ if(selectedMode!==mode){
+  selectedMode=mode;
+  if(announce)toast('PARTY SIZE '+n+' — GAME MODE: '+MODES[mode].name);
+ }
+ return mode;
+}
 let lockerOpen=false, lockerRow=null;
 let careerOpen=false;
 let achOpen=false;
@@ -746,6 +764,21 @@ function drawLocker(){
 }let gameFill=false, raceFill=false;
 try{gameFill=localStorage.getItem('fn2d_fill')==='1';}catch(e){}let pausePrev='play';
 let menuReady=false, readyT=0, menuSettings=false;
+function readyToggle(){
+ menuReady=!menuReady;
+ if(net.role==='host'){
+  if(net.members[0])net.members[0].ready=menuReady;
+  readyT=0;
+  lobbySync();
+ }else if(net.role==='guest'){
+  const c=net.conns[0];
+  if(c&&c.open)netSend(c,{t:'ready',on:menuReady});
+  readyT=0;
+ }else if(menuReady){
+  readyT=5;
+ }
+ sfx('swap');
+}
 
 // ---- Online party (PeerJS host-authoritative duos) ----
 const net={enabled:'Peer' in window,role:null,peer:null,conns:[],members:[],code:'',busy:false,
@@ -754,6 +787,22 @@ const NET_PREFIX='fn2d2-';
 function netCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
 function netSend(conn,obj){try{conn.send(obj);}catch(e){}}
 function netBroadcast(obj){for(const c of net.conns)if(c.open)netSend(c,obj);}
+function lobbyMembersWireless(){
+ return net.members.map(m=>({name:m.name,host:!!m.host,ready:m.conn?!!(m.conn.ready):!!m.ready}));
+}
+function lobbySync(){netBroadcast({t:'lobby',code:net.code,members:lobbyMembersWireless()});}
+function partyAllReady(){
+ if(net.role!=='host')return false;
+ for(const m of net.members){
+  if(m.conn&&m.conn.open&&!m.conn.ready)return false;
+ }
+ return true;
+}
+function partyAllReadyCount(){
+ let n=0;
+ for(const m of net.members)if(m.conn?m.conn.ready:!!m.ready)n++;
+ return n;
+}
 function netHostStart(custom){
  if(typeof Peer==='undefined'){net.err='Party needs internet (PeerJS failed to load)';return;}
  let code=(custom||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -764,11 +813,12 @@ function netHostStart(custom){
  const usedCode=code;
  const p=new Peer(NET_PREFIX+usedCode,{debug:0});
  net.peer=p;
- p.on('open',()=>{
-  net.busy=false;net.role='host';net.code=usedCode;
-  net.members=[{name:'YOU',host:true}];
-  hostNaming=false;hostTyping=false;
- });
+  p.on('open',()=>{
+   net.busy=false;net.role='host';net.code=usedCode;
+   net.members=[{name:'YOU',host:true,ready:false}];
+   hostNaming=false;hostTyping=false;
+   partyAutoMode(true);
+  });
  p.on('connection',conn=>{
   conn.on('open',()=>{
    if(net.members.length>=3||net.started){netSend(conn,{t:'full'});conn.close();return;}
@@ -788,8 +838,12 @@ function hostDropConn(conn){
   if(conn.agent.alive)addFeed(conn.agent.name+' left the party','#ef5350');
   conn.agent.alive=false;conn.agent.hp=0;conn.agent.gone=true;
  }
- const mi=net.members.findIndex(m=>m.conn===conn);
- if(mi>=0)net.members.splice(mi,1);
+  const mi=net.members.findIndex(m=>m.conn===conn);
+  if(mi>=0)net.members.splice(mi,1);
+  if(net.role==='host'){
+   lobbySync();
+   partyAutoMode(true);
+  }
 }
 let guestIdx=0;
 function netJoinStart(code){
@@ -829,13 +883,21 @@ let netBanner=null;
 // ---- host data / stream ----
 function hostOnData(conn,d){
  if(!d||typeof d!=='object')return;
- if(d.t==='hello'){
-  if(conn.guestName)return;
-  conn.guestName=cleanName(typeof d.name==='string'?d.name:'');
-  net.members.push({conn,name:conn.guestName,gi:-1});
-  netBroadcast({t:'lobby',code:net.code,members:net.members.map(m=>({name:m.name,host:!!m.host}))});
-  return;
- }
+  if(d.t==='hello'){
+   if(conn.guestName)return;
+   conn.guestName=cleanName(typeof d.name==='string'?d.name:'');
+   conn.ready=false;
+   net.members.push({conn,name:conn.guestName,gi:-1});
+   partyAutoMode(true);
+   lobbySync();
+   return;
+  }
+  if(d.t==='ready'){
+   conn.ready=!!d.on;
+   conn.guestName=conn.guestName||'FRIEND';
+   lobbySync();
+   return;
+  }
  if(d.t==='ctl'){
   const a=conn.agent;
   if(!a||a.gone||!a.alive)return;
@@ -917,6 +979,7 @@ function mirrorAgent(){
 }
 function guestStart(d){
  srand(d.seed);matchSeed=d.seed;
+ menuReady=false;readyT=0;
  bullets=[];parts=[];dnums=[];feed=[];banner=null;netBanner=null;
  genWorld();
  agents=[];player=null;
@@ -1495,10 +1558,10 @@ function startMatch(seed){
  matchSeed=seed;
  srand(window.__TEST__?424242:matchSeed);
  menuReady=false;readyT=0;menuSettings=false;
+ if(net.role==='host')for(const c of net.conns)c.ready=false;
  bullets=[];parts=[];dnums=[];feed=[];banner=null;netBanner=null;
  genWorld();
  spawnAgents();
-  storm={ph:0,mode:'wait',t:60,lw:0,rw:WORLD_W,tlw:0,trw:WORLD_W,cx:WORLD_W/2,dps:1};
  bus={x:-600,y:200,v:360};
  matchT=0;
  mapOpen=false;
@@ -2310,9 +2373,18 @@ function update(dt){
 function updateMenu(dt){
  for(const c of clouds){c.x+=c.v*dt;if(c.x>WORLD_W+200)c.x=-200;}
  if(netBanner){netBanner.t-=dt;if(netBanner.t<=0)netBanner=null;}
- if(menuReady){
-  readyT-=dt;
-  if(readyT<=0){menuReady=false;startMatch();}
+ if(net.role==='host'){
+  const all=partyAllReady();
+  if(menuReady&&all){
+   if(readyT<=0)readyT=5;
+   readyT-=dt;
+   if(readyT<=0){menuReady=false;if(net.members[0])net.members[0].ready=false;startMatch();}
+  }
+ }else if(!net.role){
+  if(menuReady){
+   readyT-=dt;
+   if(readyT<=0){menuReady=false;startMatch();}
+  }
  }
 }
 
@@ -3164,25 +3236,43 @@ function drawMenu(){
  ctx.fillText(mSel.sub+' \u2022 SIDE-SCROLLING',mx+mw/2,my+124);
   // READY UP button (under mode card)
   const R=menuBtnRects();
-  const rb=R.ready;
-  const rhov=mouse.x>=rb.x&&mouse.x<=rb.x+rb.w&&mouse.y>=rb.y&&mouse.y<=rb.y+rb.h;
-  const rg=ctx.createLinearGradient(rb.x,rb.y,rb.x,rb.y+rb.h);
-  if(menuReady){rg.addColorStop(0,'#4caf50');rg.addColorStop(1,'#2b8a3e');}
-  else{rg.addColorStop(0,rhov?'#2f4d7d':'#1d3050');rg.addColorStop(1,'#132339');}
-  ctx.fillStyle=rg;ctx.strokeStyle=menuReady?'#8dff8d':(rhov?'#ffd54f':'rgba(255,255,255,0.25)');
+   const rb=R.ready;
+   const rhov=mouse.x>=rb.x&&mouse.x<=rb.x+rb.w&&mouse.y>=rb.y&&mouse.y<=rb.y+rb.h;
+   const armed=menuReady&&(!net.role?(readyT>0):(net.role==='host'&&partyAllReady()&&readyT>0));
+   const rg=ctx.createLinearGradient(rb.x,rb.y,rb.x,rb.y+rb.h);
+   if(armed){rg.addColorStop(0,'#4caf50');rg.addColorStop(1,'#2b8a3e');}
+   else{rg.addColorStop(0,rhov?'#2f4d7d':'#1d3050');rg.addColorStop(1,'#132339');}
+   ctx.fillStyle=rg;ctx.strokeStyle=armed?'#8dff8d':(rhov?'#ffd54f':'rgba(255,255,255,0.25)');
   rrPath(rb.x,rb.y,rb.w,rb.h,10);ctx.fill();ctx.stroke();
-  ctx.textAlign='center';
-  if(menuReady){
-   ctx.fillStyle='#eaffea';ctx.font='bold 18px monospace';
-   ctx.fillText('READY — MATCH STARTING',rb.x+rb.w/2,rb.y+26);
-   ctx.fillStyle='#b7ffb7';ctx.font='12px monospace';
-   ctx.fillText('in '+Math.ceil(readyT)+'s — click to unready',rb.x+rb.w/2,rb.y+44);
-  }else{
-   ctx.fillStyle='#fff';ctx.font='bold 20px monospace';
-   ctx.fillText('READY UP',rb.x+rb.w/2,rb.y+31);
-   ctx.fillStyle='#9fb4c9';ctx.font='10px monospace';
-   ctx.fillText('Click to queue for '+MODES[selectedMode].name+' Battle Royale',rb.x+rb.w/2,rb.y+45);
-  }
+   ctx.textAlign='center';
+   if(net.role&&menuReady&&readyT>0){
+    ctx.fillStyle='#eaffea';ctx.font='bold 18px monospace';
+    ctx.fillText('ALL READY — MATCH STARTING',rb.x+rb.w/2,rb.y+26);
+    ctx.fillStyle='#b7ffb7';ctx.font='12px monospace';
+    ctx.fillText('in '+Math.ceil(readyT)+'s — click to unready',rb.x+rb.w/2,rb.y+44);
+   }else if(net.role==='host'){
+    const total=net.members.filter(m=>!m.host).length+1;
+    const waiting=total-partyAllReadyCount();
+    ctx.fillStyle=menuReady?'#eaffea':'#fff';ctx.font='bold 18px monospace';
+    ctx.fillText(menuReady?'READY — WAITING FOR PARTY':'READY UP (HOST)',rb.x+rb.w/2,rb.y+26);
+    ctx.fillStyle='#b7ffb7';ctx.font='12px monospace';
+    ctx.fillText(waiting>0?('Waiting for '+waiting+' to ready up — click to unready'):'Party ready — match starting!',rb.x+rb.w/2,rb.y+44);
+   }else if(net.role==='guest'){
+    ctx.fillStyle=menuReady?'#eaffea':'#fff';ctx.font='bold 18px monospace';
+    ctx.fillText(menuReady?'READY — WAITING FOR PARTY':'READY UP',rb.x+rb.w/2,rb.y+26);
+    ctx.fillStyle='#9fb4c9';ctx.font='12px monospace';
+    ctx.fillText(menuReady?'Host starts when everyone is ready':'Ready up for the host to start the match',rb.x+rb.w/2,rb.y+44);
+   }else if(menuReady){
+    ctx.fillStyle='#eaffea';ctx.font='bold 18px monospace';
+    ctx.fillText('READY — MATCH STARTING',rb.x+rb.w/2,rb.y+26);
+    ctx.fillStyle='#b7ffb7';ctx.font='12px monospace';
+    ctx.fillText('in '+Math.ceil(readyT)+'s — click to unready',rb.x+rb.w/2,rb.y+44);
+   }else{
+    ctx.fillStyle='#fff';ctx.font='bold 20px monospace';
+    ctx.fillText('READY UP',rb.x+rb.w/2,rb.y+31);
+    ctx.fillStyle='#9fb4c9';ctx.font='10px monospace';
+    ctx.fillText('Click to queue for '+MODES[selectedMode].name+' Battle Royale',rb.x+rb.w/2,rb.y+45);
+   }
   // news card (left)
  const nw=420,nh=118,nx=46,ny=SH*0.52-nh/2;
  ctx.fillStyle='rgba(255,255,255,0.06)';ctx.strokeStyle='rgba(255,255,255,0.12)';
@@ -3508,19 +3598,30 @@ function drawParty(){
   ctx.font='13px monospace';ctx.fillStyle='#ccc';
   ctx.fillText((net.role==='host'?'LOBBY CODE':'CONNECTED TO')+'  '+net.code,g.bx+g.pw/2,g.by+70);
   let yy=g.by+108;
+  ctx.textAlign='left';
+  const readyLbl=(x,isReady)=>{
+   ctx.fillStyle=isReady?'#8dff8d':'#757575';
+   ctx.font=isReady?'bold 12px monospace':'12px monospace';
+   ctx.fillText(isReady?'READY':'NOT READY',x,yy);
+  };
   if(net.role==='host'){
-   ctx.fillStyle='#ffd54f';ctx.font='bold 14px monospace';ctx.textAlign='left';
-   ctx.fillText('You (host)',g.bx+70,yy);yy+=26;
+   ctx.fillStyle='#ffd54f';ctx.font='bold 14px monospace';
+   ctx.fillText('You (host)',g.bx+70,yy);
+   readyLbl(g.bx+300,menuReady);
+   yy+=26;
   }
-  ctx.textAlign='center';
   for(const m of net.members){
-   if(m.gi===null&&m.ai===null)continue;
+   if(!m.conn&&!m.host)continue;
+   const isReady=m.conn?m.conn.ready:!!m.ready;
+   if(!m.host&&!m.conn)continue;
    ctx.fillStyle='#fff';ctx.font='13px monospace';
-   ctx.fillText(m.name||'Friend',g.bx+g.pw/2,yy);yy+=26;
+   ctx.fillText(m.name||'Friend',g.bx+70,yy);
+   readyLbl(g.bx+300,isReady);
+   yy+=26;
   }
   if(!net.members.length){ctx.fillStyle='#888';ctx.fillText('No friends connected yet — share the code!',g.bx+g.pw/2,g.by+120);}
   ctx.fillStyle=net.started?'#81c784':'#888';ctx.font='12px monospace';
-   ctx.fillText(net.started?'In game — use READY UP on your home screen':'Waiting \u2022 press READY UP on home screen to start',g.bx+g.pw/2,g.by+g.ph-98);
+   ctx.fillText(net.started?'In game — use READY UP on your home screen':'Everyone readies up \u2022 then the match starts in 5s',g.bx+g.pw/2,g.by+g.ph-98);
   if(net.role==='host')pauseBtnUI(g.disband.x,g.disband.y,'CLOSE LOBBY');
   else pauseBtnUI(g.disband.x,g.disband.y,'LEAVE PARTY');
  }
@@ -3765,14 +3866,12 @@ function handleClicks(){
     return;
    }
    if(pauseHit(R.ready)){
-    menuReady=!menuReady;
-    if(menuReady)readyT=5;
+    readyToggle();
     mouse.lEdge=false;
-    sfx('swap');
     return;
    }
    if(pauseHit(R.play)){
-    if(!menuReady){menuReady=true;readyT=5;sfx('swap');}
+    if(!menuReady)readyToggle();
     mouse.lEdge=false;
     return;
    }
