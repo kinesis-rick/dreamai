@@ -1858,7 +1858,7 @@ function damageAgent(a,dmg,src,crit,noShield){
      records.deaths++;
      saveRecords();
      addFeed('You placed #'+a.placement,'#ef5350');
-     state='menu';
+     saveRecords();
     }
    }
   spawnParts(a.x+a.w/2,a.y+a.h/2,20,'#ef5350',220);
@@ -3897,7 +3897,16 @@ function handleClicks(){
    else{state='menu';mouse.lEdge=false;}
    return;
   }
-  if(player&&!player.alive){state='menu';mouse.lEdge=false;return;}
+  if(player&&!player.alive){
+   if(net.role==='host'&&net.conns.some(c=>c.open)){
+    for(const c of net.conns){
+     if(c.open)netSend(c,{t:'end',win:false,place:(c.agent&&c.agent.placement)||aliveCount+1,kills:(c.agent&&c.agent.kills)||0,dth:(c.agent&&c.agent.alive)?0:1});
+    }
+    const gg=streamGen;
+    setTimeout(()=>{if(streamGen===gg){netStreamStop();for(const c of net.conns.slice())hostDropConn(c);}},1200);
+   }else if(net.role==='guest'){try{netSend(net.conns[0],{t:'bye'});}catch(e){}teardownGuest('LEFT THE MATCH');}
+   state='menu';mouse.lEdge=false;return;
+  }
  if(player&&player.buildMenu&&buildZones.length){
   for(const z of buildZones){
    if(mouse.x>=z.x&&mouse.x<=z.x+z.w&&mouse.y>=z.y&&mouse.y<=z.y+z.h){
