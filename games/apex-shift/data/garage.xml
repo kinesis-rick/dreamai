@@ -1,0 +1,3219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cars>
+  <car id="mini_cooper_s_mk1">
+    <id>mini_cooper_s_mk1</id>
+    <make>Mini</make>
+    <model>Cooper S Mk1</model>
+    <year>1965</year>
+    <tier>1</tier>
+    <price_usd>2300</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>76</horsepower>
+    <torque_nm>107</torque_nm>
+    <weight_kg>670</weight_kg>
+    <top_speed_kmh>156</top_speed_kmh>
+    <accel_0_100>10.5</accel_0_100>
+    <lateral_g>0.83</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="volkswagen_golf_gti_mk1">
+    <id>volkswagen_golf_gti_mk1</id>
+    <make>Volkswagen</make>
+    <model>Golf GTI Mk1</model>
+    <year>1976</year>
+    <tier>1</tier>
+    <price_usd>6200</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>110</horsepower>
+    <torque_nm>140</torque_nm>
+    <weight_kg>810</weight_kg>
+    <top_speed_kmh>182</top_speed_kmh>
+    <accel_0_100>9</accel_0_100>
+    <lateral_g>0.84</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="peugeot_205_gti_16">
+    <id>peugeot_205_gti_16</id>
+    <make>Peugeot</make>
+    <model>205 GTi 1.6</model>
+    <year>1984</year>
+    <tier>1</tier>
+    <price_usd>8500</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>105</horsepower>
+    <torque_nm>134</torque_nm>
+    <weight_kg>850</weight_kg>
+    <top_speed_kmh>190</top_speed_kmh>
+    <accel_0_100>8.6</accel_0_100>
+    <lateral_g>0.85</lateral_g>
+    <style_rating>89</style_rating>
+  </car>
+  <car id="renault_5_gt_turbo">
+    <id>renault_5_gt_turbo</id>
+    <make>Renault</make>
+    <model>5 GT Turbo</model>
+    <year>1985</year>
+    <tier>1</tier>
+    <price_usd>9800</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>115</horsepower>
+    <torque_nm>165</torque_nm>
+    <weight_kg>850</weight_kg>
+    <top_speed_kmh>201</top_speed_kmh>
+    <accel_0_100>7.8</accel_0_100>
+    <lateral_g>0.84</lateral_g>
+    <style_rating>85</style_rating>
+  </car>
+  <car id="toyota_corolla_gt_ae86">
+    <id>toyota_corolla_gt_ae86</id>
+    <make>Toyota</make>
+    <model>Corolla GT (AE86)</model>
+    <year>1985</year>
+    <tier>1</tier>
+    <price_usd>8900</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>124</horsepower>
+    <torque_nm>142</torque_nm>
+    <weight_kg>970</weight_kg>
+    <top_speed_kmh>195</top_speed_kmh>
+    <accel_0_100>8.5</accel_0_100>
+    <lateral_g>0.84</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="volkswagen_golf_gti_16v_mk2">
+    <id>volkswagen_golf_gti_16v_mk2</id>
+    <make>Volkswagen</make>
+    <model>Golf GTI 16V Mk2</model>
+    <year>1986</year>
+    <tier>1</tier>
+    <price_usd>12200</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>139</horsepower>
+    <torque_nm>168</torque_nm>
+    <weight_kg>960</weight_kg>
+    <top_speed_kmh>208</top_speed_kmh>
+    <accel_0_100>8.1</accel_0_100>
+    <lateral_g>0.85</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="peugeot_205_gti_19">
+    <id>peugeot_205_gti_19</id>
+    <make>Peugeot</make>
+    <model>205 GTi 1.9</model>
+    <year>1987</year>
+    <tier>1</tier>
+    <price_usd>11500</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>130</horsepower>
+    <torque_nm>165</torque_nm>
+    <weight_kg>875</weight_kg>
+    <top_speed_kmh>206</top_speed_kmh>
+    <accel_0_100>7.6</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="honda_crx_si">
+    <id>honda_crx_si</id>
+    <make>Honda</make>
+    <model>CRX Si</model>
+    <year>1988</year>
+    <tier>1</tier>
+    <price_usd>10300</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>108</horsepower>
+    <torque_nm>136</torque_nm>
+    <weight_kg>915</weight_kg>
+    <top_speed_kmh>190</top_speed_kmh>
+    <accel_0_100>8.5</accel_0_100>
+    <lateral_g>0.84</lateral_g>
+    <style_rating>86</style_rating>
+  </car>
+  <car id="ford_sierra_rs_cosworth">
+    <id>ford_sierra_rs_cosworth</id>
+    <make>Ford</make>
+    <model>Sierra RS Cosworth</model>
+    <year>1986</year>
+    <tier>1</tier>
+    <price_usd>23500</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>204</horsepower>
+    <torque_nm>277</torque_nm>
+    <weight_kg>1209</weight_kg>
+    <top_speed_kmh>240</top_speed_kmh>
+    <accel_0_100>6.5</accel_0_100>
+    <lateral_g>0.87</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="lancia_delta_hf_integrale_evo">
+    <id>lancia_delta_hf_integrale_evo</id>
+    <make>Lancia</make>
+    <model>Delta HF Integrale Evoluzione</model>
+    <year>1991</year>
+    <tier>1</tier>
+    <price_usd>35000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>210</horsepower>
+    <torque_nm>304</torque_nm>
+    <weight_kg>1300</weight_kg>
+    <top_speed_kmh>220</top_speed_kmh>
+    <accel_0_100>5.7</accel_0_100>
+    <lateral_g>0.9</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="nissan_pulsar_gti_r">
+    <id>nissan_pulsar_gti_r</id>
+    <make>Nissan</make>
+    <model>Pulsar GTI-R</model>
+    <year>1991</year>
+    <tier>1</tier>
+    <price_usd>21000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>227</horsepower>
+    <torque_nm>280</torque_nm>
+    <weight_kg>1220</weight_kg>
+    <top_speed_kmh>232</top_speed_kmh>
+    <accel_0_100>5.4</accel_0_100>
+    <lateral_g>0.89</lateral_g>
+    <style_rating>87</style_rating>
+  </car>
+  <car id="ford_escort_rs_cosworth">
+    <id>ford_escort_rs_cosworth</id>
+    <make>Ford</make>
+    <model>Escort RS Cosworth</model>
+    <year>1992</year>
+    <tier>1</tier>
+    <price_usd>32000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>227</horsepower>
+    <torque_nm>304</torque_nm>
+    <weight_kg>1275</weight_kg>
+    <top_speed_kmh>232</top_speed_kmh>
+    <accel_0_100>5.8</accel_0_100>
+    <lateral_g>0.9</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="renault_clio_williams">
+    <id>renault_clio_williams</id>
+    <make>Renault</make>
+    <model>Clio Williams</model>
+    <year>1993</year>
+    <tier>1</tier>
+    <price_usd>21500</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>147</horsepower>
+    <torque_nm>175</torque_nm>
+    <weight_kg>990</weight_kg>
+    <top_speed_kmh>215</top_speed_kmh>
+    <accel_0_100>7.7</accel_0_100>
+    <lateral_g>0.88</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="toyota_celica_gt_four_st205">
+    <id>toyota_celica_gt_four_st205</id>
+    <make>Toyota</make>
+    <model>Celica GT-Four (ST205)</model>
+    <year>1994</year>
+    <tier>1</tier>
+    <price_usd>29000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>255</horsepower>
+    <torque_nm>304</torque_nm>
+    <weight_kg>1380</weight_kg>
+    <top_speed_kmh>246</top_speed_kmh>
+    <accel_0_100>6.1</accel_0_100>
+    <lateral_g>0.89</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="volvo_850_t5_r">
+    <id>volvo_850_t5_r</id>
+    <make>Volvo</make>
+    <model>850 T-5R</model>
+    <year>1995</year>
+    <tier>1</tier>
+    <price_usd>35500</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>243</horsepower>
+    <torque_nm>340</torque_nm>
+    <weight_kg>1445</weight_kg>
+    <top_speed_kmh>245</top_speed_kmh>
+    <accel_0_100>6.7</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="peugeot_106_rallye">
+    <id>peugeot_106_rallye</id>
+    <make>Peugeot</make>
+    <model>106 Rallye 1.6</model>
+    <year>1996</year>
+    <tier>1</tier>
+    <price_usd>13500</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>103</horsepower>
+    <torque_nm>132</torque_nm>
+    <weight_kg>865</weight_kg>
+    <top_speed_kmh>195</top_speed_kmh>
+    <accel_0_100>8.7</accel_0_100>
+    <lateral_g>0.87</lateral_g>
+    <style_rating>84</style_rating>
+  </car>
+  <car id="honda_civic_type_r_ek9">
+    <id>honda_civic_type_r_ek9</id>
+    <make>Honda</make>
+    <model>Civic Type R (EK9)</model>
+    <year>1997</year>
+    <tier>1</tier>
+    <price_usd>18500</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>185</horsepower>
+    <torque_nm>160</torque_nm>
+    <weight_kg>1070</weight_kg>
+    <top_speed_kmh>235</top_speed_kmh>
+    <accel_0_100>6.8</accel_0_100>
+    <lateral_g>0.91</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="peugeot_306_gti_6">
+    <id>peugeot_306_gti_6</id>
+    <make>Peugeot</make>
+    <model>306 GTi-6</model>
+    <year>1997</year>
+    <tier>1</tier>
+    <price_usd>19000</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>167</horsepower>
+    <torque_nm>193</torque_nm>
+    <weight_kg>1215</weight_kg>
+    <top_speed_kmh>220</top_speed_kmh>
+    <accel_0_100>7.9</accel_0_100>
+    <lateral_g>0.88</lateral_g>
+    <style_rating>83</style_rating>
+  </car>
+  <car id="toyota_celica_gt_s_t230">
+    <id>toyota_celica_gt_s_t230</id>
+    <make>Toyota</make>
+    <model>Celica GT-S (T230)</model>
+    <year>1999</year>
+    <tier>1</tier>
+    <price_usd>21455</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>180</horsepower>
+    <torque_nm>176</torque_nm>
+    <weight_kg>1134</weight_kg>
+    <top_speed_kmh>225</top_speed_kmh>
+    <accel_0_100>7.2</accel_0_100>
+    <lateral_g>0.87</lateral_g>
+    <style_rating>78</style_rating>
+  </car>
+  <car id="honda_civic_type_r_ep3">
+    <id>honda_civic_type_r_ep3</id>
+    <make>Honda</make>
+    <model>Civic Type R (EP3)</model>
+    <year>2001</year>
+    <tier>1</tier>
+    <price_usd>23000</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>200</horsepower>
+    <torque_nm>196</torque_nm>
+    <weight_kg>1204</weight_kg>
+    <top_speed_kmh>235</top_speed_kmh>
+    <accel_0_100>6.6</accel_0_100>
+    <lateral_g>0.9</lateral_g>
+    <style_rating>86</style_rating>
+  </car>
+  <car id="renault_clio_v6_phase_1">
+    <id>renault_clio_v6_phase_1</id>
+    <make>Renault</make>
+    <model>Clio V6 Phase 1</model>
+    <year>2001</year>
+    <tier>1</tier>
+    <price_usd>38000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>230</horsepower>
+    <torque_nm>300</torque_nm>
+    <weight_kg>1335</weight_kg>
+    <top_speed_kmh>235</top_speed_kmh>
+    <accel_0_100>6.4</accel_0_100>
+    <lateral_g>0.89</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="ford_focus_rs_mk1">
+    <id>ford_focus_rs_mk1</id>
+    <make>Ford</make>
+    <model>Focus RS Mk1</model>
+    <year>2002</year>
+    <tier>1</tier>
+    <price_usd>29000</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>215</horsepower>
+    <torque_nm>310</torque_nm>
+    <weight_kg>1278</weight_kg>
+    <top_speed_kmh>232</top_speed_kmh>
+    <accel_0_100>6.4</accel_0_100>
+    <lateral_g>0.92</lateral_g>
+    <style_rating>89</style_rating>
+  </car>
+  <car id="volkswagen_golf_r32_mk4">
+    <id>volkswagen_golf_r32_mk4</id>
+    <make>Volkswagen</make>
+    <model>Golf R32 Mk4</model>
+    <year>2003</year>
+    <tier>1</tier>
+    <price_usd>29100</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>241</horsepower>
+    <torque_nm>320</torque_nm>
+    <weight_kg>1477</weight_kg>
+    <top_speed_kmh>247</top_speed_kmh>
+    <accel_0_100>6.4</accel_0_100>
+    <lateral_g>0.88</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="dodge_neon_srt_4">
+    <id>dodge_neon_srt_4</id>
+    <make>Dodge</make>
+    <model>Neon SRT-4</model>
+    <year>2003</year>
+    <tier>1</tier>
+    <price_usd>19995</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>215</horsepower>
+    <torque_nm>332</torque_nm>
+    <weight_kg>1350</weight_kg>
+    <top_speed_kmh>246</top_speed_kmh>
+    <accel_0_100>5.6</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>75</style_rating>
+  </car>
+  <car id="volkswagen_golf_gti_mk5">
+    <id>volkswagen_golf_gti_mk5</id>
+    <make>Volkswagen</make>
+    <model>Golf GTI Mk5</model>
+    <year>2005</year>
+    <tier>1</tier>
+    <price_usd>22490</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>200</horsepower>
+    <torque_nm>280</torque_nm>
+    <weight_kg>1330</weight_kg>
+    <top_speed_kmh>235</top_speed_kmh>
+    <accel_0_100>6.9</accel_0_100>
+    <lateral_g>0.89</lateral_g>
+    <style_rating>87</style_rating>
+  </car>
+  <car id="mazdaspeed_3_bk">
+    <id>mazdaspeed_3_bk</id>
+    <make>Mazda</make>
+    <model>Mazdaspeed 3 (BK)</model>
+    <year>2007</year>
+    <tier>1</tier>
+    <price_usd>22240</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>263</horsepower>
+    <torque_nm>380</torque_nm>
+    <weight_kg>1433</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>5.8</accel_0_100>
+    <lateral_g>0.89</lateral_g>
+    <style_rating>82</style_rating>
+  </car>
+  <car id="mini_john_cooper_works_r56">
+    <id>mini_john_cooper_works_r56</id>
+    <make>Mini</make>
+    <model>John Cooper Works (R56)</model>
+    <year>2008</year>
+    <tier>1</tier>
+    <price_usd>28550</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>211</horsepower>
+    <torque_nm>260</torque_nm>
+    <weight_kg>1205</weight_kg>
+    <top_speed_kmh>238</top_speed_kmh>
+    <accel_0_100>6.5</accel_0_100>
+    <lateral_g>0.9</lateral_g>
+    <style_rating>83</style_rating>
+  </car>
+  <car id="ford_focus_rs_mk2">
+    <id>ford_focus_rs_mk2</id>
+    <make>Ford</make>
+    <model>Focus RS Mk2</model>
+    <year>2009</year>
+    <tier>1</tier>
+    <price_usd>38000</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>305</horsepower>
+    <torque_nm>440</torque_nm>
+    <weight_kg>1467</weight_kg>
+    <top_speed_kmh>263</top_speed_kmh>
+    <accel_0_100>5.9</accel_0_100>
+    <lateral_g>0.93</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="renault_megane_rs_250_cup">
+    <id>renault_megane_rs_250_cup</id>
+    <make>Renault</make>
+    <model>Mégane R.S. 250 Cup</model>
+    <year>2009</year>
+    <tier>1</tier>
+    <price_usd>34000</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>250</horsepower>
+    <torque_nm>340</torque_nm>
+    <weight_kg>1387</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>6.1</accel_0_100>
+    <lateral_g>0.94</lateral_g>
+    <style_rating>85</style_rating>
+  </car>
+  <car id="fiat_500_abarth">
+    <id>fiat_500_abarth</id>
+    <make>Fiat</make>
+    <model>500 Abarth</model>
+    <year>2012</year>
+    <tier>1</tier>
+    <price_usd>22000</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>160</horsepower>
+    <torque_nm>230</torque_nm>
+    <weight_kg>1142</weight_kg>
+    <top_speed_kmh>205</top_speed_kmh>
+    <accel_0_100>6.9</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>81</style_rating>
+  </car>
+  <car id="ford_fiesta_st_mk7">
+    <id>ford_fiesta_st_mk7</id>
+    <make>Ford</make>
+    <model>Fiesta ST (Mk7)</model>
+    <year>2013</year>
+    <tier>1</tier>
+    <price_usd>21400</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>182</horsepower>
+    <torque_nm>240</torque_nm>
+    <weight_kg>1163</weight_kg>
+    <top_speed_kmh>224</top_speed_kmh>
+    <accel_0_100>6.9</accel_0_100>
+    <lateral_g>0.92</lateral_g>
+    <style_rating>87</style_rating>
+  </car>
+  <car id="volvo_c30_polestar_limited">
+    <id>volvo_c30_polestar_limited</id>
+    <make>Volvo</make>
+    <model>C30 Polestar Limited Edition</model>
+    <year>2013</year>
+    <tier>1</tier>
+    <price_usd>32445</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>250</horsepower>
+    <torque_nm>370</torque_nm>
+    <weight_kg>1450</weight_kg>
+    <top_speed_kmh>245</top_speed_kmh>
+    <accel_0_100>6.3</accel_0_100>
+    <lateral_g>0.88</lateral_g>
+    <style_rating>84</style_rating>
+  </car>
+  <car id="volkswagen_golf_r_mk7">
+    <id>volkswagen_golf_r_mk7</id>
+    <make>Volkswagen</make>
+    <model>Golf R Mk7</model>
+    <year>2015</year>
+    <tier>1</tier>
+    <price_usd>36595</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>292</horsepower>
+    <torque_nm>380</torque_nm>
+    <weight_kg>1500</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.9</accel_0_100>
+    <lateral_g>0.95</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="honda_civic_type_r_fk2">
+    <id>honda_civic_type_r_fk2</id>
+    <make>Honda</make>
+    <model>Civic Type R (FK2)</model>
+    <year>2015</year>
+    <tier>1</tier>
+    <price_usd>38000</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>306</horsepower>
+    <torque_nm>400</torque_nm>
+    <weight_kg>1378</weight_kg>
+    <top_speed_kmh>270</top_speed_kmh>
+    <accel_0_100>5.7</accel_0_100>
+    <lateral_g>0.95</lateral_g>
+    <style_rating>86</style_rating>
+  </car>
+  <car id="ford_focus_rs_mk3">
+    <id>ford_focus_rs_mk3</id>
+    <make>Ford</make>
+    <model>Focus RS Mk3</model>
+    <year>2016</year>
+    <tier>1</tier>
+    <price_usd>35900</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>350</horsepower>
+    <torque_nm>475</torque_nm>
+    <weight_kg>1560</weight_kg>
+    <top_speed_kmh>266</top_speed_kmh>
+    <accel_0_100>4.7</accel_0_100>
+    <lateral_g>0.98</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="honda_civic_type_r_fk8">
+    <id>honda_civic_type_r_fk8</id>
+    <make>Honda</make>
+    <model>Civic Type R (FK8)</model>
+    <year>2017</year>
+    <tier>1</tier>
+    <price_usd>34100</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>306</horsepower>
+    <torque_nm>400</torque_nm>
+    <weight_kg>1414</weight_kg>
+    <top_speed_kmh>272</top_speed_kmh>
+    <accel_0_100>5.3</accel_0_100>
+    <lateral_g>0.99</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="hyundai_i30_n_performance">
+    <id>hyundai_i30_n_performance</id>
+    <make>Hyundai</make>
+    <model>i30 N Performance</model>
+    <year>2018</year>
+    <tier>1</tier>
+    <price_usd>33500</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>275</horsepower>
+    <torque_nm>353</torque_nm>
+    <weight_kg>1429</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>6.1</accel_0_100>
+    <lateral_g>0.93</lateral_g>
+    <style_rating>85</style_rating>
+  </car>
+  <car id="renault_megane_rs_trophy_r">
+    <id>renault_megane_rs_trophy_r</id>
+    <make>Renault</make>
+    <model>Mégane R.S. Trophy-R</model>
+    <year>2019</year>
+    <tier>1</tier>
+    <price_usd>75000</price_usd>
+    <drivetrain>FWD</drivetrain>
+    <horsepower>300</horsepower>
+    <torque_nm>400</torque_nm>
+    <weight_kg>1306</weight_kg>
+    <top_speed_kmh>262</top_speed_kmh>
+    <accel_0_100>5.4</accel_0_100>
+    <lateral_g>1.02</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="toyota_gr_yaris">
+    <id>toyota_gr_yaris</id>
+    <make>Toyota</make>
+    <model>GR Yaris</model>
+    <year>2020</year>
+    <tier>1</tier>
+    <price_usd>37500</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>261</horsepower>
+    <torque_nm>360</torque_nm>
+    <weight_kg>1280</weight_kg>
+    <top_speed_kmh>230</top_speed_kmh>
+    <accel_0_100>5.2</accel_0_100>
+    <lateral_g>0.98</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="toyota_gr_corolla_morizo">
+    <id>toyota_gr_corolla_morizo</id>
+    <make>Toyota</make>
+    <model>GR Corolla Morizo Edition</model>
+    <year>2023</year>
+    <tier>1</tier>
+    <price_usd>49900</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>300</horsepower>
+    <torque_nm>400</torque_nm>
+    <weight_kg>1445</weight_kg>
+    <top_speed_kmh>230</top_speed_kmh>
+    <accel_0_100>4.9</accel_0_100>
+    <lateral_g>1.02</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="ford_mustang_gt_390_fastback">
+    <id>ford_mustang_gt_390_fastback</id>
+    <make>Ford</make>
+    <model>Mustang GT 390 Fastback</model>
+    <year>1967</year>
+    <tier>2</tier>
+    <price_usd>3300</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>320</horsepower>
+    <torque_nm>579</torque_nm>
+    <weight_kg>1515</weight_kg>
+    <top_speed_kmh>205</top_speed_kmh>
+    <accel_0_100>6.5</accel_0_100>
+    <lateral_g>0.83</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="chevrolet_camaro_ss_396">
+    <id>chevrolet_camaro_ss_396</id>
+    <make>Chevrolet</make>
+    <model>Camaro SS 396</model>
+    <year>1968</year>
+    <tier>2</tier>
+    <price_usd>3400</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>375</horsepower>
+    <torque_nm>563</torque_nm>
+    <weight_kg>1580</weight_kg>
+    <top_speed_kmh>210</top_speed_kmh>
+    <accel_0_100>6.2</accel_0_100>
+    <lateral_g>0.83</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="dodge_charger_rt_440">
+    <id>dodge_charger_rt_440</id>
+    <make>Dodge</make>
+    <model>Charger R/T 440</model>
+    <year>1969</year>
+    <tier>2</tier>
+    <price_usd>3600</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>375</horsepower>
+    <torque_nm>651</torque_nm>
+    <weight_kg>1690</weight_kg>
+    <top_speed_kmh>215</top_speed_kmh>
+    <accel_0_100>6.1</accel_0_100>
+    <lateral_g>0.82</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="plymouth_barracuda_440_six_pack">
+    <id>plymouth_barracuda_440_six_pack</id>
+    <make>Plymouth</make>
+    <model>AAR 'Cuda 440 Six-Pack</model>
+    <year>1970</year>
+    <tier>2</tier>
+    <price_usd>3900</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>390</horsepower>
+    <torque_nm>664</torque_nm>
+    <weight_kg>1635</weight_kg>
+    <top_speed_kmh>217</top_speed_kmh>
+    <accel_0_100>5.9</accel_0_100>
+    <lateral_g>0.83</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="pontiac_firebird_trans_am_455">
+    <id>pontiac_firebird_trans_am_455</id>
+    <make>Pontiac</make>
+    <model>Firebird Trans Am 455</model>
+    <year>1971</year>
+    <tier>2</tier>
+    <price_usd>4400</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>335</horsepower>
+    <torque_nm>651</torque_nm>
+    <weight_kg>1675</weight_kg>
+    <top_speed_kmh>210</top_speed_kmh>
+    <accel_0_100>6.3</accel_0_100>
+    <lateral_g>0.84</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="datsun_240z">
+    <id>datsun_240z</id>
+    <make>Datsun</make>
+    <model>240Z</model>
+    <year>1971</year>
+    <tier>2</tier>
+    <price_usd>3526</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>151</horsepower>
+    <torque_nm>198</torque_nm>
+    <weight_kg>1044</weight_kg>
+    <top_speed_kmh>201</top_speed_kmh>
+    <accel_0_100>8</accel_0_100>
+    <lateral_g>0.84</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="pontiac_trans_am_sd455">
+    <id>pontiac_trans_am_sd455</id>
+    <make>Pontiac</make>
+    <model>Firebird Trans Am SD-455</model>
+    <year>1973</year>
+    <tier>2</tier>
+    <price_usd>4700</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>290</horsepower>
+    <torque_nm>529</torque_nm>
+    <weight_kg>1740</weight_kg>
+    <top_speed_kmh>205</top_speed_kmh>
+    <accel_0_100>6.4</accel_0_100>
+    <lateral_g>0.84</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="porsche_924_turbo">
+    <id>porsche_924_turbo</id>
+    <make>Porsche</make>
+    <model>924 Turbo</model>
+    <year>1979</year>
+    <tier>2</tier>
+    <price_usd>20875</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>170</horsepower>
+    <torque_nm>245</torque_nm>
+    <weight_kg>1180</weight_kg>
+    <top_speed_kmh>225</top_speed_kmh>
+    <accel_0_100>7.8</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>82</style_rating>
+  </car>
+  <car id="porsche_944_turbo">
+    <id>porsche_944_turbo</id>
+    <make>Porsche</make>
+    <model>944 Turbo</model>
+    <year>1986</year>
+    <tier>2</tier>
+    <price_usd>29500</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>220</horsepower>
+    <torque_nm>330</torque_nm>
+    <weight_kg>1280</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>6.1</accel_0_100>
+    <lateral_g>0.9</lateral_g>
+    <style_rating>89</style_rating>
+  </car>
+  <car id="buick_gnx">
+    <id>buick_gnx</id>
+    <make>Buick</make>
+    <model>GNX</model>
+    <year>1987</year>
+    <tier>2</tier>
+    <price_usd>29900</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>276</horsepower>
+    <torque_nm>488</torque_nm>
+    <weight_kg>1565</weight_kg>
+    <top_speed_kmh>200</top_speed_kmh>
+    <accel_0_100>4.7</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="nissan_silvia_ks_s13">
+    <id>nissan_silvia_ks_s13</id>
+    <make>Nissan</make>
+    <model>Silvia K's (S13)</model>
+    <year>1989</year>
+    <tier>2</tier>
+    <price_usd>16500</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>175</horsepower>
+    <torque_nm>226</torque_nm>
+    <weight_kg>1150</weight_kg>
+    <top_speed_kmh>220</top_speed_kmh>
+    <accel_0_100>7.1</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="mazda_rx7_turbo_ii_fc">
+    <id>mazda_rx7_turbo_ii_fc</id>
+    <make>Mazda</make>
+    <model>RX-7 Turbo II (FC)</model>
+    <year>1990</year>
+    <tier>2</tier>
+    <price_usd>20900</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>200</horsepower>
+    <torque_nm>265</torque_nm>
+    <weight_kg>1300</weight_kg>
+    <top_speed_kmh>240</top_speed_kmh>
+    <accel_0_100>6.7</accel_0_100>
+    <lateral_g>0.88</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="subaru_svx">
+    <id>subaru_svx</id>
+    <make>Subaru</make>
+    <model>SVX</model>
+    <year>1992</year>
+    <tier>2</tier>
+    <price_usd>28000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>230</horsepower>
+    <torque_nm>309</torque_nm>
+    <weight_kg>1625</weight_kg>
+    <top_speed_kmh>232</top_speed_kmh>
+    <accel_0_100>7.3</accel_0_100>
+    <lateral_g>0.85</lateral_g>
+    <style_rating>80</style_rating>
+  </car>
+  <car id="mitsubishi_3000gt_vr4">
+    <id>mitsubishi_3000gt_vr4</id>
+    <make>Mitsubishi</make>
+    <model>3000GT VR-4</model>
+    <year>1994</year>
+    <tier>2</tier>
+    <price_usd>39900</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>320</horsepower>
+    <torque_nm>427</torque_nm>
+    <weight_kg>1720</weight_kg>
+    <top_speed_kmh>256</top_speed_kmh>
+    <accel_0_100>5.3</accel_0_100>
+    <lateral_g>0.9</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="nissan_300zx_twin_turbo_z32">
+    <id>nissan_300zx_twin_turbo_z32</id>
+    <make>Nissan</make>
+    <model>300ZX Twin Turbo (Z32)</model>
+    <year>1994</year>
+    <tier>2</tier>
+    <price_usd>37500</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>300</horsepower>
+    <torque_nm>384</torque_nm>
+    <weight_kg>1576</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>5.6</accel_0_100>
+    <lateral_g>0.91</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="toyota_supra_turbo_a80">
+    <id>toyota_supra_turbo_a80</id>
+    <make>Toyota</make>
+    <model>Supra Turbo (A80)</model>
+    <year>1994</year>
+    <tier>2</tier>
+    <price_usd>39900</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>320</horsepower>
+    <torque_nm>427</torque_nm>
+    <weight_kg>1570</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.9</accel_0_100>
+    <lateral_g>0.93</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="bmw_m3_e36_coupe">
+    <id>bmw_m3_e36_coupe</id>
+    <make>BMW</make>
+    <model>M3 (E36) Coupe</model>
+    <year>1995</year>
+    <tier>2</tier>
+    <price_usd>36800</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>286</horsepower>
+    <torque_nm>320</torque_nm>
+    <weight_kg>1460</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>5.5</accel_0_100>
+    <lateral_g>0.9</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="mitsubishi_eclipse_gsx">
+    <id>mitsubishi_eclipse_gsx</id>
+    <make>Mitsubishi</make>
+    <model>Eclipse GSX</model>
+    <year>1997</year>
+    <tier>2</tier>
+    <price_usd>24000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>210</horsepower>
+    <torque_nm>290</torque_nm>
+    <weight_kg>1445</weight_kg>
+    <top_speed_kmh>230</top_speed_kmh>
+    <accel_0_100>6.5</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>85</style_rating>
+  </car>
+  <car id="nissan_silvia_spec_r_s15">
+    <id>nissan_silvia_spec_r_s15</id>
+    <make>Nissan</make>
+    <model>Silvia Spec-R (S15)</model>
+    <year>1999</year>
+    <tier>2</tier>
+    <price_usd>22000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>250</horsepower>
+    <torque_nm>275</torque_nm>
+    <weight_kg>1240</weight_kg>
+    <top_speed_kmh>245</top_speed_kmh>
+    <accel_0_100>5.8</accel_0_100>
+    <lateral_g>0.89</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="honda_s2000_ap1">
+    <id>honda_s2000_ap1</id>
+    <make>Honda</make>
+    <model>S2000 (AP1)</model>
+    <year>1999</year>
+    <tier>2</tier>
+    <price_usd>32000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>240</horsepower>
+    <torque_nm>208</torque_nm>
+    <weight_kg>1260</weight_kg>
+    <top_speed_kmh>241</top_speed_kmh>
+    <accel_0_100>6</accel_0_100>
+    <lateral_g>0.92</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="chevrolet_corvette_c5_coupe">
+    <id>chevrolet_corvette_c5_coupe</id>
+    <make>Chevrolet</make>
+    <model>Corvette (C5) Coupe</model>
+    <year>2000</year>
+    <tier>2</tier>
+    <price_usd>39475</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>345</horsepower>
+    <torque_nm>475</torque_nm>
+    <weight_kg>1472</weight_kg>
+    <top_speed_kmh>282</top_speed_kmh>
+    <accel_0_100>4.8</accel_0_100>
+    <lateral_g>0.92</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="bmw_m3_e46_coupe">
+    <id>bmw_m3_e46_coupe</id>
+    <make>BMW</make>
+    <model>M3 (E46) Coupe</model>
+    <year>2001</year>
+    <tier>2</tier>
+    <price_usd>46500</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>338</horsepower>
+    <torque_nm>365</torque_nm>
+    <weight_kg>1549</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>5.1</accel_0_100>
+    <lateral_g>0.92</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="nissan_350z_track">
+    <id>nissan_350z_track</id>
+    <make>Nissan</make>
+    <model>350Z Track</model>
+    <year>2003</year>
+    <tier>2</tier>
+    <price_usd>34079</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>287</horsepower>
+    <torque_nm>371</torque_nm>
+    <weight_kg>1463</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>5.7</accel_0_100>
+    <lateral_g>0.91</lateral_g>
+    <style_rating>89</style_rating>
+  </car>
+  <car id="mazda_rx8">
+    <id>mazda_rx8</id>
+    <make>Mazda</make>
+    <model>RX-8</model>
+    <year>2004</year>
+    <tier>2</tier>
+    <price_usd>26680</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>232</horsepower>
+    <torque_nm>216</torque_nm>
+    <weight_kg>1380</weight_kg>
+    <top_speed_kmh>235</top_speed_kmh>
+    <accel_0_100>6.4</accel_0_100>
+    <lateral_g>0.91</lateral_g>
+    <style_rating>84</style_rating>
+  </car>
+  <car id="pontiac_gto_ls2">
+    <id>pontiac_gto_ls2</id>
+    <make>Pontiac</make>
+    <model>GTO (LS2)</model>
+    <year>2005</year>
+    <tier>2</tier>
+    <price_usd>32995</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>400</horsepower>
+    <torque_nm>542</torque_nm>
+    <weight_kg>1690</weight_kg>
+    <top_speed_kmh>274</top_speed_kmh>
+    <accel_0_100>4.8</accel_0_100>
+    <lateral_g>0.88</lateral_g>
+    <style_rating>82</style_rating>
+  </car>
+  <car id="ford_mustang_gt_s197">
+    <id>ford_mustang_gt_s197</id>
+    <make>Ford</make>
+    <model>Mustang GT</model>
+    <year>2005</year>
+    <tier>2</tier>
+    <price_usd>25815</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>300</horsepower>
+    <torque_nm>434</torque_nm>
+    <weight_kg>1579</weight_kg>
+    <top_speed_kmh>240</top_speed_kmh>
+    <accel_0_100>5.1</accel_0_100>
+    <lateral_g>0.87</lateral_g>
+    <style_rating>87</style_rating>
+  </car>
+  <car id="audi_tt_32_quattro">
+    <id>audi_tt_32_quattro</id>
+    <make>Audi</make>
+    <model>TT 3.2 Quattro (8N)</model>
+    <year>2004</year>
+    <tier>2</tier>
+    <price_usd>40620</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>250</horsepower>
+    <torque_nm>320</torque_nm>
+    <weight_kg>1520</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>6.2</accel_0_100>
+    <lateral_g>0.89</lateral_g>
+    <style_rating>86</style_rating>
+  </car>
+  <car id="porsche_cayman_s_987">
+    <id>porsche_cayman_s_987</id>
+    <make>Porsche</make>
+    <model>Cayman S (987)</model>
+    <year>2006</year>
+    <tier>2</tier>
+    <price_usd>58900</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>295</horsepower>
+    <torque_nm>340</torque_nm>
+    <weight_kg>1340</weight_kg>
+    <top_speed_kmh>275</top_speed_kmh>
+    <accel_0_100>5.4</accel_0_100>
+    <lateral_g>0.96</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="ford_mustang_bullitt_2008">
+    <id>ford_mustang_bullitt_2008</id>
+    <make>Ford</make>
+    <model>Mustang Bullitt</model>
+    <year>2008</year>
+    <tier>2</tier>
+    <price_usd>31075</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>315</horsepower>
+    <torque_nm>441</torque_nm>
+    <weight_kg>1605</weight_kg>
+    <top_speed_kmh>245</top_speed_kmh>
+    <accel_0_100>5</accel_0_100>
+    <lateral_g>0.88</lateral_g>
+    <style_rating>89</style_rating>
+  </car>
+  <car id="nissan_370z_nismo">
+    <id>nissan_370z_nismo</id>
+    <make>Nissan</make>
+    <model>370Z Nismo</model>
+    <year>2009</year>
+    <tier>2</tier>
+    <price_usd>39990</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>350</horsepower>
+    <torque_nm>374</torque_nm>
+    <weight_kg>1500</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.9</accel_0_100>
+    <lateral_g>0.97</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="chevrolet_camaro_ss_gen5">
+    <id>chevrolet_camaro_ss_gen5</id>
+    <make>Chevrolet</make>
+    <model>Camaro SS</model>
+    <year>2010</year>
+    <tier>2</tier>
+    <price_usd>30945</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>426</horsepower>
+    <torque_nm>569</torque_nm>
+    <weight_kg>1750</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.6</accel_0_100>
+    <lateral_g>0.9</lateral_g>
+    <style_rating>87</style_rating>
+  </car>
+  <car id="dodge_challenger_srt8_392">
+    <id>dodge_challenger_srt8_392</id>
+    <make>Dodge</make>
+    <model>Challenger SRT8 392</model>
+    <year>2011</year>
+    <tier>2</tier>
+    <price_usd>44680</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>470</horsepower>
+    <torque_nm>637</torque_nm>
+    <weight_kg>1905</weight_kg>
+    <top_speed_kmh>293</top_speed_kmh>
+    <accel_0_100>4.5</accel_0_100>
+    <lateral_g>0.88</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="subaru_brz_first_gen">
+    <id>subaru_brz_first_gen</id>
+    <make>Subaru</make>
+    <model>BRZ</model>
+    <year>2013</year>
+    <tier>2</tier>
+    <price_usd>25495</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>200</horsepower>
+    <torque_nm>205</torque_nm>
+    <weight_kg>1256</weight_kg>
+    <top_speed_kmh>226</top_speed_kmh>
+    <accel_0_100>7.3</accel_0_100>
+    <lateral_g>0.91</lateral_g>
+    <style_rating>87</style_rating>
+  </car>
+  <car id="bmw_m2_f87">
+    <id>bmw_m2_f87</id>
+    <make>BMW</make>
+    <model>M2 (F87)</model>
+    <year>2016</year>
+    <tier>2</tier>
+    <price_usd>51700</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>365</horsepower>
+    <torque_nm>500</torque_nm>
+    <weight_kg>1565</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.3</accel_0_100>
+    <lateral_g>0.97</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="ford_mustang_gt_performance_pack_s550">
+    <id>ford_mustang_gt_performance_pack_s550</id>
+    <make>Ford</make>
+    <model>Mustang GT Performance Pack</model>
+    <year>2018</year>
+    <tier>2</tier>
+    <price_usd>39190</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>460</horsepower>
+    <torque_nm>569</torque_nm>
+    <weight_kg>1680</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.2</accel_0_100>
+    <lateral_g>0.96</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="toyota_gr_supra_30_a90">
+    <id>toyota_gr_supra_30_a90</id>
+    <make>Toyota</make>
+    <model>GR Supra 3.0 (A90)</model>
+    <year>2020</year>
+    <tier>2</tier>
+    <price_usd>50920</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>382</horsepower>
+    <torque_nm>499</torque_nm>
+    <weight_kg>1542</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>3.9</accel_0_100>
+    <lateral_g>0.99</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="subaru_brz_second_gen">
+    <id>subaru_brz_second_gen</id>
+    <make>Subaru</make>
+    <model>BRZ</model>
+    <year>2022</year>
+    <tier>2</tier>
+    <price_usd>27995</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>228</horsepower>
+    <torque_nm>249</torque_nm>
+    <weight_kg>1277</weight_kg>
+    <top_speed_kmh>226</top_speed_kmh>
+    <accel_0_100>6</accel_0_100>
+    <lateral_g>0.94</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="toyota_gr86">
+    <id>toyota_gr86</id>
+    <make>Toyota</make>
+    <model>GR86</model>
+    <year>2022</year>
+    <tier>2</tier>
+    <price_usd>27700</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>228</horsepower>
+    <torque_nm>249</torque_nm>
+    <weight_kg>1275</weight_kg>
+    <top_speed_kmh>226</top_speed_kmh>
+    <accel_0_100>6.1</accel_0_100>
+    <lateral_g>0.94</lateral_g>
+    <style_rating>89</style_rating>
+  </car>
+  <car id="nissan_z_performance_rz34">
+    <id>nissan_z_performance_rz34</id>
+    <make>Nissan</make>
+    <model>Z Performance (RZ34)</model>
+    <year>2023</year>
+    <tier>2</tier>
+    <price_usd>49990</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>400</horsepower>
+    <torque_nm>475</torque_nm>
+    <weight_kg>1600</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.3</accel_0_100>
+    <lateral_g>0.94</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="ford_mustang_dark_horse_s650">
+    <id>ford_mustang_dark_horse_s650</id>
+    <make>Ford</make>
+    <model>Mustang Dark Horse (S650)</model>
+    <year>2024</year>
+    <tier>2</tier>
+    <price_usd>59270</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>500</horsepower>
+    <torque_nm>567</torque_nm>
+    <weight_kg>1755</weight_kg>
+    <top_speed_kmh>268</top_speed_kmh>
+    <accel_0_100>4.1</accel_0_100>
+    <lateral_g>1.03</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="chevrolet_corvette_l88_c3">
+    <id>chevrolet_corvette_l88_c3</id>
+    <make>Chevrolet</make>
+    <model>Corvette L88 (C3)</model>
+    <year>1968</year>
+    <tier>3</tier>
+    <price_usd>5600</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>430</horsepower>
+    <torque_nm>610</torque_nm>
+    <weight_kg>1550</weight_kg>
+    <top_speed_kmh>275</top_speed_kmh>
+    <accel_0_100>5</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="mercedes_benz_300_sel_63">
+    <id>mercedes_benz_300_sel_63</id>
+    <make>Mercedes-Benz</make>
+    <model>300 SEL 6.3 (W109)</model>
+    <year>1968</year>
+    <tier>3</tier>
+    <price_usd>14000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>250</horsepower>
+    <torque_nm>500</torque_nm>
+    <weight_kg>1780</weight_kg>
+    <top_speed_kmh>220</top_speed_kmh>
+    <accel_0_100>6.5</accel_0_100>
+    <lateral_g>0.83</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="bmw_m5_e28">
+    <id>bmw_m5_e28</id>
+    <make>BMW</make>
+    <model>M5 (E28)</model>
+    <year>1985</year>
+    <tier>3</tier>
+    <price_usd>47500</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>286</horsepower>
+    <torque_nm>340</torque_nm>
+    <weight_kg>1430</weight_kg>
+    <top_speed_kmh>245</top_speed_kmh>
+    <accel_0_100>6.2</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="mercedes_benz_500e_w124">
+    <id>mercedes_benz_500e_w124</id>
+    <make>Mercedes-Benz</make>
+    <model>500E (W124)</model>
+    <year>1991</year>
+    <tier>3</tier>
+    <price_usd>81800</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>322</horsepower>
+    <torque_nm>480</torque_nm>
+    <weight_kg>1710</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>5.9</accel_0_100>
+    <lateral_g>0.87</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="audi_rs2_avant">
+    <id>audi_rs2_avant</id>
+    <make>Audi</make>
+    <model>RS2 Avant</model>
+    <year>1994</year>
+    <tier>3</tier>
+    <price_usd>62000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>311</horsepower>
+    <torque_nm>410</torque_nm>
+    <weight_kg>1595</weight_kg>
+    <top_speed_kmh>262</top_speed_kmh>
+    <accel_0_100>4.8</accel_0_100>
+    <lateral_g>0.9</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="bmw_m5_e39">
+    <id>bmw_m5_e39</id>
+    <make>BMW</make>
+    <model>M5 (E39)</model>
+    <year>1998</year>
+    <tier>3</tier>
+    <price_usd>69400</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>394</horsepower>
+    <torque_nm>500</torque_nm>
+    <weight_kg>1795</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.9</accel_0_100>
+    <lateral_g>0.91</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="chevrolet_corvette_z06_c5">
+    <id>chevrolet_corvette_z06_c5</id>
+    <make>Chevrolet</make>
+    <model>Corvette Z06 (C5)</model>
+    <year>2001</year>
+    <tier>3</tier>
+    <price_usd>47500</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>405</horsepower>
+    <torque_nm>542</torque_nm>
+    <weight_kg>1414</weight_kg>
+    <top_speed_kmh>275</top_speed_kmh>
+    <accel_0_100>4</accel_0_100>
+    <lateral_g>1</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="mercedes_benz_e55_amg_w211">
+    <id>mercedes_benz_e55_amg_w211</id>
+    <make>Mercedes-Benz</make>
+    <model>E55 AMG (W211)</model>
+    <year>2003</year>
+    <tier>3</tier>
+    <price_usd>76000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>469</horsepower>
+    <torque_nm>700</torque_nm>
+    <weight_kg>1835</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.5</accel_0_100>
+    <lateral_g>0.89</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="bmw_m5_e60">
+    <id>bmw_m5_e60</id>
+    <make>BMW</make>
+    <model>M5 (E60)</model>
+    <year>2005</year>
+    <tier>3</tier>
+    <price_usd>81200</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>500</horsepower>
+    <torque_nm>520</torque_nm>
+    <weight_kg>1830</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.5</accel_0_100>
+    <lateral_g>0.92</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="audi_rs4_b7">
+    <id>audi_rs4_b7</id>
+    <make>Audi</make>
+    <model>RS4 (B7)</model>
+    <year>2006</year>
+    <tier>3</tier>
+    <price_usd>66000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>414</horsepower>
+    <torque_nm>430</torque_nm>
+    <weight_kg>1650</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.6</accel_0_100>
+    <lateral_g>0.94</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="mercedes_benz_c63_amg_w204">
+    <id>mercedes_benz_c63_amg_w204</id>
+    <make>Mercedes-Benz</make>
+    <model>C63 AMG (W204)</model>
+    <year>2008</year>
+    <tier>3</tier>
+    <price_usd>53800</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>451</horsepower>
+    <torque_nm>600</torque_nm>
+    <weight_kg>1730</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.4</accel_0_100>
+    <lateral_g>0.92</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="lexus_is_f">
+    <id>lexus_is_f</id>
+    <make>Lexus</make>
+    <model>IS F</model>
+    <year>2008</year>
+    <tier>3</tier>
+    <price_usd>56000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>416</horsepower>
+    <torque_nm>503</torque_nm>
+    <weight_kg>1715</weight_kg>
+    <top_speed_kmh>270</top_speed_kmh>
+    <accel_0_100>4.6</accel_0_100>
+    <lateral_g>0.93</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="cadillac_cts_v_sedan_gen2">
+    <id>cadillac_cts_v_sedan_gen2</id>
+    <make>Cadillac</make>
+    <model>CTS-V Sedan</model>
+    <year>2009</year>
+    <tier>3</tier>
+    <price_usd>59995</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>556</horsepower>
+    <torque_nm>747</torque_nm>
+    <weight_kg>1915</weight_kg>
+    <top_speed_kmh>282</top_speed_kmh>
+    <accel_0_100>3.9</accel_0_100>
+    <lateral_g>0.94</lateral_g>
+    <style_rating>89</style_rating>
+  </car>
+  <car id="tesla_model_s_p85">
+    <id>tesla_model_s_p85</id>
+    <make>Tesla</make>
+    <model>Model S P85</model>
+    <year>2012</year>
+    <tier>3</tier>
+    <price_usd>87400</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>416</horsepower>
+    <torque_nm>600</torque_nm>
+    <weight_kg>2108</weight_kg>
+    <top_speed_kmh>210</top_speed_kmh>
+    <accel_0_100>4.2</accel_0_100>
+    <lateral_g>0.89</lateral_g>
+    <style_rating>87</style_rating>
+  </car>
+  <car id="bmw_m5_f10">
+    <id>bmw_m5_f10</id>
+    <make>BMW</make>
+    <model>M5 (F10)</model>
+    <year>2012</year>
+    <tier>3</tier>
+    <price_usd>89900</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>553</horsepower>
+    <torque_nm>680</torque_nm>
+    <weight_kg>1945</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.2</accel_0_100>
+    <lateral_g>0.95</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="audi_rs7_sportback_c7">
+    <id>audi_rs7_sportback_c7</id>
+    <make>Audi</make>
+    <model>RS7 Sportback (C7)</model>
+    <year>2014</year>
+    <tier>3</tier>
+    <price_usd>104900</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>553</horsepower>
+    <torque_nm>700</torque_nm>
+    <weight_kg>2030</weight_kg>
+    <top_speed_kmh>280</top_speed_kmh>
+    <accel_0_100>3.7</accel_0_100>
+    <lateral_g>0.95</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="mercedes_amg_c63_s_w205">
+    <id>mercedes_amg_c63_s_w205</id>
+    <make>Mercedes-AMG</make>
+    <model>C63 S (W205)</model>
+    <year>2015</year>
+    <tier>3</tier>
+    <price_usd>71900</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>503</horsepower>
+    <torque_nm>700</torque_nm>
+    <weight_kg>1730</weight_kg>
+    <top_speed_kmh>290</top_speed_kmh>
+    <accel_0_100>3.9</accel_0_100>
+    <lateral_g>0.96</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="tesla_model_s_p90d_ludicrous">
+    <id>tesla_model_s_p90d_ludicrous</id>
+    <make>Tesla</make>
+    <model>Model S P90D Ludicrous</model>
+    <year>2015</year>
+    <tier>3</tier>
+    <price_usd>118000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>532</horsepower>
+    <torque_nm>967</torque_nm>
+    <weight_kg>2200</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>2.8</accel_0_100>
+    <lateral_g>0.92</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="alfa_romeo_giulia_quadrifoglio">
+    <id>alfa_romeo_giulia_quadrifoglio</id>
+    <make>Alfa Romeo</make>
+    <model>Giulia Quadrifoglio</model>
+    <year>2016</year>
+    <tier>3</tier>
+    <price_usd>72000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>505</horsepower>
+    <torque_nm>600</torque_nm>
+    <weight_kg>1524</weight_kg>
+    <top_speed_kmh>307</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>1</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="chevrolet_corvette_grand_sport_c7">
+    <id>chevrolet_corvette_grand_sport_c7</id>
+    <make>Chevrolet</make>
+    <model>Corvette Grand Sport (C7)</model>
+    <year>2017</year>
+    <tier>3</tier>
+    <price_usd>65450</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>460</horsepower>
+    <torque_nm>630</torque_nm>
+    <weight_kg>1555</weight_kg>
+    <top_speed_kmh>290</top_speed_kmh>
+    <accel_0_100>3.6</accel_0_100>
+    <lateral_g>1.11</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="dodge_charger_srt_hellcat">
+    <id>dodge_charger_srt_hellcat</id>
+    <make>Dodge</make>
+    <model>Charger SRT Hellcat</model>
+    <year>2015</year>
+    <tier>3</tier>
+    <price_usd>63995</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>707</horsepower>
+    <torque_nm>881</torque_nm>
+    <weight_kg>2075</weight_kg>
+    <top_speed_kmh>328</top_speed_kmh>
+    <accel_0_100>3.6</accel_0_100>
+    <lateral_g>0.93</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="bmw_m3_cs_f80">
+    <id>bmw_m3_cs_f80</id>
+    <make>BMW</make>
+    <model>M3 CS (F80)</model>
+    <year>2018</year>
+    <tier>3</tier>
+    <price_usd>97400</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>453</horsepower>
+    <torque_nm>600</torque_nm>
+    <weight_kg>1585</weight_kg>
+    <top_speed_kmh>280</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>1.04</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="tesla_model_3_performance_2019">
+    <id>tesla_model_3_performance_2019</id>
+    <make>Tesla</make>
+    <model>Model 3 Performance</model>
+    <year>2019</year>
+    <tier>3</tier>
+    <price_usd>56990</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>450</horsepower>
+    <torque_nm>639</torque_nm>
+    <weight_kg>1847</weight_kg>
+    <top_speed_kmh>261</top_speed_kmh>
+    <accel_0_100>3.2</accel_0_100>
+    <lateral_g>0.96</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="polestar_1">
+    <id>polestar_1</id>
+    <make>Polestar</make>
+    <model>1</model>
+    <year>2020</year>
+    <tier>3</tier>
+    <price_usd>155000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>609</horsepower>
+    <torque_nm>1000</torque_nm>
+    <weight_kg>2350</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>4.2</accel_0_100>
+    <lateral_g>0.94</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="chevrolet_corvette_stingray_c8">
+    <id>chevrolet_corvette_stingray_c8</id>
+    <make>Chevrolet</make>
+    <model>Corvette Stingray (C8)</model>
+    <year>2020</year>
+    <tier>3</tier>
+    <price_usd>58900</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>495</horsepower>
+    <torque_nm>637</torque_nm>
+    <weight_kg>1530</weight_kg>
+    <top_speed_kmh>312</top_speed_kmh>
+    <accel_0_100>2.9</accel_0_100>
+    <lateral_g>1.04</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="porsche_taycan_4s">
+    <id>porsche_taycan_4s</id>
+    <make>Porsche</make>
+    <model>Taycan 4S</model>
+    <year>2020</year>
+    <tier>3</tier>
+    <price_usd>103800</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>522</horsepower>
+    <torque_nm>640</torque_nm>
+    <weight_kg>2215</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>0.99</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="bmw_m3_competition_g80">
+    <id>bmw_m3_competition_g80</id>
+    <make>BMW</make>
+    <model>M3 Competition (G80)</model>
+    <year>2021</year>
+    <tier>3</tier>
+    <price_usd>72800</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>503</horsepower>
+    <torque_nm>650</torque_nm>
+    <weight_kg>1730</weight_kg>
+    <top_speed_kmh>290</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>1.03</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="audi_rs_e_tron_gt">
+    <id>audi_rs_e_tron_gt</id>
+    <make>Audi</make>
+    <model>RS e-tron GT</model>
+    <year>2021</year>
+    <tier>3</tier>
+    <price_usd>139900</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>637</horsepower>
+    <torque_nm>830</torque_nm>
+    <weight_kg>2347</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>3.1</accel_0_100>
+    <lateral_g>0.98</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="tesla_model_s_plaid">
+    <id>tesla_model_s_plaid</id>
+    <make>Tesla</make>
+    <model>Model S Plaid</model>
+    <year>2021</year>
+    <tier>3</tier>
+    <price_usd>129990</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1020</horsepower>
+    <torque_nm>1420</torque_nm>
+    <weight_kg>2162</weight_kg>
+    <top_speed_kmh>322</top_speed_kmh>
+    <accel_0_100>2.1</accel_0_100>
+    <lateral_g>1.03</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="cadillac_ct5_v_blackwing">
+    <id>cadillac_ct5_v_blackwing</id>
+    <make>Cadillac</make>
+    <model>CT5-V Blackwing</model>
+    <year>2022</year>
+    <tier>3</tier>
+    <price_usd>83995</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>668</horsepower>
+    <torque_nm>893</torque_nm>
+    <weight_kg>1870</weight_kg>
+    <top_speed_kmh>330</top_speed_kmh>
+    <accel_0_100>3.4</accel_0_100>
+    <lateral_g>1.02</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="mercedes_amg_gt_63_s_e_performance">
+    <id>mercedes_amg_gt_63_s_e_performance</id>
+    <make>Mercedes-AMG</make>
+    <model>GT 63 S E Performance 4-Door</model>
+    <year>2022</year>
+    <tier>3</tier>
+    <price_usd>195000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>831</horsepower>
+    <torque_nm>1400</torque_nm>
+    <weight_kg>2380</weight_kg>
+    <top_speed_kmh>316</top_speed_kmh>
+    <accel_0_100>2.9</accel_0_100>
+    <lateral_g>1.02</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="porsche_taycan_gts">
+    <id>porsche_taycan_gts</id>
+    <make>Porsche</make>
+    <model>Taycan GTS</model>
+    <year>2022</year>
+    <tier>3</tier>
+    <price_usd>131400</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>590</horsepower>
+    <torque_nm>850</torque_nm>
+    <weight_kg>2295</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>3.5</accel_0_100>
+    <lateral_g>1.02</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="kia_ev6_gt">
+    <id>kia_ev6_gt</id>
+    <make>Kia</make>
+    <model>EV6 GT</model>
+    <year>2023</year>
+    <tier>3</tier>
+    <price_usd>61600</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>576</horsepower>
+    <torque_nm>740</torque_nm>
+    <weight_kg>2175</weight_kg>
+    <top_speed_kmh>260</top_speed_kmh>
+    <accel_0_100>3.4</accel_0_100>
+    <lateral_g>0.95</lateral_g>
+    <style_rating>87</style_rating>
+  </car>
+  <car id="byd_seal_performance">
+    <id>byd_seal_performance</id>
+    <make>BYD</make>
+    <model>Seal Performance AWD</model>
+    <year>2024</year>
+    <tier>3</tier>
+    <price_usd>45500</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>523</horsepower>
+    <torque_nm>670</torque_nm>
+    <weight_kg>2185</weight_kg>
+    <top_speed_kmh>180</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>0.96</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="hyundai_ioniq_5_n">
+    <id>hyundai_ioniq_5_n</id>
+    <make>Hyundai</make>
+    <model>Ioniq 5 N</model>
+    <year>2024</year>
+    <tier>3</tier>
+    <price_usd>66100</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>641</horsepower>
+    <torque_nm>770</torque_nm>
+    <weight_kg>2230</weight_kg>
+    <top_speed_kmh>260</top_speed_kmh>
+    <accel_0_100>3.4</accel_0_100>
+    <lateral_g>0.99</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="tesla_model_3_performance_ludicrous_2024">
+    <id>tesla_model_3_performance_ludicrous_2024</id>
+    <make>Tesla</make>
+    <model>Model 3 Performance (Highland)</model>
+    <year>2024</year>
+    <tier>3</tier>
+    <price_usd>52990</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>510</horsepower>
+    <torque_nm>741</torque_nm>
+    <weight_kg>1851</weight_kg>
+    <top_speed_kmh>262</top_speed_kmh>
+    <accel_0_100>3</accel_0_100>
+    <lateral_g>1</lateral_g>
+    <style_rating>89</style_rating>
+  </car>
+  <car id="lucid_air_touring">
+    <id>lucid_air_touring</id>
+    <make>Lucid</make>
+    <model>Air Touring</model>
+    <year>2024</year>
+    <tier>3</tier>
+    <price_usd>77900</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>620</horsepower>
+    <torque_nm>1200</torque_nm>
+    <weight_kg>2244</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>3.4</accel_0_100>
+    <lateral_g>0.94</lateral_g>
+    <style_rating>88</style_rating>
+  </car>
+  <car id="bmw_m5_g90_hybrid">
+    <id>bmw_m5_g90_hybrid</id>
+    <make>BMW</make>
+    <model>M5 (G90) Hybrid</model>
+    <year>2025</year>
+    <tier>3</tier>
+    <price_usd>119500</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>717</horsepower>
+    <torque_nm>1000</torque_nm>
+    <weight_kg>2435</weight_kg>
+    <top_speed_kmh>305</top_speed_kmh>
+    <accel_0_100>3.5</accel_0_100>
+    <lateral_g>1.01</lateral_g>
+    <style_rating>89</style_rating>
+  </car>
+  <car id="audi_rs6_avant_gt">
+    <id>audi_rs6_avant_gt</id>
+    <make>Audi</make>
+    <model>RS6 Avant GT</model>
+    <year>2025</year>
+    <tier>3</tier>
+    <price_usd>160000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>621</horsepower>
+    <torque_nm>850</torque_nm>
+    <weight_kg>2075</weight_kg>
+    <top_speed_kmh>305</top_speed_kmh>
+    <accel_0_100>3.3</accel_0_100>
+    <lateral_g>1.04</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="byd_yangwang_u7">
+    <id>byd_yangwang_u7</id>
+    <make>BYD</make>
+    <model>Yangwang U7</model>
+    <year>2026</year>
+    <tier>3</tier>
+    <price_usd>140000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1287</horsepower>
+    <torque_nm>1580</torque_nm>
+    <weight_kg>3095</weight_kg>
+    <top_speed_kmh>270</top_speed_kmh>
+    <accel_0_100>2.9</accel_0_100>
+    <lateral_g>0.96</lateral_g>
+    <style_rating>89</style_rating>
+  </car>
+  <car id="lamborghini_miura_p400">
+    <id>lamborghini_miura_p400</id>
+    <make>Lamborghini</make>
+    <model>Miura P400</model>
+    <year>1966</year>
+    <tier>4</tier>
+    <price_usd>20000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>350</horsepower>
+    <torque_nm>369</torque_nm>
+    <weight_kg>1125</weight_kg>
+    <top_speed_kmh>275</top_speed_kmh>
+    <accel_0_100>6.7</accel_0_100>
+    <lateral_g>0.86</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="ferrari_365_gtb4_daytona">
+    <id>ferrari_365_gtb4_daytona</id>
+    <make>Ferrari</make>
+    <model>365 GTB/4 Daytona</model>
+    <year>1969</year>
+    <tier>4</tier>
+    <price_usd>19500</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>347</horsepower>
+    <torque_nm>431</torque_nm>
+    <weight_kg>1600</weight_kg>
+    <top_speed_kmh>280</top_speed_kmh>
+    <accel_0_100>5.4</accel_0_100>
+    <lateral_g>0.85</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="lamborghini_countach_lp400">
+    <id>lamborghini_countach_lp400</id>
+    <make>Lamborghini</make>
+    <model>Countach LP400</model>
+    <year>1974</year>
+    <tier>4</tier>
+    <price_usd>52000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>370</horsepower>
+    <torque_nm>361</torque_nm>
+    <weight_kg>1065</weight_kg>
+    <top_speed_kmh>290</top_speed_kmh>
+    <accel_0_100>5.4</accel_0_100>
+    <lateral_g>0.88</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="porsche_911_turbo_30_930">
+    <id>porsche_911_turbo_30_930</id>
+    <make>Porsche</make>
+    <model>911 Turbo 3.0 (930)</model>
+    <year>1975</year>
+    <tier>4</tier>
+    <price_usd>36700</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>256</horsepower>
+    <torque_nm>343</torque_nm>
+    <weight_kg>1195</weight_kg>
+    <top_speed_kmh>250</top_speed_kmh>
+    <accel_0_100>5.2</accel_0_100>
+    <lateral_g>0.88</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="bmw_m1_e26">
+    <id>bmw_m1_e26</id>
+    <make>BMW</make>
+    <model>M1 (E26)</model>
+    <year>1978</year>
+    <tier>4</tier>
+    <price_usd>115000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>273</horsepower>
+    <torque_nm>330</torque_nm>
+    <weight_kg>1300</weight_kg>
+    <top_speed_kmh>262</top_speed_kmh>
+    <accel_0_100>5.6</accel_0_100>
+    <lateral_g>0.9</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="ferrari_testarossa">
+    <id>ferrari_testarossa</id>
+    <make>Ferrari</make>
+    <model>Testarossa</model>
+    <year>1984</year>
+    <tier>4</tier>
+    <price_usd>85000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>385</horsepower>
+    <torque_nm>490</torque_nm>
+    <weight_kg>1506</weight_kg>
+    <top_speed_kmh>290</top_speed_kmh>
+    <accel_0_100>5.2</accel_0_100>
+    <lateral_g>0.89</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="porsche_911_turbo_930_5speed">
+    <id>porsche_911_turbo_930_5speed</id>
+    <make>Porsche</make>
+    <model>911 Turbo (930 5-Speed)</model>
+    <year>1989</year>
+    <tier>4</tier>
+    <price_usd>70000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>296</horsepower>
+    <torque_nm>430</torque_nm>
+    <weight_kg>1335</weight_kg>
+    <top_speed_kmh>260</top_speed_kmh>
+    <accel_0_100>4.9</accel_0_100>
+    <lateral_g>0.91</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="honda_nsx_na1">
+    <id>honda_nsx_na1</id>
+    <make>Honda</make>
+    <model>NSX (NA1)</model>
+    <year>1990</year>
+    <tier>4</tier>
+    <price_usd>61000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>270</horsepower>
+    <torque_nm>285</torque_nm>
+    <weight_kg>1370</weight_kg>
+    <top_speed_kmh>270</top_speed_kmh>
+    <accel_0_100>5.2</accel_0_100>
+    <lateral_g>0.93</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="dodge_viper_rt10">
+    <id>dodge_viper_rt10</id>
+    <make>Dodge</make>
+    <model>Viper RT/10</model>
+    <year>1992</year>
+    <tier>4</tier>
+    <price_usd>50000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>400</horsepower>
+    <torque_nm>630</torque_nm>
+    <weight_kg>1490</weight_kg>
+    <top_speed_kmh>266</top_speed_kmh>
+    <accel_0_100>4.4</accel_0_100>
+    <lateral_g>0.96</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="porsche_911_turbo_36_964">
+    <id>porsche_911_turbo_36_964</id>
+    <make>Porsche</make>
+    <model>911 Turbo 3.6 (964)</model>
+    <year>1993</year>
+    <tier>4</tier>
+    <price_usd>99000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>355</horsepower>
+    <torque_nm>520</torque_nm>
+    <weight_kg>1470</weight_kg>
+    <top_speed_kmh>280</top_speed_kmh>
+    <accel_0_100>4.5</accel_0_100>
+    <lateral_g>0.93</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="ferrari_f355_berlinetta">
+    <id>ferrari_f355_berlinetta</id>
+    <make>Ferrari</make>
+    <model>F355 Berlinetta</model>
+    <year>1994</year>
+    <tier>4</tier>
+    <price_usd>120000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>375</horsepower>
+    <torque_nm>363</torque_nm>
+    <weight_kg>1350</weight_kg>
+    <top_speed_kmh>295</top_speed_kmh>
+    <accel_0_100>4.7</accel_0_100>
+    <lateral_g>0.94</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="porsche_911_gt2_993">
+    <id>porsche_911_gt2_993</id>
+    <make>Porsche</make>
+    <model>911 GT2 (993)</model>
+    <year>1995</year>
+    <tier>4</tier>
+    <price_usd>190000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>424</horsepower>
+    <torque_nm>540</torque_nm>
+    <weight_kg>1290</weight_kg>
+    <top_speed_kmh>301</top_speed_kmh>
+    <accel_0_100>3.9</accel_0_100>
+    <lateral_g>1.01</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="dodge_viper_gts">
+    <id>dodge_viper_gts</id>
+    <make>Dodge</make>
+    <model>Viper GTS</model>
+    <year>1996</year>
+    <tier>4</tier>
+    <price_usd>66000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>450</horsepower>
+    <torque_nm>664</torque_nm>
+    <weight_kg>1530</weight_kg>
+    <top_speed_kmh>298</top_speed_kmh>
+    <accel_0_100>4</accel_0_100>
+    <lateral_g>0.98</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="ferrari_360_modena">
+    <id>ferrari_360_modena</id>
+    <make>Ferrari</make>
+    <model>360 Modena</model>
+    <year>1999</year>
+    <tier>4</tier>
+    <price_usd>138225</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>395</horsepower>
+    <torque_nm>373</torque_nm>
+    <weight_kg>1390</weight_kg>
+    <top_speed_kmh>295</top_speed_kmh>
+    <accel_0_100>4.5</accel_0_100>
+    <lateral_g>0.95</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="porsche_911_gt3_996_1">
+    <id>porsche_911_gt3_996_1</id>
+    <make>Porsche</make>
+    <model>911 GT3 (996.1)</model>
+    <year>1999</year>
+    <tier>4</tier>
+    <price_usd>100000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>355</horsepower>
+    <torque_nm>370</torque_nm>
+    <weight_kg>1350</weight_kg>
+    <top_speed_kmh>302</top_speed_kmh>
+    <accel_0_100>4.8</accel_0_100>
+    <lateral_g>1</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="lamborghini_murcielago">
+    <id>lamborghini_murcielago</id>
+    <make>Lamborghini</make>
+    <model>Murciélago</model>
+    <year>2001</year>
+    <tier>4</tier>
+    <price_usd>273000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>572</horsepower>
+    <torque_nm>650</torque_nm>
+    <weight_kg>1650</weight_kg>
+    <top_speed_kmh>330</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>0.98</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="ferrari_360_challenge_stradale">
+    <id>ferrari_360_challenge_stradale</id>
+    <make>Ferrari</make>
+    <model>360 Challenge Stradale</model>
+    <year>2003</year>
+    <tier>4</tier>
+    <price_usd>172000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>420</horsepower>
+    <torque_nm>373</torque_nm>
+    <weight_kg>1280</weight_kg>
+    <top_speed_kmh>300</top_speed_kmh>
+    <accel_0_100>4.1</accel_0_100>
+    <lateral_g>1.02</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="lamborghini_gallardo">
+    <id>lamborghini_gallardo</id>
+    <make>Lamborghini</make>
+    <model>Gallardo</model>
+    <year>2003</year>
+    <tier>4</tier>
+    <price_usd>165900</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>493</horsepower>
+    <torque_nm>510</torque_nm>
+    <weight_kg>1520</weight_kg>
+    <top_speed_kmh>309</top_speed_kmh>
+    <accel_0_100>4.2</accel_0_100>
+    <lateral_g>0.97</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="ford_gt_2005">
+    <id>ford_gt_2005</id>
+    <make>Ford</make>
+    <model>GT</model>
+    <year>2005</year>
+    <tier>4</tier>
+    <price_usd>139995</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>550</horsepower>
+    <torque_nm>678</torque_nm>
+    <weight_kg>1538</weight_kg>
+    <top_speed_kmh>330</top_speed_kmh>
+    <accel_0_100>3.5</accel_0_100>
+    <lateral_g>1</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="chevrolet_corvette_z06_c6">
+    <id>chevrolet_corvette_z06_c6</id>
+    <make>Chevrolet</make>
+    <model>Corvette Z06 (C6)</model>
+    <year>2006</year>
+    <tier>4</tier>
+    <price_usd>65800</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>505</horsepower>
+    <torque_nm>637</torque_nm>
+    <weight_kg>1420</weight_kg>
+    <top_speed_kmh>319</top_speed_kmh>
+    <accel_0_100>3.7</accel_0_100>
+    <lateral_g>1.04</lateral_g>
+    <style_rating>91</style_rating>
+  </car>
+  <car id="ferrari_430_scuderia">
+    <id>ferrari_430_scuderia</id>
+    <make>Ferrari</make>
+    <model>430 Scuderia</model>
+    <year>2007</year>
+    <tier>4</tier>
+    <price_usd>262600</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>503</horsepower>
+    <torque_nm>470</torque_nm>
+    <weight_kg>1350</weight_kg>
+    <top_speed_kmh>320</top_speed_kmh>
+    <accel_0_100>3.6</accel_0_100>
+    <lateral_g>1.05</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="audi_r8_42_quattro">
+    <id>audi_r8_42_quattro</id>
+    <make>Audi</make>
+    <model>R8 4.2 FSI Quattro</model>
+    <year>2007</year>
+    <tier>4</tier>
+    <price_usd>109000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>414</horsepower>
+    <torque_nm>430</torque_nm>
+    <weight_kg>1560</weight_kg>
+    <top_speed_kmh>301</top_speed_kmh>
+    <accel_0_100>4.4</accel_0_100>
+    <lateral_g>0.98</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="nissan_gtr_r35">
+    <id>nissan_gtr_r35</id>
+    <make>Nissan</make>
+    <model>GT-R (R35)</model>
+    <year>2008</year>
+    <tier>4</tier>
+    <price_usd>69850</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>480</horsepower>
+    <torque_nm>588</torque_nm>
+    <weight_kg>1740</weight_kg>
+    <top_speed_kmh>311</top_speed_kmh>
+    <accel_0_100>3.5</accel_0_100>
+    <lateral_g>1.02</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="mercedes_benz_sls_amg">
+    <id>mercedes_benz_sls_amg</id>
+    <make>Mercedes-Benz</make>
+    <model>SLS AMG</model>
+    <year>2010</year>
+    <tier>4</tier>
+    <price_usd>183000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>563</horsepower>
+    <torque_nm>650</torque_nm>
+    <weight_kg>1620</weight_kg>
+    <top_speed_kmh>317</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>1</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="porsche_911_gt3_rs_997_2">
+    <id>porsche_911_gt3_rs_997_2</id>
+    <make>Porsche</make>
+    <model>911 GT3 RS (997.2)</model>
+    <year>2010</year>
+    <tier>4</tier>
+    <price_usd>132800</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>444</horsepower>
+    <torque_nm>430</torque_nm>
+    <weight_kg>1370</weight_kg>
+    <top_speed_kmh>310</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>1.08</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="ferrari_458_italia">
+    <id>ferrari_458_italia</id>
+    <make>Ferrari</make>
+    <model>458 Italia</model>
+    <year>2010</year>
+    <tier>4</tier>
+    <price_usd>225325</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>562</horsepower>
+    <torque_nm>540</torque_nm>
+    <weight_kg>1485</weight_kg>
+    <top_speed_kmh>325</top_speed_kmh>
+    <accel_0_100>3.4</accel_0_100>
+    <lateral_g>1.04</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="lexus_lfa">
+    <id>lexus_lfa</id>
+    <make>Lexus</make>
+    <model>LFA</model>
+    <year>2011</year>
+    <tier>4</tier>
+    <price_usd>375000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>553</horsepower>
+    <torque_nm>480</torque_nm>
+    <weight_kg>1480</weight_kg>
+    <top_speed_kmh>326</top_speed_kmh>
+    <accel_0_100>3.7</accel_0_100>
+    <lateral_g>1.05</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="mclaren_mp4_12c">
+    <id>mclaren_mp4_12c</id>
+    <make>McLaren</make>
+    <model>12C</model>
+    <year>2011</year>
+    <tier>4</tier>
+    <price_usd>229000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>592</horsepower>
+    <torque_nm>600</torque_nm>
+    <weight_kg>1434</weight_kg>
+    <top_speed_kmh>333</top_speed_kmh>
+    <accel_0_100>3.1</accel_0_100>
+    <lateral_g>1.05</lateral_g>
+    <style_rating>90</style_rating>
+  </car>
+  <car id="ferrari_458_speciale">
+    <id>ferrari_458_speciale</id>
+    <make>Ferrari</make>
+    <model>458 Speciale</model>
+    <year>2014</year>
+    <tier>4</tier>
+    <price_usd>298000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>597</horsepower>
+    <torque_nm>540</torque_nm>
+    <weight_kg>1395</weight_kg>
+    <top_speed_kmh>325</top_speed_kmh>
+    <accel_0_100>3</accel_0_100>
+    <lateral_g>1.1</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="nissan_gtr_nismo_r35">
+    <id>nissan_gtr_nismo_r35</id>
+    <make>Nissan</make>
+    <model>GT-R Nismo (R35)</model>
+    <year>2015</year>
+    <tier>4</tier>
+    <price_usd>149990</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>600</horsepower>
+    <torque_nm>652</torque_nm>
+    <weight_kg>1720</weight_kg>
+    <top_speed_kmh>315</top_speed_kmh>
+    <accel_0_100>2.7</accel_0_100>
+    <lateral_g>1.08</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="ferrari_488_gtb">
+    <id>ferrari_488_gtb</id>
+    <make>Ferrari</make>
+    <model>488 GTB</model>
+    <year>2015</year>
+    <tier>4</tier>
+    <price_usd>245000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>661</horsepower>
+    <torque_nm>760</torque_nm>
+    <weight_kg>1475</weight_kg>
+    <top_speed_kmh>330</top_speed_kmh>
+    <accel_0_100>3</accel_0_100>
+    <lateral_g>1.06</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="porsche_911_gt3_rs_991_1">
+    <id>porsche_911_gt3_rs_991_1</id>
+    <make>Porsche</make>
+    <model>911 GT3 RS (991.1)</model>
+    <year>2016</year>
+    <tier>4</tier>
+    <price_usd>175900</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>500</horsepower>
+    <torque_nm>460</torque_nm>
+    <weight_kg>1420</weight_kg>
+    <top_speed_kmh>310</top_speed_kmh>
+    <accel_0_100>3.3</accel_0_100>
+    <lateral_g>1.12</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="lamborghini_huracan_performante">
+    <id>lamborghini_huracan_performante</id>
+    <make>Lamborghini</make>
+    <model>Huracán Performante</model>
+    <year>2017</year>
+    <tier>4</tier>
+    <price_usd>274390</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>631</horsepower>
+    <torque_nm>600</torque_nm>
+    <weight_kg>1382</weight_kg>
+    <top_speed_kmh>325</top_speed_kmh>
+    <accel_0_100>2.9</accel_0_100>
+    <lateral_g>1.14</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="ford_gt_gen2">
+    <id>ford_gt_gen2</id>
+    <make>Ford</make>
+    <model>GT (Gen 2)</model>
+    <year>2017</year>
+    <tier>4</tier>
+    <price_usd>450000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>647</horsepower>
+    <torque_nm>746</torque_nm>
+    <weight_kg>1385</weight_kg>
+    <top_speed_kmh>348</top_speed_kmh>
+    <accel_0_100>3</accel_0_100>
+    <lateral_g>1.11</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="ferrari_488_pista">
+    <id>ferrari_488_pista</id>
+    <make>Ferrari</make>
+    <model>488 Pista</model>
+    <year>2018</year>
+    <tier>4</tier>
+    <price_usd>350000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>710</horsepower>
+    <torque_nm>770</torque_nm>
+    <weight_kg>1385</weight_kg>
+    <top_speed_kmh>340</top_speed_kmh>
+    <accel_0_100>2.85</accel_0_100>
+    <lateral_g>1.13</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="mclaren_720s">
+    <id>mclaren_720s</id>
+    <make>McLaren</make>
+    <model>720S</model>
+    <year>2018</year>
+    <tier>4</tier>
+    <price_usd>284745</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>710</horsepower>
+    <torque_nm>770</torque_nm>
+    <weight_kg>1419</weight_kg>
+    <top_speed_kmh>341</top_speed_kmh>
+    <accel_0_100>2.8</accel_0_100>
+    <lateral_g>1.1</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="porsche_911_gt3_992">
+    <id>porsche_911_gt3_992</id>
+    <make>Porsche</make>
+    <model>911 GT3 (992)</model>
+    <year>2022</year>
+    <tier>4</tier>
+    <price_usd>161100</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>502</horsepower>
+    <torque_nm>469</torque_nm>
+    <weight_kg>1435</weight_kg>
+    <top_speed_kmh>318</top_speed_kmh>
+    <accel_0_100>3.4</accel_0_100>
+    <lateral_g>1.16</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="chevrolet_corvette_z06_c8">
+    <id>chevrolet_corvette_z06_c8</id>
+    <make>Chevrolet</make>
+    <model>Corvette Z06 (C8)</model>
+    <year>2023</year>
+    <tier>4</tier>
+    <price_usd>105300</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>670</horsepower>
+    <torque_nm>624</torque_nm>
+    <weight_kg>1560</weight_kg>
+    <top_speed_kmh>314</top_speed_kmh>
+    <accel_0_100>2.6</accel_0_100>
+    <lateral_g>1.16</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="ferrari_296_gtb">
+    <id>ferrari_296_gtb</id>
+    <make>Ferrari</make>
+    <model>296 GTB</model>
+    <year>2023</year>
+    <tier>4</tier>
+    <price_usd>322986</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>819</horsepower>
+    <torque_nm>740</torque_nm>
+    <weight_kg>1470</weight_kg>
+    <top_speed_kmh>330</top_speed_kmh>
+    <accel_0_100>2.9</accel_0_100>
+    <lateral_g>1.12</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="chevrolet_corvette_zr1_c8">
+    <id>chevrolet_corvette_zr1_c8</id>
+    <make>Chevrolet</make>
+    <model>Corvette ZR1 (C8)</model>
+    <year>2026</year>
+    <tier>4</tier>
+    <price_usd>150000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>1064</horsepower>
+    <torque_nm>1123</torque_nm>
+    <weight_kg>1665</weight_kg>
+    <top_speed_kmh>375</top_speed_kmh>
+    <accel_0_100>2.3</accel_0_100>
+    <lateral_g>1.2</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="porsche_959_komfort">
+    <id>porsche_959_komfort</id>
+    <make>Porsche</make>
+    <model>959 Komfort</model>
+    <year>1986</year>
+    <tier>5</tier>
+    <price_usd>225000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>444</horsepower>
+    <torque_nm>500</torque_nm>
+    <weight_kg>1450</weight_kg>
+    <top_speed_kmh>317</top_speed_kmh>
+    <accel_0_100>3.7</accel_0_100>
+    <lateral_g>1</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="ferrari_f40">
+    <id>ferrari_f40</id>
+    <make>Ferrari</make>
+    <model>F40</model>
+    <year>1987</year>
+    <tier>5</tier>
+    <price_usd>400000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>471</horsepower>
+    <torque_nm>577</torque_nm>
+    <weight_kg>1250</weight_kg>
+    <top_speed_kmh>324</top_speed_kmh>
+    <accel_0_100>4.1</accel_0_100>
+    <lateral_g>1.05</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="jaguar_xj220">
+    <id>jaguar_xj220</id>
+    <make>Jaguar</make>
+    <model>XJ220</model>
+    <year>1992</year>
+    <tier>5</tier>
+    <price_usd>580000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>542</horsepower>
+    <torque_nm>644</torque_nm>
+    <weight_kg>1470</weight_kg>
+    <top_speed_kmh>342</top_speed_kmh>
+    <accel_0_100>3.6</accel_0_100>
+    <lateral_g>1.02</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="bugatti_eb110_super_sport">
+    <id>bugatti_eb110_super_sport</id>
+    <make>Bugatti</make>
+    <model>EB110 Super Sport</model>
+    <year>1992</year>
+    <tier>5</tier>
+    <price_usd>380000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>603</horsepower>
+    <torque_nm>650</torque_nm>
+    <weight_kg>1570</weight_kg>
+    <top_speed_kmh>355</top_speed_kmh>
+    <accel_0_100>3.3</accel_0_100>
+    <lateral_g>1.03</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="mclaren_f1">
+    <id>mclaren_f1</id>
+    <make>McLaren</make>
+    <model>F1</model>
+    <year>1993</year>
+    <tier>5</tier>
+    <price_usd>815000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>618</horsepower>
+    <torque_nm>650</torque_nm>
+    <weight_kg>1138</weight_kg>
+    <top_speed_kmh>386</top_speed_kmh>
+    <accel_0_100>3.2</accel_0_100>
+    <lateral_g>1.04</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="ferrari_f50">
+    <id>ferrari_f50</id>
+    <make>Ferrari</make>
+    <model>F50</model>
+    <year>1995</year>
+    <tier>5</tier>
+    <price_usd>475000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>512</horsepower>
+    <torque_nm>471</torque_nm>
+    <weight_kg>1230</weight_kg>
+    <top_speed_kmh>325</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>1.06</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="porsche_911_gt1_strassenversion">
+    <id>porsche_911_gt1_strassenversion</id>
+    <make>Porsche</make>
+    <model>911 GT1 Strassenversion</model>
+    <year>1997</year>
+    <tier>5</tier>
+    <price_usd>890000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>537</horsepower>
+    <torque_nm>600</torque_nm>
+    <weight_kg>1150</weight_kg>
+    <top_speed_kmh>308</top_speed_kmh>
+    <accel_0_100>3.9</accel_0_100>
+    <lateral_g>1.08</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="mercedes_benz_clk_gtr">
+    <id>mercedes_benz_clk_gtr</id>
+    <make>Mercedes-Benz</make>
+    <model>CLK GTR</model>
+    <year>1998</year>
+    <tier>5</tier>
+    <price_usd>1500000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>604</horsepower>
+    <torque_nm>775</torque_nm>
+    <weight_kg>1440</weight_kg>
+    <top_speed_kmh>344</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>1.07</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="pagani_zonda_c12_s_73">
+    <id>pagani_zonda_c12_s_73</id>
+    <make>Pagani</make>
+    <model>Zonda C12 S 7.3</model>
+    <year>2002</year>
+    <tier>5</tier>
+    <price_usd>500000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>547</horsepower>
+    <torque_nm>750</torque_nm>
+    <weight_kg>1250</weight_kg>
+    <top_speed_kmh>354</top_speed_kmh>
+    <accel_0_100>3.7</accel_0_100>
+    <lateral_g>1.08</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="ferrari_enzo">
+    <id>ferrari_enzo</id>
+    <make>Ferrari</make>
+    <model>Enzo</model>
+    <year>2002</year>
+    <tier>5</tier>
+    <price_usd>659330</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>651</horsepower>
+    <torque_nm>657</torque_nm>
+    <weight_kg>1255</weight_kg>
+    <top_speed_kmh>350</top_speed_kmh>
+    <accel_0_100>3.3</accel_0_100>
+    <lateral_g>1.1</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="porsche_carrera_gt">
+    <id>porsche_carrera_gt</id>
+    <make>Porsche</make>
+    <model>Carrera GT</model>
+    <year>2003</year>
+    <tier>5</tier>
+    <price_usd>440000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>603</horsepower>
+    <torque_nm>590</torque_nm>
+    <weight_kg>1380</weight_kg>
+    <top_speed_kmh>330</top_speed_kmh>
+    <accel_0_100>3.6</accel_0_100>
+    <lateral_g>1.09</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="maserati_mc12">
+    <id>maserati_mc12</id>
+    <make>Maserati</make>
+    <model>MC12</model>
+    <year>2004</year>
+    <tier>5</tier>
+    <price_usd>800000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>621</horsepower>
+    <torque_nm>652</torque_nm>
+    <weight_kg>1335</weight_kg>
+    <top_speed_kmh>330</top_speed_kmh>
+    <accel_0_100>3.8</accel_0_100>
+    <lateral_g>1.1</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="bugatti_veyron_16_4">
+    <id>bugatti_veyron_16_4</id>
+    <make>Bugatti</make>
+    <model>Veyron 16.4</model>
+    <year>2005</year>
+    <tier>5</tier>
+    <price_usd>1250000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>987</horsepower>
+    <torque_nm>1250</torque_nm>
+    <weight_kg>1888</weight_kg>
+    <top_speed_kmh>407</top_speed_kmh>
+    <accel_0_100>2.5</accel_0_100>
+    <lateral_g>1.06</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="koenigsegg_ccx">
+    <id>koenigsegg_ccx</id>
+    <make>Koenigsegg</make>
+    <model>CCX</model>
+    <year>2006</year>
+    <tier>5</tier>
+    <price_usd>700000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>806</horsepower>
+    <torque_nm>920</torque_nm>
+    <weight_kg>1280</weight_kg>
+    <top_speed_kmh>395</top_speed_kmh>
+    <accel_0_100>3.2</accel_0_100>
+    <lateral_g>1.12</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="pagani_zonda_cinque">
+    <id>pagani_zonda_cinque</id>
+    <make>Pagani</make>
+    <model>Zonda Cinque</model>
+    <year>2009</year>
+    <tier>5</tier>
+    <price_usd>1800000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>669</horsepower>
+    <torque_nm>780</torque_nm>
+    <weight_kg>1210</weight_kg>
+    <top_speed_kmh>350</top_speed_kmh>
+    <accel_0_100>3.4</accel_0_100>
+    <lateral_g>1.15</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="bugatti_veyron_super_sport">
+    <id>bugatti_veyron_super_sport</id>
+    <make>Bugatti</make>
+    <model>Veyron 16.4 Super Sport</model>
+    <year>2010</year>
+    <tier>5</tier>
+    <price_usd>2400000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1184</horsepower>
+    <torque_nm>1500</torque_nm>
+    <weight_kg>1838</weight_kg>
+    <top_speed_kmh>431</top_speed_kmh>
+    <accel_0_100>2.5</accel_0_100>
+    <lateral_g>1.08</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="koenigsegg_agera_r">
+    <id>koenigsegg_agera_r</id>
+    <make>Koenigsegg</make>
+    <model>Agera R</model>
+    <year>2011</year>
+    <tier>5</tier>
+    <price_usd>1600000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>1124</horsepower>
+    <torque_nm>1200</torque_nm>
+    <weight_kg>1435</weight_kg>
+    <top_speed_kmh>418</top_speed_kmh>
+    <accel_0_100>2.8</accel_0_100>
+    <lateral_g>1.16</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="pagani_huayra">
+    <id>pagani_huayra</id>
+    <make>Pagani</make>
+    <model>Huayra</model>
+    <year>2011</year>
+    <tier>5</tier>
+    <price_usd>1300000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>720</horsepower>
+    <torque_nm>1000</torque_nm>
+    <weight_kg>1350</weight_kg>
+    <top_speed_kmh>383</top_speed_kmh>
+    <accel_0_100>3.2</accel_0_100>
+    <lateral_g>1.12</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="mclaren_p1">
+    <id>mclaren_p1</id>
+    <make>McLaren</make>
+    <model>P1</model>
+    <year>2013</year>
+    <tier>5</tier>
+    <price_usd>1150000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>903</horsepower>
+    <torque_nm>900</torque_nm>
+    <weight_kg>1490</weight_kg>
+    <top_speed_kmh>350</top_speed_kmh>
+    <accel_0_100>2.8</accel_0_100>
+    <lateral_g>1.2</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="ferrari_laferrari">
+    <id>ferrari_laferrari</id>
+    <make>Ferrari</make>
+    <model>LaFerrari</model>
+    <year>2013</year>
+    <tier>5</tier>
+    <price_usd>1420000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>949</horsepower>
+    <torque_nm>900</torque_nm>
+    <weight_kg>1430</weight_kg>
+    <top_speed_kmh>352</top_speed_kmh>
+    <accel_0_100>2.6</accel_0_100>
+    <lateral_g>1.18</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="porsche_918_spyder">
+    <id>porsche_918_spyder</id>
+    <make>Porsche</make>
+    <model>918 Spyder</model>
+    <year>2013</year>
+    <tier>5</tier>
+    <price_usd>845000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>875</horsepower>
+    <torque_nm>1280</torque_nm>
+    <weight_kg>1634</weight_kg>
+    <top_speed_kmh>345</top_speed_kmh>
+    <accel_0_100>2.5</accel_0_100>
+    <lateral_g>1.18</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="koenigsegg_one_1">
+    <id>koenigsegg_one_1</id>
+    <make>Koenigsegg</make>
+    <model>One:1</model>
+    <year>2014</year>
+    <tier>5</tier>
+    <price_usd>2850000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>1341</horsepower>
+    <torque_nm>1371</torque_nm>
+    <weight_kg>1360</weight_kg>
+    <top_speed_kmh>440</top_speed_kmh>
+    <accel_0_100>2.8</accel_0_100>
+    <lateral_g>1.22</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="bugatti_chiron">
+    <id>bugatti_chiron</id>
+    <make>Bugatti</make>
+    <model>Chiron</model>
+    <year>2016</year>
+    <tier>5</tier>
+    <price_usd>2998000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1479</horsepower>
+    <torque_nm>1600</torque_nm>
+    <weight_kg>1995</weight_kg>
+    <top_speed_kmh>420</top_speed_kmh>
+    <accel_0_100>2.4</accel_0_100>
+    <lateral_g>1.1</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="koenigsegg_regera">
+    <id>koenigsegg_regera</id>
+    <make>Koenigsegg</make>
+    <model>Regera</model>
+    <year>2016</year>
+    <tier>5</tier>
+    <price_usd>1900000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>1489</horsepower>
+    <torque_nm>2000</torque_nm>
+    <weight_kg>1590</weight_kg>
+    <top_speed_kmh>404</top_speed_kmh>
+    <accel_0_100>2.8</accel_0_100>
+    <lateral_g>1.16</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="pagani_huayra_bc">
+    <id>pagani_huayra_bc</id>
+    <make>Pagani</make>
+    <model>Huayra BC</model>
+    <year>2016</year>
+    <tier>5</tier>
+    <price_usd>2550000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>789</horsepower>
+    <torque_nm>1100</torque_nm>
+    <weight_kg>1218</weight_kg>
+    <top_speed_kmh>380</top_speed_kmh>
+    <accel_0_100>3</accel_0_100>
+    <lateral_g>1.2</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="mclaren_senna">
+    <id>mclaren_senna</id>
+    <make>McLaren</make>
+    <model>Senna</model>
+    <year>2018</year>
+    <tier>5</tier>
+    <price_usd>958966</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>789</horsepower>
+    <torque_nm>800</torque_nm>
+    <weight_kg>1309</weight_kg>
+    <top_speed_kmh>335</top_speed_kmh>
+    <accel_0_100>2.8</accel_0_100>
+    <lateral_g>1.25</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="bugatti_chiron_super_sport_300p">
+    <id>bugatti_chiron_super_sport_300p</id>
+    <make>Bugatti</make>
+    <model>Chiron Super Sport 300+</model>
+    <year>2019</year>
+    <tier>5</tier>
+    <price_usd>3900000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1578</horsepower>
+    <torque_nm>1600</torque_nm>
+    <weight_kg>1978</weight_kg>
+    <top_speed_kmh>440</top_speed_kmh>
+    <accel_0_100>2.4</accel_0_100>
+    <lateral_g>1.12</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="koenigsegg_jesko_absolut">
+    <id>koenigsegg_jesko_absolut</id>
+    <make>Koenigsegg</make>
+    <model>Jesko Absolut</model>
+    <year>2020</year>
+    <tier>5</tier>
+    <price_usd>3400000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>1600</horsepower>
+    <torque_nm>1500</torque_nm>
+    <weight_kg>1390</weight_kg>
+    <top_speed_kmh>500</top_speed_kmh>
+    <accel_0_100>2.5</accel_0_100>
+    <lateral_g>1.22</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="mclaren_speedtail">
+    <id>mclaren_speedtail</id>
+    <make>McLaren</make>
+    <model>Speedtail</model>
+    <year>2020</year>
+    <tier>5</tier>
+    <price_usd>2250000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>1036</horsepower>
+    <torque_nm>1150</torque_nm>
+    <weight_kg>1430</weight_kg>
+    <top_speed_kmh>403</top_speed_kmh>
+    <accel_0_100>3</accel_0_100>
+    <lateral_g>1.14</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="pagani_huayra_roadster_bc">
+    <id>pagani_huayra_roadster_bc</id>
+    <make>Pagani</make>
+    <model>Huayra Roadster BC</model>
+    <year>2020</year>
+    <tier>5</tier>
+    <price_usd>3500000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>791</horsepower>
+    <torque_nm>1050</torque_nm>
+    <weight_kg>1250</weight_kg>
+    <top_speed_kmh>380</top_speed_kmh>
+    <accel_0_100>3</accel_0_100>
+    <lateral_g>1.22</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="rimac_nevera">
+    <id>rimac_nevera</id>
+    <make>Rimac</make>
+    <model>Nevera</model>
+    <year>2021</year>
+    <tier>5</tier>
+    <price_usd>2200000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1888</horsepower>
+    <torque_nm>2360</torque_nm>
+    <weight_kg>2300</weight_kg>
+    <top_speed_kmh>412</top_speed_kmh>
+    <accel_0_100>1.81</accel_0_100>
+    <lateral_g>1.2</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="pininfarina_battista">
+    <id>pininfarina_battista</id>
+    <make>Pininfarina</make>
+    <model>Battista</model>
+    <year>2021</year>
+    <tier>5</tier>
+    <price_usd>2250000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1877</horsepower>
+    <torque_nm>2300</torque_nm>
+    <weight_kg>2063</weight_kg>
+    <top_speed_kmh>350</top_speed_kmh>
+    <accel_0_100>1.86</accel_0_100>
+    <lateral_g>1.2</lateral_g>
+    <style_rating>93</style_rating>
+  </car>
+  <car id="aston_martin_valkyrie">
+    <id>aston_martin_valkyrie</id>
+    <make>Aston Martin</make>
+    <model>Valkyrie</model>
+    <year>2022</year>
+    <tier>5</tier>
+    <price_usd>3200000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>1139</horsepower>
+    <torque_nm>900</torque_nm>
+    <weight_kg>1100</weight_kg>
+    <top_speed_kmh>400</top_speed_kmh>
+    <accel_0_100>2.5</accel_0_100>
+    <lateral_g>1.25</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="mercedes_amg_one">
+    <id>mercedes_amg_one</id>
+    <make>Mercedes-AMG</make>
+    <model>ONE</model>
+    <year>2022</year>
+    <tier>5</tier>
+    <price_usd>2720000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1049</horsepower>
+    <torque_nm>1100</torque_nm>
+    <weight_kg>1695</weight_kg>
+    <top_speed_kmh>352</top_speed_kmh>
+    <accel_0_100>2.9</accel_0_100>
+    <lateral_g>1.25</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="pagani_utopia">
+    <id>pagani_utopia</id>
+    <make>Pagani</make>
+    <model>Utopia</model>
+    <year>2022</year>
+    <tier>5</tier>
+    <price_usd>2500000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>852</horsepower>
+    <torque_nm>1100</torque_nm>
+    <weight_kg>1280</weight_kg>
+    <top_speed_kmh>354</top_speed_kmh>
+    <accel_0_100>3.1</accel_0_100>
+    <lateral_g>1.18</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="koenigsegg_cc850">
+    <id>koenigsegg_cc850</id>
+    <make>Koenigsegg</make>
+    <model>CC850</model>
+    <year>2023</year>
+    <tier>5</tier>
+    <price_usd>3650000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>1385</horsepower>
+    <torque_nm>1385</torque_nm>
+    <weight_kg>1385</weight_kg>
+    <top_speed_kmh>400</top_speed_kmh>
+    <accel_0_100>2.7</accel_0_100>
+    <lateral_g>1.21</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="byd_yangwang_u9">
+    <id>byd_yangwang_u9</id>
+    <make>BYD</make>
+    <model>Yangwang U9</model>
+    <year>2024</year>
+    <tier>5</tier>
+    <price_usd>236000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1287</horsepower>
+    <torque_nm>1680</torque_nm>
+    <weight_kg>2475</weight_kg>
+    <top_speed_kmh>309</top_speed_kmh>
+    <accel_0_100>2.36</accel_0_100>
+    <lateral_g>1.18</lateral_g>
+    <style_rating>92</style_rating>
+  </car>
+  <car id="mclaren_w1">
+    <id>mclaren_w1</id>
+    <make>McLaren</make>
+    <model>W1</model>
+    <year>2025</year>
+    <tier>5</tier>
+    <price_usd>2100000</price_usd>
+    <drivetrain>RWD</drivetrain>
+    <horsepower>1258</horsepower>
+    <torque_nm>1340</torque_nm>
+    <weight_kg>1399</weight_kg>
+    <top_speed_kmh>350</top_speed_kmh>
+    <accel_0_100>2.7</accel_0_100>
+    <lateral_g>1.25</lateral_g>
+    <style_rating>94</style_rating>
+  </car>
+  <car id="ferrari_f80">
+    <id>ferrari_f80</id>
+    <make>Ferrari</make>
+    <model>F80</model>
+    <year>2025</year>
+    <tier>5</tier>
+    <price_usd>3900000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1184</horsepower>
+    <torque_nm>1100</torque_nm>
+    <weight_kg>1525</weight_kg>
+    <top_speed_kmh>350</top_speed_kmh>
+    <accel_0_100>2.15</accel_0_100>
+    <lateral_g>1.25</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="bugatti_tourbillon">
+    <id>bugatti_tourbillon</id>
+    <make>Bugatti</make>
+    <model>Tourbillon</model>
+    <year>2026</year>
+    <tier>5</tier>
+    <price_usd>4100000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>1775</horsepower>
+    <torque_nm>1800</torque_nm>
+    <weight_kg>1995</weight_kg>
+    <top_speed_kmh>445</top_speed_kmh>
+    <accel_0_100>2</accel_0_100>
+    <lateral_g>1.22</lateral_g>
+    <style_rating>95</style_rating>
+  </car>
+  <car id="byd_yangwang_u9_xtreme">
+    <id>byd_yangwang_u9_xtreme</id>
+    <make>BYD</make>
+    <model>Yangwang U9 Xtreme</model>
+    <year>2025</year>
+    <tier>5</tier>
+    <price_usd>350000</price_usd>
+    <drivetrain>AWD</drivetrain>
+    <horsepower>3000</horsepower>
+    <torque_nm>2200</torque_nm>
+    <weight_kg>2200</weight_kg>
+    <top_speed_kmh>496</top_speed_kmh>
+    <accel_0_100>1.8</accel_0_100>
+    <lateral_g>1.22</lateral_g>
+    <style_rating>96</style_rating>
+  </car>
+</cars>

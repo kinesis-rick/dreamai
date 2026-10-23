@@ -83,6 +83,9 @@ def get_file_metadata(filepath, filename, category_dir, rel_path):
         elif "wheel" in path_lower or "motor" in path_lower:
             icon = "fa-car-side"
             if not description: description = "High-speed open wheel motorsports racing."
+        elif "apex" in path_lower or "shift" in path_lower:
+            icon = "fa-flag-checkered"
+            if not description: description = "Automotive card battle game inspired by Top Trumps and Need for Speed Underground."
         elif "hell" in path_lower or "pang" in path_lower:
             icon = "fa-ghost"
             if not description: description = "Pop the bouncy sentient Bobas with your harpoon!"

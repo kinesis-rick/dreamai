@@ -57,6 +57,14 @@
   },
   {
     "category": "Games",
+    "name": "Apex Shift - Automotive Card Battle Game",
+    "path": "games/apex-shift/index.html",
+    "type": "game",
+    "icon": "fa-flag-checkered",
+    "description": "Apex Shift - A 2-player automotive card battle game inspired by Top Trumps and Need for Speed Underground."
+  },
+  {
+    "category": "Games",
     "name": "HELLPANG - Boba Splatter Arcade",
     "path": "games/hellpang/index.html",
     "type": "game",

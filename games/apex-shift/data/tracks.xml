@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tracks>
+  <track id="highway_bayshore">
+    <name>Bayshore Route 9</name>
+    <environment>Urban Highway</environment>
+    <surface>Dry Tarmac</surface>
+    <backgroundImage>Apex_Shift_Assets/tracks/highway_bg.png</backgroundImage>
+    <description>High-speed multi-lane elevated tollway prioritizing sustained top velocity and high-gear pull.</description>
+    <weights>
+      <topSpeed>0.50</topSpeed>
+      <acceleration>0.35</acceleration>
+      <grip>0.15</grip>
+    </weights>
+    <rewards>
+      <baseCash>1200</baseCash>
+      <repBonus>40</repBonus>
+    </rewards>
+  </track>
+
+  <track id="touge_nagao">
+    <name>Nagao Mountain Pass</name>
+    <environment>Mountain Hairpins</environment>
+    <surface>Damp Asphalt</surface>
+    <backgroundImage>Apex_Shift_Assets/tracks/touge_bg.png</backgroundImage>
+    <description>Tight downhill hairpins and switchbacks demanding lateral grip and punchy corner exits.</description>
+    <weights>
+      <topSpeed>0.15</topSpeed>
+      <acceleration>0.35</acceleration>
+      <grip>0.50</grip>
+    </weights>
+    <rewards>
+      <baseCash>1400</baseCash>
+      <repBonus>50</repBonus>
+    </rewards>
+  </track>
+
+  <track id="drag_airfield">
+    <name>Blackridge Airfield Drag</name>
+    <environment>Abandoned Runway</environment>
+    <surface>Grooved Concrete</surface>
+    <backgroundImage>Apex_Shift_Assets/tracks/drag_bg.png</backgroundImage>
+    <description>Raw straight-line quarter-mile battle where launch traction and rapid acceleration rule.</description>
+    <weights>
+      <topSpeed>0.30</topSpeed>
+      <acceleration>0.60</acceleration>
+      <grip>0.10</grip>
+    </weights>
+    <rewards>
+      <baseCash>1000</baseCash>
+      <repBonus>35</repBonus>
+    </rewards>
+  </track>
+
+  <track id="circuit_grand_prix">
+    <name>Suzuka National Raceway</name>
+    <environment>Grand Prix Asphalt</environment>
+    <surface>Paved Racing Tarmac</surface>
+    <backgroundImage>Apex_Shift_Assets/tracks/circuit_bg.png</backgroundImage>
+    <description>Sweeping high-downforce corners and long straights testing balanced aerodynamics and mechanical grip.</description>
+    <weights>
+      <topSpeed>0.40</topSpeed>
+      <acceleration>0.15</acceleration>
+      <grip>0.45</grip>
+    </weights>
+    <rewards>
+      <baseCash>1600</baseCash>
+      <repBonus>60</repBonus>
+    </rewards>
+  </track>
+</tracks>

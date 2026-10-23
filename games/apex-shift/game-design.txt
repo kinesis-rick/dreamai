@@ -1,0 +1,62 @@
+Act as a principal creative web game developer. Build the complete, functional, single-page prototype for "Apex Shift", a 2-player automotive card battle game inspired by Top Trumps and Need for Speed Underground.
+
+DELIVERABLE FORMAT:
+Provide ONE complete, fully implemented, production-ready `index.html` file containing all HTML, CSS (in <style>), and JavaScript (in <script>).
+- CRITICAL: DO NOT use placeholders, stub functions, or "// TODO" comments. Every mechanic described below must be completely written and functional.
+- The game must run locally via `python3 -m http.server 8080`.
+
+PATH ALIGNMENT & ASSET HOOKS:
+- Set asset root constant: `const ASSET_ROOT = 'Apex_Shift_Assets';`
+- Car artwork: `${ASSET_ROOT}/cars/${car.id}_base.png`
+- Parts icons: `${ASSET_ROOT}/parts/${category}/${stage}.png` (e.g., `${ASSET_ROOT}/parts/turbos/stage1.png`)
+- Track backdrops: `${ASSET_ROOT}/tracks/${track.id}_bg.png`
+- If an image fails to load, gracefully fall back to a styled SVG placeholder icon with the part/car name so the UI never breaks.
+
+UI & AESTHETICS (NFS UNDERGROUND THEME):
+- Dark palette: background `#0c0d10`, panels `#14171d`, electric cyan `#00f0ff`, magenta `#ff0055`, amber `#ffb000`, neon green `#00ff66`.
+- High-contrast HUD font styling with glowing text shadows.
+- Active card layout: renders vehicle image, make/model badge, tier star rating, dynamic stat chips (ET, Trap Speed, HP, Grip, Weight), equipped parts socket drawer (5 slots), and dynamic CSS underglow box-shadow based on installed neon color.
+- Persistent Header: Room Code status, Wallet Bank balance, and persistent "Settings / Backup" button.
+
+DATA ENGINE & FALLBACK:
+- Parse `data/garage.xml` and `data/tracks.xml` using fetch() and DOMParser().
+- Include a complete embedded fallback XML string with at least 8 vehicles (spanning Tiers 1-5, ICE and EVs including BYD Seal Performance, Tesla Plaid, Porsche 911 GT3, Toyota Supra A80, Golf GTI Mk1) and 4 tracks, so the app is 100% playable out of the box even before external XML files are placed.
+
+SIMULATION & PHYSICS ENGINE:
+1. Dynamic Quarter-Mile:
+   ET = 5.825 * ((weightKg * 2.20462) / HP)**(1/3) * (1.0 - ((lateralG - 0.90) * 0.12) - dtBonus)
+   (dtBonus: AWD = 0.04, RWD = 0.00, FWD = -0.03).
+   TrapSpeedKmh = (234 * (HP / (weightKg * 2.20462))**(1/3)) * 1.60934.
+2. Normalized Race Scoring:
+   Because acceleration is lower-is-better, normalize each stat to a 0-100 scale:
+   - AccelScore = Math.max(0, Math.min(100, (12.0 - accelZeroHundred) * 10))
+   - SpeedScore = Math.max(0, Math.min(100, (topSpeedKmh / 400) * 100))
+   - GripScore = Math.max(0, Math.min(100, ((lateralG - 0.70) / 0.60) * 100))
+   RaceScore = (W_accel * AccelScore) + (W_speed * SpeedScore) + (W_grip * GripScore) + (styleRating * 0.05).
+   Highest RaceScore takes the heat.
+
+MULTIPLAYER MODES:
+1. Hotseat (Pass & Play): Default mode. Player 1 selects a car from their drawn hand of 3. Full-screen curtain overlays: "PASS TO PLAYER 2". Player 2 selects their car. Simultaneous card flip showdown animation, followed by the victory/reward banner. First player to 5 round wins takes the match. Player garages are separate from each other. Player 1 can have their own upgrades to their own card hand, while player 2 could have their own different upgrades on their own different car hand.
+2. Online P2P (PeerJS): Load `https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js`. Player 1 hosts with a generated 4-character room code; Player 2 joins. All hand selections and reveals sync over WebRTC DataConnection.
+
+GARAGE, TUNING SHOP & SCRAP:
+- 3 Persistent Starred Slots in localStorage.
+- Player(s) can click a card to star it, and add to their garage slots, if they have an available slot. This saves the car to their inventory where they can upgrade it in the tuning shop.
+- Tuning Shop modal:
+  - Turbos (+15% / +35% / +60% HP)
+  - Tyres (+0.06 / +0.14 / +0.25 G)
+  - Suspension (+0.05 / +0.12 / +0.22 G)
+  - Weight (-40kg / -90kg / -160kg)
+  - ECU (+5% / +12% / +20% HP)
+  - Neon Underglow (Cyan, Magenta, Amber, Green, Purple, Red - adds +15 Style Rating).
+- Equipping an upgrade dynamically recalculates stats and quarter-mile times in real time.
+- Scrap & Replace: If a player stars a card when all 3 slots are full, show a comparison modal with:
+  - Quick Cash: 100% base tier chassis scrap ($2k-$12k) + 50% part spend + 25% cosmetic spend.
+  - Chop Shop Salvage: 100% chassis cash + return the highest-value part into the player's Toolbox inventory.
+
+BACKUP & EXPORT / IMPORT SYSTEM:
+- Add an "Export Save" button that packages the current player profile (bank balance, 3-slot starred garage, equipped upgrades, unlocked cosmetics, and toolbox inventory) into a clean JSON file and triggers a browser download titled `apex_shift_save_[timestamp].json`.
+- Add an "Import Save" file upload handler that reads the JSON file, validates the data structure, commits it to localStorage, and immediately updates the UI without requiring a full browser refresh.
+- Include a "Reset Profile" button with a double-confirmation prompt to wipe localStorage and restart with default starter credits.
+
+Deliver the entire solution as a single monolithic index.html file with clean, structured vanilla JavaScript.

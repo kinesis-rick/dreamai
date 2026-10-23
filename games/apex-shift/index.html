@@ -1,0 +1,3752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex Shift - Automotive Card Battle Game</title>
+  <meta name="description" content="Apex Shift - A 2-player automotive card battle game inspired by Top Trumps and Need for Speed Underground.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- PeerJS for P2P Multiplayer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js" defer></script>
+
+  <style>
+    /* ==========================================
+       CSS DESIGN SYSTEM (NFS UNDERGROUND THEME)
+       ========================================== */
+    :root {
+      --bg-dark: #0c0d10;
+      --panel-bg: #14171d;
+      --panel-border: #222733;
+      --panel-header: #1a1e27;
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.4);
+      --magenta: #ff0055;
+      --magenta-glow: rgba(255, 0, 85, 0.4);
+      --amber: #ffb000;
+      --amber-glow: rgba(255, 176, 0, 0.4);
+      --green: #00ff66;
+      --green-glow: rgba(0, 255, 102, 0.4);
+      --purple: #9d00ff;
+      --purple-glow: rgba(157, 0, 255, 0.4);
+      --red: #ff2a2a;
+      --text-main: #f0f4f8;
+      --text-muted: #8a99ad;
+      --font-hud: 'Orbitron', sans-serif;
+      --font-stats: 'Rajdhani', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(0, 240, 255, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(255, 0, 85, 0.05) 0%, transparent 40%);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--panel-border);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--cyan);
+    }
+
+    /* --- PERSISTENT HEADER --- */
+    header {
+      background: rgba(20, 23, 29, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--panel-border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      font-family: var(--font-hud);
+      font-size: 1.5rem;
+      font-weight: 900;
+      font-style: italic;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px var(--cyan), 0 0 20px var(--cyan);
+    }
+
+    .brand-logo span {
+      color: var(--magenta);
+      text-shadow: 0 0 10px var(--magenta), 0 0 20px var(--magenta);
+    }
+
+    .mode-badge {
+      font-family: var(--font-hud);
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      letter-spacing: 1px;
+    }
+
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .scoreboard {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--panel-header);
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--panel-border);
+      font-family: var(--font-hud);
+    }
+
+    .score-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .score-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .score-val {
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
+    .score-p1 { color: var(--cyan); }
+    .score-p2 { color: var(--magenta); }
+
+    .score-vs {
+      color: var(--amber);
+      font-weight: 900;
+      font-size: 0.9rem;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .wallet-chip {
+      background: rgba(255, 176, 0, 0.1);
+      border: 1px solid var(--amber);
+      padding: 6px 14px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-hud);
+      font-weight: 700;
+      color: var(--amber);
+      box-shadow: 0 0 10px rgba(255, 176, 0, 0.2);
+    }
+
+    .btn {
+      background: var(--panel-header);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-family: var(--font-hud);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+    }
+
+    .btn:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan), #00a8ff);
+      color: #000;
+      border: none;
+      font-weight: 800;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #33f3ff, #33b8ff);
+      color: #000;
+      box-shadow: 0 0 15px var(--cyan-glow);
+    }
+
+    .btn-magenta {
+      background: linear-gradient(135deg, var(--magenta), #d60047);
+      color: #fff;
+      border: none;
+      font-weight: 800;
+    }
+    .btn-magenta:hover {
+      background: linear-gradient(135deg, #ff3377, #f00050);
+      box-shadow: 0 0 15px var(--magenta-glow);
+    }
+
+    /* --- MAIN LAYOUT --- */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* --- TRACK BANNER --- */
+    .track-banner {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      min-height: 180px;
+      display: flex;
+      align-items: flex-end;
+      padding: 20px 30px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    }
+
+    .track-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.45;
+      filter: contrast(1.1) brightness(0.9);
+      transition: opacity 0.5s ease;
+    }
+
+    .track-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(0deg, rgba(12,13,16,0.95) 0%, rgba(12,13,16,0.4) 60%, rgba(12,13,16,0.2) 100%);
+    }
+
+    .track-info {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      width: 100%;
+    }
+
+    .track-meta h2 {
+      font-family: var(--font-hud);
+      font-size: 1.8rem;
+      font-weight: 900;
+      font-style: italic;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+
+    .track-meta p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+      max-width: 600px;
+    }
+
+    .track-weights {
+      display: flex;
+      gap: 12px;
+    }
+
+    .weight-chip {
+      background: rgba(20, 23, 29, 0.8);
+      border: 1px solid var(--panel-border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: var(--font-stats);
+    }
+
+    .weight-chip .lbl {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .weight-chip .val {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+
+    /* --- BATTLE ARENA --- */
+    .arena {
+      display: grid;
+      grid-template-columns: 1fr 340px 1fr;
+      gap: 20px;
+      align-items: center;
+      min-height: 480px;
+    }
+
+    @media (max-width: 1100px) {
+      .arena {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .arena-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .side-header {
+      font-family: var(--font-hud);
+      font-size: 1.1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .side-header.p1 { color: var(--cyan); }
+    .side-header.p2 { color: var(--magenta); }
+
+    /* --- CARDS & 3D FLIP --- */
+    .card-slot {
+      perspective: 1000px;
+      width: 320px;
+      height: 460px;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .card-slot.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 14px;
+      border: 2px solid var(--panel-border);
+      background: var(--panel-bg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    /* Card Back */
+    .card-back {
+      background: radial-gradient(circle at center, #1a2233 0%, #0d111a 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      border-color: rgba(0, 240, 255, 0.3);
+    }
+
+    .card-back-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid var(--cyan);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 20px var(--cyan-glow);
+    }
+
+    .card-back-text {
+      font-family: var(--font-hud);
+      font-size: 1rem;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      text-transform: uppercase;
+    }
+
+    /* Card Front */
+    .card-front {
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Underglow Shadow Effects */
+    .card-front.underglow-cyan { box-shadow: 0 0 25px var(--cyan-glow), inset 0 -10px 20px rgba(0,240,255,0.2); }
+    .card-front.underglow-magenta { box-shadow: 0 0 25px var(--magenta-glow), inset 0 -10px 20px rgba(255,0,85,0.2); }
+    .card-front.underglow-amber { box-shadow: 0 0 25px var(--amber-glow), inset 0 -10px 20px rgba(255,176,0,0.2); }
+    .card-front.underglow-green { box-shadow: 0 0 25px var(--green-glow), inset 0 -10px 20px rgba(0,255,102,0.2); }
+    .card-front.underglow-purple { box-shadow: 0 0 25px var(--purple-glow), inset 0 -10px 20px rgba(157,0,255,0.2); }
+    .card-front.underglow-red { box-shadow: 0 0 25px rgba(255,42,42,0.4), inset 0 -10px 20px rgba(255,42,42,0.2); }
+
+    .card-header-badge {
+      background: rgba(10, 13, 20, 0.96);
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.25);
+      position: relative;
+      z-index: 10;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    }
+
+    .car-title {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .car-make {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--cyan);
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    }
+
+    .car-model {
+      font-family: var(--font-hud);
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+      letter-spacing: 0.5px;
+    }
+
+    .tier-stars {
+      color: #ffb000;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-shadow: 0 0 8px rgba(255, 176, 0, 0.6);
+    }
+
+    .car-img-container {
+      position: relative;
+      height: 180px;
+      background: #08090c;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .car-img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.8));
+      transition: transform 0.3s ease;
+    }
+
+    .car-img:hover {
+      transform: scale(1.05);
+    }
+
+    .drivetrain-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid var(--panel-border);
+      color: var(--cyan);
+      font-family: var(--font-hud);
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .card-zoom-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(14, 17, 23, 0.85);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 12;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+      padding: 0;
+    }
+
+    .card-zoom-btn:hover {
+      background: var(--cyan);
+      color: #0e1117;
+      transform: scale(1.15);
+      box-shadow: 0 0 15px var(--cyan-glow);
+    }
+
+    .card-zoom-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* --- CARBON FIBRE TABLE EFFECT --- */
+    body {
+      background-color: #0b0c10;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(0, 240, 255, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(255, 0, 85, 0.08) 0%, transparent 45%),
+        linear-gradient(45deg, #12151c 25%, transparent 25%, transparent 75%, #12151c 75%, #12151c),
+        linear-gradient(45deg, #12151c 25%, transparent 25%, transparent 75%, #12151c 75%, #12151c);
+      background-size: 100% 100%, 100% 100%, 12px 12px, 12px 12px;
+      background-position: 0 0, 0 0, 0 0, 6px 6px;
+    }
+
+    .hand-dock, .arena {
+      background-color: #090a0d;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 60%),
+        linear-gradient(45deg, #141720 25%, transparent 25%, transparent 75%, #141720 75%, #141720),
+        linear-gradient(45deg, #141720 25%, transparent 25%, transparent 75%, #141720 75%, #141720);
+      background-size: 100% 100%, 10px 10px, 10px 10px;
+      background-position: 0 0, 0 0, 5px 5px;
+      border-radius: 14px;
+      box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.8), 0 8px 30px rgba(0,0,0,0.5);
+    }
+
+    /* --- CARD FRAMES & FOIL EFFECT --- */
+    .card-frame-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 4;
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      border-radius: 14px;
+      opacity: 0.88;
+      -webkit-mask-image: radial-gradient(ellipse at 50% 50%, transparent 50%, black 72%);
+      mask-image: radial-gradient(ellipse at 50% 50%, transparent 50%, black 72%);
+    }
+    .card-frame-overlay.tier-1 { background-image: url('frames/tier1.jpg'); }
+    .card-frame-overlay.tier-2 { background-image: url('frames/tier2.jpg'); }
+    .card-frame-overlay.tier-3 { background-image: url('frames/tier3.jpg'); }
+    .card-frame-overlay.tier-4 { background-image: url('frames/tier4.jpg'); }
+    .card-frame-overlay.tier-5 { background-image: url('frames/tier5.jpg'); opacity: 1; }
+
+    /* 5-Star Holographic Rainbow Foil Sheen */
+    .card-front.tier-5-foil::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        115deg,
+        transparent 15%,
+        rgba(255, 0, 128, 0.35) 30%,
+        rgba(0, 240, 255, 0.4) 45%,
+        rgba(255, 230, 0, 0.4) 60%,
+        rgba(0, 255, 102, 0.35) 75%,
+        transparent 90%
+      );
+      background-size: 250% 250%;
+      animation: foilShine 3.5s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 15;
+      mix-blend-mode: color-dodge;
+      opacity: 0.95;
+      border-radius: 14px;
+    }
+
+    @keyframes foilShine {
+      0% { background-position: -100% -100%; }
+      50% { background-position: 100% 100%; }
+      100% { background-position: -100% -100%; }
+    }
+
+    /* --- PROTECTIVE TRANSPARENT PLASTIC SLEEVE --- */
+    .card-plastic-sleeve {
+      position: absolute;
+      inset: -4px;
+      border-radius: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.7);
+      background: linear-gradient(
+        135deg, 
+        rgba(255, 255, 255, 0.22) 0%, 
+        rgba(255, 255, 255, 0.02) 25%, 
+        transparent 50%, 
+        rgba(255, 255, 255, 0.08) 80%, 
+        rgba(255, 255, 255, 0.28) 100%
+      );
+      box-shadow: 
+        0 0 12px rgba(255, 255, 255, 0.3),
+        inset 0 0 8px rgba(255, 255, 255, 0.25),
+        inset 0 2px 4px rgba(255, 255, 255, 0.5);
+      pointer-events: none;
+      z-index: 20;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    }
+
+    .card-plastic-sleeve.unwrapped {
+      transform: translateY(-102%) scale(0.95);
+      opacity: 0.2;
+    }
+
+    .plastic-sleeve-seal {
+      position: absolute;
+      top: 4px;
+      left: 12px;
+      right: 12px;
+      height: 14px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-hud);
+      font-size: 0.55rem;
+      color: rgba(255, 255, 255, 0.95);
+      letter-spacing: 1.5px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+      font-weight: 800;
+      pointer-events: none;
+    }
+
+    .plastic-sleeve-badge {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(14, 17, 23, 0.95);
+      border: 1px solid var(--amber);
+      color: var(--amber);
+      font-family: var(--font-hud);
+      font-size: 0.6rem;
+      padding: 3px 10px;
+      border-radius: 12px;
+      letter-spacing: 1px;
+      font-weight: 800;
+      box-shadow: 0 0 12px rgba(255, 176, 0, 0.5);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 22;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      pointer-events: auto;
+    }
+
+    .plastic-sleeve-badge:hover {
+      background: var(--amber);
+      color: #000;
+      transform: translateX(-50%) scale(1.08);
+      box-shadow: 0 0 18px var(--amber-glow);
+    }
+
+    /* Socket Drawer */
+    .parts-drawer {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px;
+      background: rgba(0,0,0,0.4);
+      border-top: 1px solid var(--panel-border);
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .part-socket {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--panel-header);
+      border: 1px dashed var(--panel-border);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .part-socket.equipped {
+      border: 1px solid var(--cyan);
+      box-shadow: 0 0 6px var(--cyan-glow);
+    }
+
+    .part-socket img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      flex: 1;
+      background: rgba(10, 13, 20, 0.9);
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-chip {
+      background: rgba(18, 22, 31, 0.95);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .stat-lbl {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      font-family: var(--font-stats);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+    }
+
+    .stat-val {
+      font-family: var(--font-hud);
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    }
+
+    .stat-val.highlight {
+      color: #00ff66;
+      text-shadow: 0 0 10px rgba(0, 255, 102, 0.6);
+    }
+
+    /* Card Footer Actions */
+    .card-actions {
+      padding: 8px 12px;
+      background: rgba(10, 13, 20, 0.95);
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid var(--panel-border);
+      position: relative;
+      z-index: 12;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Arena Center Control Panel */
+    .arena-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 24px 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+    }
+
+    .vs-badge {
+      font-family: var(--font-hud);
+      font-size: 2.2rem;
+      font-weight: 900;
+      font-style: italic;
+      color: var(--amber);
+      text-shadow: 0 0 15px var(--amber-glow);
+    }
+
+    .match-status-text {
+      font-family: var(--font-hud);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .race-results-panel {
+      width: 100%;
+      background: rgba(10, 12, 16, 0.8);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-family: var(--font-stats);
+    }
+
+    .score-row .lbl { color: var(--text-muted); }
+    .score-row .val { font-weight: 700; }
+
+    /* --- HAND SELECTION DOCK --- */
+    .hand-dock {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .dock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .dock-title {
+      font-family: var(--font-hud);
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--cyan);
+    }
+
+    .deck-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 420px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      background: rgba(10, 12, 16, 0.4);
+      border-radius: 10px;
+      border: 1px dashed var(--panel-border);
+    }
+
+    .cards-stack {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      height: 380px;
+      margin: 0 auto;
+    }
+
+    .hand-card-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: 380px;
+      perspective: 1000px;
+      touch-action: none;
+      user-select: none;
+      cursor: grab;
+      transition: box-shadow 0.2s ease, transform 0.05s linear;
+    }
+
+    .hand-card-wrapper.dragging {
+      cursor: grabbing;
+      box-shadow: 0 15px 35px rgba(0, 240, 255, 0.4);
+      z-index: 300 !important;
+    }
+
+    .hand-card-wrapper .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .hand-card-wrapper.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .hand-card-wrapper .card-face {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 14px;
+      border: 2px solid var(--panel-border);
+      background: var(--panel-bg);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+
+    .hand-card-wrapper.selected .card-front {
+      border-color: var(--cyan);
+      box-shadow: 0 0 25px var(--cyan-glow);
+    }
+
+    /* --- MODALS --- */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(8, 9, 12, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-window {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+    }
+
+    .modal-header {
+      background: var(--panel-header);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-family: var(--font-hud);
+      font-size: 1.2rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--cyan);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-close:hover { color: #fff; }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Tabs */
+    .modal-tabs {
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 10px;
+    }
+
+    .tab-btn {
+      background: var(--panel-header);
+      border: 1px solid var(--panel-border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-family: var(--font-hud);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--cyan);
+      color: #000;
+      font-weight: 800;
+      border-color: var(--cyan);
+    }
+
+    /* Garage Slots & Tuning Cards */
+    .garage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .tuning-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .part-option-card {
+      background: var(--panel-header);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .part-option-card.installed {
+      border-color: var(--green);
+      box-shadow: 0 0 10px var(--green-glow);
+    }
+
+    .part-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-hud);
+      font-size: 0.85rem;
+    }
+
+    /* PASS TURN CURTAIN OVERLAY */
+    .curtain-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #08090c;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .curtain-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .curtain-title {
+      font-family: var(--font-hud);
+      font-size: 2.5rem;
+      font-weight: 900;
+      font-style: italic;
+      color: var(--magenta);
+      text-shadow: 0 0 20px var(--magenta-glow);
+      text-align: center;
+      letter-spacing: 3px;
+    }
+
+    .curtain-sub {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    /* --- VICTORY CHEQUERED FLAG & FIREWORKS --- */
+    #victoryCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 250;
+    }
+
+    .chequered-flag-overlay {
+      position: absolute;
+      top: -35px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      z-index: 50;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: waveFlagAnimation 1.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes waveFlagAnimation {
+      0% { transform: translateX(-50%) scale(0.2) rotate(-25deg); opacity: 0; }
+      40% { transform: translateX(-50%) scale(1.15) rotate(6deg); opacity: 1; }
+      60% { transform: translateX(-50%) scale(0.95) rotate(-3deg); opacity: 1; }
+      80% { transform: translateX(-50%) scale(1.05) rotate(2deg); opacity: 1; }
+      100% { transform: translateX(-50%) scale(1.0) rotate(0deg); opacity: 1; }
+    }
+
+    .flag-ribbon {
+      background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 50% / 18px 18px;
+      width: 100%;
+      height: 55px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(255,255,255,0.8), 0 0 30px var(--cyan-glow);
+      border: 2px solid #fff;
+      animation: flagRipple 0.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes flagRipple {
+      0% { transform: skewY(-4deg) scaleY(0.95); }
+      100% { transform: skewY(4deg) scaleY(1.05); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= PERSISTENT HEADER ================= -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">Apex <span>Shift</span></div>
+      <div class="mode-badge" id="modeBadge">HOTSEAT MODE</div>
+    </div>
+
+    <div class="header-center">
+      <div class="scoreboard">
+        <div class="score-box">
+          <span class="score-label">P1 WINS</span>
+          <span class="score-val score-p1" id="p1Score">0</span>
+        </div>
+        <div class="score-box" style="margin-left: 6px; padding-left: 10px; border-left: 1px solid var(--panel-border);">
+          <span class="score-label" style="color: var(--cyan);">P1 STACK</span>
+          <span class="score-val score-p1" id="p1DeckCount" style="font-size: 0.95rem;">20 CARDS</span>
+        </div>
+        <span class="score-vs" style="margin: 0 4px;">VS</span>
+        <div class="score-box" style="margin-right: 6px; padding-right: 10px; border-right: 1px solid var(--panel-border);">
+          <span class="score-label" style="color: var(--magenta);">P2 STACK</span>
+          <span class="score-val score-p2" id="p2DeckCount" style="font-size: 0.95rem;">20 CARDS</span>
+        </div>
+        <div class="score-box">
+          <span class="score-label">P2 WINS</span>
+          <span class="score-val score-p2" id="p2Score">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <div class="wallet-chip" style="border-color: var(--cyan); background: rgba(0, 240, 255, 0.1); color: var(--cyan); box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);">
+          <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 800; margin-right: 4px;">P1 BANK</span>
+          <span>$</span><span id="p1WalletVal">10,000</span>
+        </div>
+        <div class="wallet-chip" style="border-color: var(--magenta); background: rgba(255, 0, 85, 0.1); color: var(--magenta); box-shadow: 0 0 10px rgba(255, 0, 85, 0.2);">
+          <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 800; margin-right: 4px;">P2 BANK</span>
+          <span>$</span><span id="p2WalletVal">10,000</span>
+        </div>
+      </div>
+
+      <button class="btn" id="btnGarage">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6h-2c0-2.21-1.79-4-4-4S9 3.79 9 6H7c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6-2c1.1 0 2 .9 2 2h-4c0-1.1.9-2 2-2zm0 10c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>
+        Garage & Tuning
+      </button>
+
+      <button class="btn" id="btnP2P">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        Online P2P
+      </button>
+
+      <button class="btn" id="btnSettings">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+        Backup / Save
+      </button>
+
+      <button class="btn" id="btnNewGame">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.86 20 14 20 12c0-4.42-3.58-8-8-8zm-6 7c0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 9.14 4 11 4 13c0 4.42 3.58 8 8 8v4l5-5-5-5v3c-3.31 0-6-2.69-6-6z"/></svg>
+        New Game
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <main>
+    <!-- TRACK BACKDROP BANNER -->
+    <div class="track-banner" id="trackBanner">
+      <img src="" alt="Track Backdrop" class="track-bg" id="trackBgImg">
+      <div class="track-overlay"></div>
+      <div class="track-info">
+        <div class="track-meta">
+          <h2 id="trackTitle">Loading Track...</h2>
+          <p id="trackDesc">Track description...</p>
+        </div>
+        <div class="track-weights">
+          <div class="weight-chip">
+            <span class="lbl">ACCEL</span>
+            <span class="val" id="wAccel">0%</span>
+          </div>
+          <div class="weight-chip">
+            <span class="lbl">SPEED</span>
+            <span class="val" id="wSpeed">0%</span>
+          </div>
+          <div class="weight-chip">
+            <span class="lbl">GRIP</span>
+            <span class="val" id="wGrip">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BATTLE ARENA -->
+    <div class="arena">
+      <!-- P1 CAR SLOT -->
+      <div class="arena-side">
+        <div class="side-header p1">
+          <span>PLAYER 1</span>
+        </div>
+        <div class="card-slot" id="slotP1">
+          <div class="card-inner">
+            <div class="card-face card-back">
+              <div class="card-back-icon">⚡</div>
+              <div class="card-back-text">P1 CARD</div>
+            </div>
+            <div class="card-face card-front" id="cardP1Front">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER CONTROL & RESULTS PANEL -->
+      <div class="arena-center">
+        <div class="vs-badge">VS</div>
+        <div class="match-status-text" id="statusText">PLAYER 1: SELECT YOUR CAR FOR THE HEAT</div>
+        
+        <button class="btn btn-primary" id="btnActionHeat" style="font-size: 1rem; padding: 12px 24px;">
+          FLIP & SHOWDOWN
+        </button>
+
+        <div class="race-results-panel" id="resultsPanel" style="display: none;">
+          <div class="score-row">
+            <span class="lbl">P1 1/4 Mile ET:</span>
+            <span class="val" id="resP1Et">--</span>
+          </div>
+          <div class="score-row">
+            <span class="lbl">P2 1/4 Mile ET:</span>
+            <span class="val" id="resP2Et">--</span>
+          </div>
+          <hr style="border-color: var(--panel-border); margin: 4px 0;">
+          <div class="score-row">
+            <span class="lbl">P1 Race Score:</span>
+            <span class="val score-p1" id="resP1Score">0.0</span>
+          </div>
+          <div class="score-row">
+            <span class="lbl">P2 Race Score:</span>
+            <span class="val score-p2" id="resP2Score">0.0</span>
+          </div>
+        </div>
+
+        <button class="btn btn-magenta" id="btnNextRound" style="display: none;">
+          NEXT HEAT
+        </button>
+      </div>
+
+      <!-- P2 CAR SLOT -->
+      <div class="arena-side">
+        <div class="side-header p2">
+          <span>PLAYER 2</span>
+        </div>
+        <div class="card-slot" id="slotP2">
+          <div class="card-inner">
+            <div class="card-face card-back">
+              <div class="card-back-icon">🔥</div>
+              <div class="card-back-text">P2 CARD</div>
+            </div>
+            <div class="card-face card-front" id="cardP2Front">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HAND DOCK -->
+    <div class="hand-dock">
+      <div class="dock-header">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div class="dock-title" id="dockTitle">PLAYER 1: DRAW YOUR 3 CARDS FROM THE PILE</div>
+          <div class="dock-hint" id="dockHint" style="font-size: 0.75rem; color: var(--cyan); font-family: var(--font-hud);">
+            🎴 DRAW YOUR CARDS: DRAG CARDS OFF THE DRAW PILE (LEFT) ONTO THE TABLE TO DRAW
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button class="btn" id="btnResetLayout" style="font-size: 0.75rem;">RESET POSITIONS</button>
+        </div>
+      </div>
+      <div class="deck-container">
+        <div class="cards-stack" id="handRow">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- VICTORY FULLSCREEN CANVAS -->
+  <canvas id="victoryCanvas"></canvas>
+
+  <!-- ================= MODALS & OVERLAYS ================= -->
+
+  <!-- PASS TURN CURTAIN OVERLAY -->
+  <div class="curtain-overlay" id="curtainOverlay">
+    <div class="curtain-title">PASS DEVICE TO PLAYER 2</div>
+    <div class="curtain-sub">Player 1 has locked in their card choice!</div>
+    <button class="btn btn-primary" id="btnCurtainReady" style="font-size: 1.1rem; padding: 14px 32px;">
+      I AM READY (PLAYER 2)
+    </button>
+  </div>
+
+  <!-- GARAGE & TUNING SHOP MODAL -->
+  <div class="modal-backdrop" id="modalGarage">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">GARAGE & TUNING SHOP</div>
+        <button class="modal-close" id="closeGarage">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-tabs">
+          <button class="tab-btn active" id="tabP1Garage">P1 Garage Slots (3)</button>
+          <button class="tab-btn" id="tabP2Garage">P2 Garage Slots (3)</button>
+          <button class="tab-btn" id="tabToolbox">Toolbox Inventory</button>
+        </div>
+
+        <div id="garageContent">
+          <!-- Garage cards or tuning catalog rendered dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRAP & REPLACE MODAL -->
+  <div class="modal-backdrop" id="modalScrap">
+    <div class="modal-window" style="max-width: 700px;">
+      <div class="modal-header">
+        <div class="modal-title" style="color: var(--amber);">GARAGE FULL - SCRAP & SALVAGE</div>
+        <button class="modal-close" id="closeScrap">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted);">Your 3 garage slots are full. Choose an existing vehicle slot to replace with your new car, or cancel to keep your current garage intact:</p>
+
+        <div id="scrapSlotsContainer" class="garage-grid">
+          <!-- Rendered via JS -->
+        </div>
+
+        <div style="display: flex; justify-content: center; margin-top: 16px;">
+          <button class="btn" id="btnCancelScrap" style="padding: 10px 24px; border-color: var(--panel-border); color: var(--text-muted); font-size: 0.85rem; cursor: pointer;">
+            ✖️ KEEP EXISTING GARAGE (CANCEL)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- P2P MODAL -->
+  <div class="modal-backdrop" id="modalP2P">
+    <div class="modal-window" style="max-width: 500px;">
+      <div class="modal-header">
+        <div class="modal-title">ONLINE P2P MULTIPLAYER</div>
+        <button class="modal-close" id="closeP2P">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 16px;">
+        <div style="background: var(--panel-header); padding: 16px; border-radius: 8px; border: 1px solid var(--panel-border);">
+          <h4 style="font-family: var(--font-hud); margin-bottom: 8px;">HOST A ROOM</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Create a 4-character room code to invite Player 2.</p>
+          <button class="btn btn-primary" id="btnHostRoom">CREATE ROOM</button>
+          <div id="hostCodeDisplay" style="margin-top: 10px; font-family: var(--font-hud); font-size: 1.2rem; color: var(--cyan); display: none;"></div>
+        </div>
+
+        <div style="background: var(--panel-header); padding: 16px; border-radius: 8px; border: 1px solid var(--panel-border);">
+          <h4 style="font-family: var(--font-hud); margin-bottom: 8px;">JOIN A ROOM</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Enter host's 4-character room code:</p>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="joinCodeInput" placeholder="ROOM" maxlength="4" style="background: var(--bg-dark); border: 1px solid var(--panel-border); color: #fff; padding: 8px; border-radius: 6px; font-family: var(--font-hud); text-transform: uppercase; width: 120px; text-align: center;">
+            <button class="btn btn-magenta" id="btnJoinRoom">JOIN ROOM</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS & BACKUP MODAL -->
+  <div class="modal-backdrop" id="modalSettings">
+    <div class="modal-window" style="max-width: 550px;">
+      <div class="modal-header">
+        <div class="modal-title">SETTINGS & SAVE BACKUP</div>
+        <button class="modal-close" id="closeSettings">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <h4 style="font-family: var(--font-hud);">SAVE GAME MANAGEMENT</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Export your current profile, garage, upgrades, and wallet to JSON backup.</p>
+          
+          <div style="display: flex; gap: 12px;">
+            <button class="btn btn-primary" id="btnExportSave">EXPORT SAVE (.JSON)</button>
+            <label class="btn" style="margin: 0; cursor: pointer;">
+              IMPORT SAVE (.JSON)
+              <input type="file" id="importFileInput" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+
+        <hr style="border-color: var(--panel-border);">
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <h4 style="font-family: var(--font-hud); color: var(--red);">RESET PROFILE</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Wipe all saved data, reset garage slots and restart with default $10,000 wallet.</p>
+          <button class="btn" id="btnResetProfile" style="border-color: var(--red); color: var(--red);">RESET PROFILE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW GAME MODAL -->
+  <div class="modal-backdrop" id="modalNewGame">
+    <div class="modal-window" style="max-width: 550px;">
+      <div class="modal-header">
+        <div class="modal-title">NEW GAME OPTIONS</div>
+        <button class="modal-close" id="closeNewGame">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 16px;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+          Select how you would like to start a new game:
+        </p>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(0, 240, 255, 0.05); padding: 16px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.2);">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+              <h4 style="font-family: var(--font-hud); color: var(--cyan); margin: 0 0 4px 0; font-size: 0.95rem;">CLEAR SCORES ONLY</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Resets match heat scores (P1: 0, P2: 0). Keeps all money, owned garage cars, and tuning upgrades intact.</p>
+            </div>
+            <button class="btn btn-primary" id="btnResetScoresOnly" style="white-space: nowrap;">CLEAR SCORES</button>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255, 0, 85, 0.05); padding: 16px; border-radius: 8px; border: 1px solid rgba(255, 0, 85, 0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+              <h4 style="font-family: var(--font-hud); color: var(--magenta); margin: 0 0 4px 0; font-size: 0.95rem;">FULL GAME RESET</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Completely wipes scores, money ($10,000 starting bank), garage cars, and tuning upgrades back to initial state.</p>
+            </div>
+            <button class="btn" id="btnResetFull" style="border-color: var(--magenta); color: var(--magenta); background: rgba(255, 0, 85, 0.15); white-space: nowrap;">FULL RESET</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAR MAGNIFIER / ZOOM LIGHTBOX MODAL -->
+  <div class="modal-backdrop" id="modalCarZoom" style="z-index: 9999;">
+    <div class="modal-window" style="max-width: 650px; text-align: center; border: 2px solid var(--cyan); box-shadow: 0 0 40px var(--cyan-glow); background: rgba(14, 17, 23, 0.95);">
+      <div class="modal-header" style="background: rgba(0, 240, 255, 0.1); border-bottom: 1px solid var(--cyan);">
+        <div class="modal-title" id="zoomCarTitle" style="color: var(--cyan); font-size: 1.2rem; letter-spacing: 2px;">
+          MAGNIFIED CAR INSPECTOR
+        </div>
+        <button class="modal-close" id="closeCarZoom">&times;</button>
+      </div>
+      <div class="modal-body" style="align-items: center; gap: 16px; padding: 24px;">
+        <div style="width: 100%; height: 320px; background: radial-gradient(circle at center, #1a233a 0%, #08090c 100%); border-radius: 12px; border: 1px solid var(--panel-border); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);">
+          <span class="drivetrain-tag" id="zoomCarDrivetrain" style="position: absolute; top: 14px; right: 14px; font-size: 0.85rem; padding: 4px 10px;">AWD</span>
+          <span id="zoomCarStars" style="position: absolute; top: 14px; left: 14px; color: var(--amber); font-size: 1.1rem; letter-spacing: 2px;">★★★★★</span>
+          <img id="zoomCarImg" src="" alt="Car Preview" style="max-width: 90%; max-height: 85%; object-fit: contain; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)); transition: transform 0.3s ease;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <h3 id="zoomCarName" style="font-family: var(--font-hud); font-size: 1.6rem; color: #fff; margin: 0; letter-spacing: 1px;">CAR NAME</h3>
+          <p id="zoomCarSubtitle" style="font-size: 0.85rem; color: var(--text-muted); margin: 0; font-family: var(--font-stats);">APEX SHIFT VEHICLE</p>
+        </div>
+
+        <div id="zoomCarStatsGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; font-family: var(--font-stats);">
+          <!-- Dynamic stats injected -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATCH VICTORY MODAL -->
+  <div class="modal-backdrop" id="modalMatchVictory">
+    <div class="modal-window" style="max-width: 580px; text-align: center; border: 2px solid var(--amber); box-shadow: 0 0 50px var(--amber-glow); background: rgba(14, 17, 23, 0.95);">
+      <div class="modal-header" style="justify-content: center; background: rgba(255, 176, 0, 0.15); border-bottom: 1px solid var(--amber);">
+        <div class="modal-title" id="matchVictoryTitle" style="color: var(--amber); font-size: 1.5rem; letter-spacing: 2px;">
+          🏆 PLAYER 1 IS THE CHAMPION!
+        </div>
+      </div>
+      <div class="modal-body" style="align-items: center; gap: 20px; padding: 28px;">
+        <div style="font-size: 4.5rem; filter: drop-shadow(0 0 25px var(--amber-glow));">
+          👑
+        </div>
+        <div style="font-family: var(--font-hud); font-size: 1.1rem; color: #fff; letter-spacing: 1px;" id="matchVictorySub">
+          FIRST TO 10 HEATS VICTORY!
+        </div>
+        <div style="display: flex; gap: 24px; font-family: var(--font-hud); font-size: 1.3rem; background: var(--panel-header); padding: 12px 28px; border-radius: 8px; border: 1px solid var(--panel-border);">
+          <span style="color: var(--cyan);" id="matchP1Final">P1: 10</span>
+          <span style="color: var(--text-muted);">VS</span>
+          <span style="color: var(--magenta);" id="matchP2Final">P2: 0</span>
+        </div>
+        <button class="btn btn-primary" id="btnPlayAgain" style="font-size: 1.05rem; padding: 14px 32px; background: linear-gradient(135deg, #ffb000, #ff8000); color: #000; border: none; font-weight: 900; letter-spacing: 1px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 176, 0, 0.5);">
+          🎮 PLAY AGAIN (RESET SCORES)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 HEAT WINS DECISION MODAL -->
+  <div class="modal-backdrop" id="modal10WinChoice">
+    <div class="modal-window" style="max-width: 580px; text-align: center; border: 2px solid var(--amber); box-shadow: 0 0 40px var(--amber-glow); background: rgba(14, 17, 23, 0.95);">
+      <div class="modal-header" style="justify-content: center; background: rgba(255, 176, 0, 0.15); border-bottom: 1px solid var(--amber);">
+        <div class="modal-title" id="winChoiceTitle" style="color: var(--amber); font-size: 1.4rem; letter-spacing: 2px;">
+          🏆 10 HEATS WON!
+        </div>
+      </div>
+      <div class="modal-body" style="align-items: center; gap: 20px; padding: 24px;">
+        <div style="font-size: 3.5rem; filter: drop-shadow(0 0 20px var(--amber-glow));">
+          🎖️
+        </div>
+        <div id="winChoiceDesc" style="font-family: var(--font-body); font-size: 0.95rem; color: var(--text-main); line-height: 1.6;">
+          A player has achieved 10 Heat Wins! Would you like to end the match now and claim overall victory, or carry on playing for Total Deck Conquest (first player to stack 30+ cards)?
+        </div>
+        <div style="display: flex; gap: 14px; justify-content: center; width: 100%; flex-wrap: wrap; margin-top: 10px;">
+          <button class="btn btn-primary" id="btnClaim10Win" style="flex: 1; min-width: 200px; padding: 12px 18px; font-size: 0.9rem;">
+            🏆 CLAIM VICTORY NOW
+          </button>
+          <button class="btn btn-magenta" id="btnCarryOn10Win" style="flex: 1; min-width: 200px; padding: 12px 18px; font-size: 0.9rem;">
+            ⚔️ CARRY ON (DECK CONQUEST)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= JASCARIPT DATA & ENGINE ================= -->
+  <script>
+    // --- ASSET ROOT CONSTANT ---
+    const ASSET_ROOT = '.';
+
+    // --- EMBEDDED XML FALLBACKS ---
+    const FALLBACK_GARAGE_XML = `<?xml version="1.0" encoding="utf-8"?>
+    <cars>
+      <car id="mini_cooper_s_mk1">
+        <id>mini_cooper_s_mk1</id>
+        <make>Mini</make>
+        <model>Cooper S Mk1</model>
+        <year>1965</year>
+        <tier>1</tier>
+        <price_usd>2300</price_usd>
+        <drivetrain>FWD</drivetrain>
+        <horsepower>76</horsepower>
+        <torque_nm>107</torque_nm>
+        <weight_kg>670</weight_kg>
+        <top_speed_kmh>156</top_speed_kmh>
+        <accel_0_100>10.5</accel_0_100>
+        <lateral_g>0.83</lateral_g>
+        <style_rating>90</style_rating>
+      </car>
+      <car id="volkswagen_golf_gti_mk1">
+        <id>volkswagen_golf_gti_mk1</id>
+        <make>Volkswagen</make>
+        <model>Golf GTI Mk1</model>
+        <year>1976</year>
+        <tier>1</tier>
+        <price_usd>6200</price_usd>
+        <drivetrain>FWD</drivetrain>
+        <horsepower>110</horsepower>
+        <torque_nm>140</torque_nm>
+        <weight_kg>810</weight_kg>
+        <top_speed_kmh>182</top_speed_kmh>
+        <accel_0_100>9.0</accel_0_100>
+        <lateral_g>0.84</lateral_g>
+        <style_rating>92</style_rating>
+      </car>
+      <car id="toyota_corolla_gt_ae86">
+        <id>toyota_corolla_gt_ae86</id>
+        <make>Toyota</make>
+        <model>Corolla GT (AE86)</model>
+        <year>1985</year>
+        <tier>1</tier>
+        <price_usd>8900</price_usd>
+        <drivetrain>RWD</drivetrain>
+        <horsepower>124</horsepower>
+        <torque_nm>142</torque_nm>
+        <weight_kg>970</weight_kg>
+        <top_speed_kmh>195</top_speed_kmh>
+        <accel_0_100>8.5</accel_0_100>
+        <lateral_g>0.84</lateral_g>
+        <style_rating>95</style_rating>
+      </car>
+      <car id="honda_civic_type_r_ek9">
+        <id>honda_civic_type_r_ek9</id>
+        <make>Honda</make>
+        <model>Civic Type R (EK9)</model>
+        <year>1997</year>
+        <tier>2</tier>
+        <price_usd>14500</price_usd>
+        <drivetrain>FWD</drivetrain>
+        <horsepower>185</horsepower>
+        <torque_nm>160</torque_nm>
+        <weight_kg>1050</weight_kg>
+        <top_speed_kmh>225</top_speed_kmh>
+        <accel_0_100>6.7</accel_0_100>
+        <lateral_g>0.89</lateral_g>
+        <style_rating>91</style_rating>
+      </car>
+      <car id="toyota_supra_turbo_a80">
+        <id>toyota_supra_turbo_a80</id>
+        <make>Toyota</make>
+        <model>Supra Turbo (A80)</model>
+        <year>1994</year>
+        <tier>3</tier>
+        <price_usd>38000</price_usd>
+        <drivetrain>RWD</drivetrain>
+        <horsepower>326</horsepower>
+        <torque_nm>441</torque_nm>
+        <weight_kg>1570</weight_kg>
+        <top_speed_kmh>250</top_speed_kmh>
+        <accel_0_100>4.9</accel_0_100>
+        <lateral_g>0.94</lateral_g>
+        <style_rating>98</style_rating>
+      </car>
+      <car id="byd_seal_performance">
+        <id>byd_seal_performance</id>
+        <make>BYD</make>
+        <model>Seal Performance</model>
+        <year>2024</year>
+        <tier>3</tier>
+        <price_usd>54000</price_usd>
+        <drivetrain>AWD</drivetrain>
+        <horsepower>523</horsepower>
+        <torque_nm>670</torque_nm>
+        <weight_kg>2185</weight_kg>
+        <top_speed_kmh>240</top_speed_kmh>
+        <accel_0_100>3.8</accel_0_100>
+        <lateral_g>0.92</lateral_g>
+        <style_rating>88</style_rating>
+      </car>
+      <car id="porsche_911_gt3_992">
+        <id>porsche_911_gt3_992</id>
+        <make>Porsche</make>
+        <model>911 GT3 (992)</model>
+        <year>2022</year>
+        <tier>4</tier>
+        <price_usd>161000</price_usd>
+        <drivetrain>RWD</drivetrain>
+        <horsepower>502</horsepower>
+        <torque_nm>470</torque_nm>
+        <weight_kg>1435</weight_kg>
+        <top_speed_kmh>318</top_speed_kmh>
+        <accel_0_100>3.4</accel_0_100>
+        <lateral_g>1.12</lateral_g>
+        <style_rating>96</style_rating>
+      </car>
+      <car id="tesla_model_s_plaid">
+        <id>tesla_model_s_plaid</id>
+        <make>Tesla</make>
+        <model>Model S Plaid</model>
+        <year>2021</year>
+        <tier>5</tier>
+        <price_usd>129000</price_usd>
+        <drivetrain>AWD</drivetrain>
+        <horsepower>1020</horsepower>
+        <torque_nm>1420</torque_nm>
+        <weight_kg>2162</weight_kg>
+        <top_speed_kmh>322</top_speed_kmh>
+        <accel_0_100>2.1</accel_0_100>
+        <lateral_g>1.08</lateral_g>
+        <style_rating>90</style_rating>
+      </car>
+    </cars>`;
+
+    const FALLBACK_TRACKS_XML = `<?xml version="1.0" encoding="UTF-8"?>
+    <tracks>
+      <track id="highway_bayshore">
+        <name>Bayshore Route 9</name>
+        <environment>Urban Highway</environment>
+        <surface>Dry Tarmac</surface>
+        <backgroundImage>tracks/highway_bg.png</backgroundImage>
+        <description>High-speed multi-lane elevated tollway prioritizing sustained top velocity and high-gear pull.</description>
+        <weights>
+          <topSpeed>0.50</topSpeed>
+          <acceleration>0.35</acceleration>
+          <grip>0.15</grip>
+        </weights>
+        <rewards>
+          <baseCash>1200</baseCash>
+          <repBonus>40</repBonus>
+        </rewards>
+      </track>
+      <track id="touge_nagao">
+        <name>Nagao Mountain Pass</name>
+        <environment>Mountain Hairpins</environment>
+        <surface>Damp Asphalt</surface>
+        <backgroundImage>tracks/touge_bg.png</backgroundImage>
+        <description>Tight downhill hairpins and switchbacks demanding lateral grip and punchy corner exits.</description>
+        <weights>
+          <topSpeed>0.15</topSpeed>
+          <acceleration>0.35</acceleration>
+          <grip>0.50</grip>
+        </weights>
+        <rewards>
+          <baseCash>1400</baseCash>
+          <repBonus>50</repBonus>
+        </rewards>
+      </track>
+      <track id="drag_airfield">
+        <name>Blackridge Airfield Drag</name>
+        <environment>Abandoned Runway</environment>
+        <surface>Grooved Concrete</surface>
+        <backgroundImage>tracks/drag_bg.png</backgroundImage>
+        <description>Raw straight-line quarter-mile battle where launch traction and rapid acceleration rule.</description>
+        <weights>
+          <topSpeed>0.30</topSpeed>
+          <acceleration>0.60</acceleration>
+          <grip>0.10</grip>
+        </weights>
+        <rewards>
+          <baseCash>1000</baseCash>
+          <repBonus>35</repBonus>
+        </rewards>
+      </track>
+      <track id="circuit_grand_prix">
+        <name>Suzuka National Raceway</name>
+        <environment>Grand Prix Asphalt</environment>
+        <surface>Paved Racing Tarmac</surface>
+        <backgroundImage>tracks/circuit_bg.png</backgroundImage>
+        <description>Sweeping high-downforce corners and long straights testing balanced aerodynamics and mechanical grip.</description>
+        <weights>
+          <topSpeed>0.40</topSpeed>
+          <acceleration>0.15</acceleration>
+          <grip>0.45</grip>
+        </weights>
+        <rewards>
+          <baseCash>1600</baseCash>
+          <repBonus>60</repBonus>
+        </rewards>
+      </track>
+    </tracks>`;
+
+    // --- STATE MANAGEMENT ---
+    let dbCars = [];
+    let dbTracks = [];
+    let currentTrack = null;
+
+    let gameState = {
+      p1Score: 0,
+      p2Score: 0,
+      turnState: 'P1_SELECTING', // P1_SELECTING, PASS_CURTAIN, P2_SELECTING, SHOWDOWN, RESULT
+      p1Deck: [],
+      p2Deck: [],
+      p1Hand: [],
+      p2Hand: [],
+      p1Selected: null,
+      p2Selected: null,
+      winChoiceOffered: false,
+      activeGarages: {
+        p1: [], // up to 3 car objects with installed parts
+        p2: []
+      },
+      p1Wallet: 10000,
+      p2Wallet: 10000,
+      toolbox: [], // salvaged parts
+      mode: 'HOTSEAT', // HOTSEAT or P2P
+      isHost: true,
+      isP2PConnected: false,
+      peer: null,
+      conn: null
+    };
+
+    // --- AUDIO SYNTHESIZER (WEB AUDIO API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'click') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.05);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'flip') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(200, now);
+          osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === 'win') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+          osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+          osc.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
+          osc.start(now);
+          osc.stop(now + 0.6);
+        } else if (type === 'engine') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.exponentialRampToValueAtTime(350, now + 0.4);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'cheer') {
+          // Synthesize crowd noise applause & cheering fanfare
+          const bufferSize = audioCtx.sampleRate * 2.5;
+          const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 0.4);
+          }
+
+          const noise = audioCtx.createBufferSource();
+          noise.buffer = buffer;
+
+          const filter = audioCtx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(850, now);
+          filter.Q.setValueAtTime(1.2, now);
+
+          const noiseGain = audioCtx.createGain();
+          noiseGain.gain.setValueAtTime(0.01, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.35, now + 0.2);
+          noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 2.4);
+
+          noise.connect(filter);
+          filter.connect(noiseGain);
+          noiseGain.connect(audioCtx.destination);
+          noise.start(now);
+
+          // Fanfare Horn notes: C5, E5, G5, C6
+          const freqs = [523.25, 659.25, 783.99, 1046.50];
+          freqs.forEach((freq, idx) => {
+            const fOsc = audioCtx.createOscillator();
+            const fGain = audioCtx.createGain();
+            fOsc.type = 'sawtooth';
+            fOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
+            fGain.gain.setValueAtTime(0.2, now + idx * 0.12);
+            fGain.gain.linearRampToValueAtTime(0.01, now + idx * 0.12 + 0.5);
+            fOsc.connect(fGain);
+            fGain.connect(audioCtx.destination);
+            fOsc.start(now + idx * 0.12);
+            fOsc.stop(now + idx * 0.12 + 0.5);
+          });
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    // --- SVG FALLBACK IMAGE GENERATOR ---
+    function getCarSvgFallback(make, model, tier) {
+      const stars = '★'.repeat(tier) + '☆'.repeat(5 - tier);
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 180" width="100%" height="100%">
+        <rect width="100%" height="100%" fill="#0e1117"/>
+        <path d="M 40 120 L 70 80 L 140 70 L 210 80 L 260 120 Z" fill="none" stroke="#00f0ff" stroke-width="3" opacity="0.6"/>
+        <circle cx="80" cy="120" r="16" fill="#1b202e" stroke="#00f0ff" stroke-width="2"/>
+        <circle cx="220" cy="120" r="16" fill="#1b202e" stroke="#00f0ff" stroke-width="2"/>
+        <text x="150" y="50" font-family="Orbitron, sans-serif" font-size="14" fill="#ffb000" text-anchor="middle" font-weight="bold">${stars}</text>
+        <text x="150" y="145" font-family="Orbitron, sans-serif" font-size="12" fill="#8a99ad" text-anchor="middle">${make.toUpperCase()}</text>
+        <text x="150" y="165" font-family="Orbitron, sans-serif" font-size="14" fill="#ffffff" text-anchor="middle" font-weight="bold">${model}</text>
+      </svg>`;
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+
+    // --- PHYSICS ENGINE & STAT COMPUTATION ---
+    function calcCarStats(car, upgrades = {}) {
+      if (!car) return { hp: 150, weight: 1200, grip: 0.85, style: 80, et: 8.0, trapSpeed: 200, accel: 8.0, topSpeed: 200, neonColor: null };
+
+      const turboHP = upgrades.turbos ? (upgrades.turbos.stage === 1 ? 0.15 : upgrades.turbos.stage === 2 ? 0.35 : 0.60) : 0;
+      const ecuHP = upgrades.ecu ? (upgrades.ecu.stage === 1 ? 0.05 : upgrades.ecu.stage === 2 ? 0.12 : 0.20) : 0;
+      const tyresG = upgrades.tyres ? (upgrades.tyres.stage === 1 ? 0.06 : upgrades.tyres.stage === 2 ? 0.14 : 0.25) : 0;
+      const suspG = upgrades.suspension ? (upgrades.suspension.stage === 1 ? 0.05 : upgrades.suspension.stage === 2 ? 0.12 : 0.22) : 0;
+      const weightRed = upgrades.weight ? (upgrades.weight.stage === 1 ? 40 : upgrades.weight.stage === 2 ? 90 : 160) : 0;
+      const neonStyle = upgrades.neon ? 15 : 0;
+
+      const effHP = Math.round((car.horsepower || 150) * (1 + turboHP + ecuHP));
+      const effWeight = Math.max(400, (car.weight_kg || 1200) - weightRed);
+      const effGrip = Math.round(((car.lateral_g || 0.85) + tyresG + suspG) * 100) / 100;
+      const effStyle = (car.style_rating || 80) + neonStyle;
+
+      const dtBonus = car.drivetrain === 'AWD' ? 0.04 : (car.drivetrain === 'FWD' ? -0.03 : 0.00);
+
+      // Quarter-Mile ET formula: ET = 5.825 * ((weightKg * 2.20462) / HP)**(1/3) * (1.0 - ((lateralG - 0.90) * 0.12) - dtBonus)
+      const etRaw = 5.825 * Math.cbrt((effWeight * 2.20462) / effHP) * (1.0 - ((effGrip - 0.90) * 0.12) - dtBonus);
+      const ET = Math.round(etRaw * 1000) / 1000;
+
+      // Trap Speed formula: TrapSpeedKmh = (234 * (HP / (weightKg * 2.20462))**(1/3)) * 1.60934
+      const trapSpeedRaw = (234 * Math.cbrt(effHP / (effWeight * 2.20462))) * 1.60934;
+      const TrapSpeedKmh = Math.round(trapSpeedRaw * 10) / 10;
+
+      const accel0100 = Math.max(1.2, Math.round(((car.accel_0_100 || 8.0) * Math.sqrt(effWeight / (car.weight_kg || 1200)) * Math.sqrt((car.horsepower || 150) / effHP)) * 10) / 10);
+      const topSpeedKmh = Math.round((car.top_speed_kmh || 200) * Math.cbrt(effHP / (car.horsepower || 150)));
+
+      return {
+        hp: effHP,
+        weight: effWeight,
+        grip: effGrip,
+        style: effStyle,
+        et: ET,
+        trapSpeed: TrapSpeedKmh,
+        accel: accel0100,
+        topSpeed: topSpeedKmh,
+        neonColor: upgrades.neon || null
+      };
+    }
+
+    // Dynamic Race Scoring Engine:
+    function calcRaceScore(stats, track) {
+      const accelScore = Math.max(0, Math.min(100, (12.0 - stats.accel) * 10));
+      const speedScore = Math.max(0, Math.min(100, (stats.topSpeed / 400.0) * 100));
+      const gripScore = Math.max(0, Math.min(100, ((stats.grip - 0.70) / 0.60) * 100));
+
+      const wAccel = track ? track.weights.acceleration : 0.33;
+      const wSpeed = track ? track.weights.topSpeed : 0.33;
+      const wGrip = track ? track.weights.grip : 0.33;
+
+      const raceScore = (wAccel * accelScore) + (wSpeed * speedScore) + (wGrip * gripScore) + (stats.style * 0.05);
+      return Math.round(raceScore * 10) / 10;
+    }
+
+    // --- XML PARSER HELPERS ---
+    function parseCarsFromXml(xmlStr) {
+      const parser = new DOMParser();
+      const carDoc = parser.parseFromString(xmlStr, 'text/xml');
+      const carNodes = carDoc.querySelectorAll('car');
+      return Array.from(carNodes).map(node => ({
+        id: node.querySelector('id')?.textContent || '',
+        make: node.querySelector('make')?.textContent || '',
+        model: node.querySelector('model')?.textContent || '',
+        year: parseInt(node.querySelector('year')?.textContent || '2000'),
+        tier: parseInt(node.querySelector('tier')?.textContent || '1'),
+        price_usd: parseInt(node.querySelector('price_usd')?.textContent || '5000'),
+        drivetrain: node.querySelector('drivetrain')?.textContent || 'RWD',
+        horsepower: parseFloat(node.querySelector('horsepower')?.textContent || '150'),
+        torque_nm: parseFloat(node.querySelector('torque_nm')?.textContent || '200'),
+        weight_kg: parseFloat(node.querySelector('weight_kg')?.textContent || '1200'),
+        top_speed_kmh: parseFloat(node.querySelector('top_speed_kmh')?.textContent || '200'),
+        accel_0_100: parseFloat(node.querySelector('accel_0_100')?.textContent || '8.0'),
+        lateral_g: parseFloat(node.querySelector('lateral_g')?.textContent || '0.85'),
+        style_rating: parseFloat(node.querySelector('style_rating')?.textContent || '80')
+      })).filter(c => c.id && c.model);
+    }
+
+    function parseTracksFromXml(xmlStr) {
+      const parser = new DOMParser();
+      const trackDoc = parser.parseFromString(xmlStr, 'text/xml');
+      const trackNodes = trackDoc.querySelectorAll('track');
+      return Array.from(trackNodes).map(node => ({
+        id: node.getAttribute('id') || '',
+        name: node.querySelector('name')?.textContent || '',
+        environment: node.querySelector('environment')?.textContent || '',
+        surface: node.querySelector('surface')?.textContent || '',
+        bgImage: node.querySelector('backgroundImage')?.textContent || '',
+        description: node.querySelector('description')?.textContent || '',
+        weights: {
+          topSpeed: parseFloat(node.querySelector('weights > topSpeed')?.textContent || '0.33'),
+          acceleration: parseFloat(node.querySelector('weights > acceleration')?.textContent || '0.33'),
+          grip: parseFloat(node.querySelector('weights > grip')?.textContent || '0.33')
+        },
+        rewards: {
+          baseCash: parseInt(node.querySelector('rewards > baseCash')?.textContent || '1000')
+        }
+      })).filter(t => t.id && t.name);
+    }
+
+    // --- DATA LOADING & BOOT ---
+    async function initData() {
+      try {
+        let garageXmlStr = '';
+        let tracksXmlStr = '';
+
+        try {
+          const resG = await fetch('data/garage.xml').catch(() => null);
+          if (resG && resG.ok) {
+            const txt = await resG.text();
+            if (txt && txt.includes('<car')) garageXmlStr = txt;
+          }
+        } catch(e) {}
+
+        if (!garageXmlStr) {
+          try {
+            const resG2 = await fetch(`${ASSET_ROOT}/data/garage.xml`).catch(() => null);
+            if (resG2 && resG2.ok) {
+              const txt = await resG2.text();
+              if (txt && txt.includes('<car')) garageXmlStr = txt;
+            }
+          } catch(e) {}
+        }
+
+        try {
+          const resT = await fetch('data/tracks.xml').catch(() => null);
+          if (resT && resT.ok) {
+            const txt = await resT.text();
+            if (txt && txt.includes('<track')) tracksXmlStr = txt;
+          }
+        } catch(e) {}
+
+        if (!tracksXmlStr) {
+          try {
+            const resT2 = await fetch(`${ASSET_ROOT}/data/tracks.xml`).catch(() => null);
+            if (resT2 && resT2.ok) {
+              const txt = await resT2.text();
+              if (txt && txt.includes('<track')) tracksXmlStr = txt;
+            }
+          } catch(e) {}
+        }
+
+        if (garageXmlStr) {
+          dbCars = parseCarsFromXml(garageXmlStr);
+        }
+        if (!dbCars || dbCars.length < 6) {
+          dbCars = parseCarsFromXml(FALLBACK_GARAGE_XML);
+        }
+
+        if (tracksXmlStr) {
+          dbTracks = parseTracksFromXml(tracksXmlStr);
+        }
+        if (!dbTracks || dbTracks.length === 0) {
+          dbTracks = parseTracksFromXml(FALLBACK_TRACKS_XML);
+        }
+
+        // Select initial track & draw hands
+        currentTrack = dbTracks[Math.floor(Math.random() * dbTracks.length)];
+        loadSavedState();
+        if (!gameState.p1Deck || gameState.p1Deck.length === 0 || !gameState.p2Deck || gameState.p2Deck.length === 0) {
+          initDecks();
+        }
+        drawHands();
+        renderAll();
+      } catch (err) {
+        console.error('Fatal initialization error, applying emergency recovery:', err);
+        if (!dbCars || dbCars.length < 6) dbCars = parseCarsFromXml(FALLBACK_GARAGE_XML);
+        if (!dbTracks || dbTracks.length === 0) dbTracks = parseTracksFromXml(FALLBACK_TRACKS_XML);
+        if (!currentTrack && dbTracks.length > 0) currentTrack = dbTracks[0];
+        initDecks();
+        drawHands();
+        renderAll();
+      }
+    }
+
+    // --- DECK INITIALIZATION ---
+    function initDecks() {
+      gameState.p1Deck = [];
+      gameState.p2Deck = [];
+      gameState.winChoiceOffered = false;
+
+      if (!dbCars || dbCars.length === 0) return;
+
+      const usedCarIds = new Set();
+      const pool = [...dbCars].sort(() => 0.5 - Math.random());
+
+      // 1. Give P1 their garage cars first
+      const p1Garage = gameState.activeGarages.p1 || [];
+      for (const gCar of p1Garage) {
+        if (gameState.p1Deck.length < 20 && !usedCarIds.has(gCar.car.id)) {
+          const item = JSON.parse(JSON.stringify(gCar));
+          item.fromGarage = true;
+          item.drawn = false;
+          usedCarIds.add(gCar.car.id);
+          gameState.p1Deck.push(item);
+        }
+      }
+
+      // 2. Fill remaining P1 deck up to 20 cards from pool
+      for (const car of pool) {
+        if (gameState.p1Deck.length >= 20) break;
+        if (!usedCarIds.has(car.id)) {
+          usedCarIds.add(car.id);
+          const matchInGarage = p1Garage.find(g => g.car.id === car.id);
+          gameState.p1Deck.push({
+            car: car,
+            upgrades: matchInGarage ? JSON.parse(JSON.stringify(matchInGarage.upgrades || {})) : {},
+            fromGarage: !!matchInGarage,
+            drawn: false
+          });
+        }
+      }
+      let cIdx = 0;
+      while (gameState.p1Deck.length < 20 && pool.length > 0) {
+        const car = pool[cIdx % pool.length];
+        gameState.p1Deck.push({ car: car, upgrades: {}, fromGarage: false, drawn: false });
+        cIdx++;
+      }
+
+      // 3. Give P2 their garage cars first
+      const p2Garage = gameState.activeGarages.p2 || [];
+      for (const gCar of p2Garage) {
+        if (gameState.p2Deck.length < 20 && !usedCarIds.has(gCar.car.id)) {
+          const item = JSON.parse(JSON.stringify(gCar));
+          item.fromGarage = true;
+          item.drawn = false;
+          usedCarIds.add(gCar.car.id);
+          gameState.p2Deck.push(item);
+        }
+      }
+
+      // 4. Fill remaining P2 deck up to 20 cards from pool
+      for (const car of pool) {
+        if (gameState.p2Deck.length >= 20) break;
+        if (!usedCarIds.has(car.id)) {
+          usedCarIds.add(car.id);
+          const matchInGarage = p2Garage.find(g => g.car.id === car.id);
+          gameState.p2Deck.push({
+            car: car,
+            upgrades: matchInGarage ? JSON.parse(JSON.stringify(matchInGarage.upgrades || {})) : {},
+            fromGarage: !!matchInGarage,
+            drawn: false
+          });
+        }
+      }
+      cIdx = 0;
+      while (gameState.p2Deck.length < 20 && pool.length > 0) {
+        const car = pool[cIdx % pool.length];
+        gameState.p2Deck.push({ car: car, upgrades: {}, fromGarage: false, drawn: false });
+        cIdx++;
+      }
+
+      // Initial recorded shuffle for both decks
+      gameState.p1Deck.sort(() => 0.5 - Math.random());
+      gameState.p2Deck.sort(() => 0.5 - Math.random());
+    }
+
+    // --- STATE STORAGE ---
+    function saveState() {
+      try {
+        if (typeof localStorage === 'undefined') return;
+        const data = {
+          p1Wallet: gameState.p1Wallet,
+          p2Wallet: gameState.p2Wallet,
+          p1Garages: gameState.activeGarages.p1,
+          p2Garages: gameState.activeGarages.p2,
+          toolbox: gameState.toolbox,
+          p1Score: gameState.p1Score,
+          p2Score: gameState.p2Score,
+          p1Deck: gameState.p1Deck,
+          p2Deck: gameState.p2Deck,
+          winChoiceOffered: gameState.winChoiceOffered
+        };
+        localStorage.setItem('apex_shift_save', JSON.stringify(data));
+      } catch (e) { console.warn('Save state unavailable:', e); }
+    }
+
+    function loadSavedState() {
+      try {
+        const raw = localStorage.getItem('apex_shift_save');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          gameState.p1Wallet = parsed.p1Wallet || 10000;
+          gameState.p2Wallet = parsed.p2Wallet || 10000;
+          gameState.activeGarages.p1 = parsed.p1Garages || [];
+          gameState.activeGarages.p2 = parsed.p2Garages || [];
+          gameState.toolbox = parsed.toolbox || [];
+          gameState.p1Score = parsed.p1Score || 0;
+          gameState.p2Score = parsed.p2Score || 0;
+          if (parsed.p1Deck && parsed.p1Deck.length > 0) gameState.p1Deck = parsed.p1Deck;
+          if (parsed.p2Deck && parsed.p2Deck.length > 0) gameState.p2Deck = parsed.p2Deck;
+          gameState.winChoiceOffered = !!parsed.winChoiceOffered;
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    // --- RENDERING UI ---
+    function renderAll() {
+      // Header
+      document.getElementById('p1Score').textContent = gameState.p1Score;
+      document.getElementById('p2Score').textContent = gameState.p2Score;
+      document.getElementById('p1WalletVal').textContent = gameState.p1Wallet.toLocaleString();
+      document.getElementById('p2WalletVal').textContent = gameState.p2Wallet.toLocaleString();
+
+      const p1Total = (gameState.p1Deck ? gameState.p1Deck.length : 0) + (gameState.p1Hand ? gameState.p1Hand.length : 0);
+      const p2Total = (gameState.p2Deck ? gameState.p2Deck.length : 0) + (gameState.p2Hand ? gameState.p2Hand.length : 0);
+
+      const p1DeckElem = document.getElementById('p1DeckCount');
+      if (p1DeckElem) p1DeckElem.textContent = `${p1Total} CARDS`;
+
+      const p2DeckElem = document.getElementById('p2DeckCount');
+      if (p2DeckElem) p2DeckElem.textContent = `${p2Total} CARDS`;
+
+      // Track Banner
+      if (currentTrack) {
+        document.getElementById('trackTitle').textContent = currentTrack.name;
+        document.getElementById('trackDesc').textContent = currentTrack.description;
+        document.getElementById('wAccel').textContent = Math.round(currentTrack.weights.acceleration * 100) + '%';
+        document.getElementById('wSpeed').textContent = Math.round(currentTrack.weights.topSpeed * 100) + '%';
+        document.getElementById('wGrip').textContent = Math.round(currentTrack.weights.grip * 100) + '%';
+
+        let bgUrl = currentTrack.bgImage;
+        if (bgUrl && bgUrl.includes('tracks/')) {
+          const filename = bgUrl.split('tracks/').pop();
+          bgUrl = `tracks/${filename}`;
+        } else if (bgUrl && !bgUrl.startsWith('http') && !bgUrl.startsWith(ASSET_ROOT)) {
+          bgUrl = `${ASSET_ROOT}/${bgUrl}`;
+        }
+        document.getElementById('trackBgImg').src = bgUrl;
+        document.getElementById('trackBgImg').onerror = function() {
+          this.style.display = 'none';
+        };
+      }
+
+      // Render Active Cards in Slots
+      renderCardSlot('P1', gameState.p1Selected);
+      renderCardSlot('P2', gameState.p2Selected);
+
+      // Render Dock Hand
+      renderHandDock();
+    }
+
+    function drawHands() {
+      // Clean up previous flags
+      document.querySelectorAll('.chequered-flag-overlay').forEach(el => el.remove());
+
+      if (!gameState.p1Deck || gameState.p1Deck.length === 0 || !gameState.p2Deck || gameState.p2Deck.length === 0) {
+        initDecks();
+      }
+
+      // Draw top 3 cards from top of p1Deck into p1Hand sequentially
+      const p1DrawCount = Math.min(3, gameState.p1Deck.length);
+      gameState.p1Hand = gameState.p1Deck.splice(0, p1DrawCount);
+      gameState.p1Hand.forEach(item => item.drawn = false);
+
+      // Draw top 3 cards from top of p2Deck into p2Hand sequentially
+      const p2DrawCount = Math.min(3, gameState.p2Deck.length);
+      gameState.p2Hand = gameState.p2Deck.splice(0, p2DrawCount);
+      gameState.p2Hand.forEach(item => item.drawn = false);
+
+      gameState.p1Selected = null;
+      gameState.p2Selected = null;
+      gameState.turnState = 'P1_SELECTING';
+      resetCardPositions();
+      document.getElementById('slotP1').classList.remove('flipped');
+      document.getElementById('slotP2').classList.remove('flipped');
+      document.getElementById('resultsPanel').style.display = 'none';
+      document.getElementById('btnNextRound').style.display = 'none';
+      document.getElementById('btnActionHeat').style.display = 'inline-flex';
+      document.getElementById('statusText').textContent = 'PLAYER 1: DRAW YOUR 3 CARDS FROM THE PILE';
+    }
+
+    function renderCardSlot(player, item) {
+      const frontElem = document.getElementById(`card${player}Front`);
+      if (!item) {
+        frontElem.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-family: var(--font-hud);">NO CAR SELECTED</div>`;
+        return;
+      }
+
+      const { car, upgrades } = item;
+      const stats = calcCarStats(car, upgrades);
+      const stars = '★'.repeat(car.tier) + '☆'.repeat(5 - car.tier);
+      const underglowClass = stats.neonColor ? `underglow-${stats.neonColor}` : '';
+      const isFoil = car.tier === 5;
+      const isGarage = item.fromGarage || false;
+
+      let carImgPath = `cars/${car.id}.png`;
+
+      frontElem.className = `card-face card-front ${underglowClass} ${isFoil ? 'tier-5-foil' : ''}`;
+      frontElem.innerHTML = `
+        <div class="card-frame-overlay tier-${car.tier}"></div>
+        ${isGarage ? `
+          <div class="card-plastic-sleeve">
+            <div class="plastic-sleeve-seal">GARAGE PROTECTED SLEEVE</div>
+            <div class="plastic-sleeve-badge" onclick="event.stopPropagation(); toggleSleeve(this)">🛡️ SLEEVED (CLICK TO UNWRAP)</div>
+          </div>
+        ` : ''}
+        <div class="card-header-badge">
+          <div class="car-title">
+            <span class="car-make">${car.make}</span>
+            <span class="car-model">${car.model}</span>
+          </div>
+          <span class="tier-stars">${stars}</span>
+        </div>
+        <div class="car-img-container">
+          <span class="drivetrain-tag">${car.drivetrain}</span>
+          <img src="${carImgPath}" class="car-img" alt="${car.model}" onerror="this.src='${getCarSvgFallback(car.make, car.model, car.tier)}'">
+          ${getZoomBtnHtml(car.make, car.model, carImgPath, car.id, car.drivetrain, car.tier, stats)}
+        </div>
+        <div class="parts-drawer">
+          <div class="part-socket ${upgrades.turbos ? 'equipped' : ''}" title="Turbos">
+            ${upgrades.turbos ? `<img src="${ASSET_ROOT}/parts/turbos/stage${upgrades.turbos.stage}.png" onerror="this.src=''">` : '⚡'}
+          </div>
+          <div class="part-socket ${upgrades.tyres ? 'equipped' : ''}" title="Tyres">
+            ${upgrades.tyres ? `<img src="${ASSET_ROOT}/parts/tyres/stage${upgrades.tyres.stage}.png" onerror="this.src=''">` : '🛞'}
+          </div>
+          <div class="part-socket ${upgrades.suspension ? 'equipped' : ''}" title="Suspension">
+            ${upgrades.suspension ? `<img src="${ASSET_ROOT}/parts/suspension/stage${upgrades.suspension.stage}.png" onerror="this.src=''">` : '🔧'}
+          </div>
+          <div class="part-socket ${upgrades.weight ? 'equipped' : ''}" title="Weight">
+            ${upgrades.weight ? `<img src="${ASSET_ROOT}/parts/weight_reduction/stage${upgrades.weight.stage}.png" onerror="this.src=''">` : '⚖️'}
+          </div>
+          <div class="part-socket ${upgrades.ecu ? 'equipped' : ''}" title="ECU">
+            ${upgrades.ecu ? `<img src="${ASSET_ROOT}/parts/ecu/stage${upgrades.ecu.stage}.png" onerror="this.src=''">` : '💻'}
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-chip"><span class="stat-lbl">1/4 MILE ET</span><span class="stat-val highlight">${stats.et}s</span></div>
+          <div class="stat-chip"><span class="stat-lbl">TRAP SPEED</span><span class="stat-val">${stats.trapSpeed}kmh</span></div>
+          <div class="stat-chip"><span class="stat-lbl">POWER</span><span class="stat-val">${stats.hp} HP</span></div>
+          <div class="stat-chip"><span class="stat-lbl">WEIGHT</span><span class="stat-val">${stats.weight} kg</span></div>
+          <div class="stat-chip"><span class="stat-lbl">LATERAL GRIP</span><span class="stat-val">${stats.grip} G</span></div>
+          <div class="stat-chip"><span class="stat-lbl">STYLE</span><span class="stat-val">${stats.style}</span></div>
+        </div>
+      `;
+    }
+
+    let cardPositions = [];
+    let topZIndex = 10;
+
+    function resetCardPositions() {
+      cardPositions = [
+        { x: 300, y: 10 },
+        { x: 570, y: 10 },
+        { x: 840, y: 10 }
+      ];
+    }
+
+    function renderHandDock() {
+      const row = document.getElementById('handRow');
+      if (!row) return;
+      row.innerHTML = '';
+
+      let isP1Turn = true;
+      let hand = [];
+      let selectedItem = null;
+
+      if (gameState.mode === 'P2P' && gameState.isP2PConnected) {
+        isP1Turn = gameState.isHost;
+        hand = gameState.isHost ? gameState.p1Hand : gameState.p2Hand;
+        selectedItem = gameState.isHost ? gameState.p1Selected : gameState.p2Selected;
+      } else {
+        isP1Turn = gameState.turnState === 'P1_SELECTING';
+        hand = isP1Turn ? gameState.p1Hand : gameState.p2Hand;
+        selectedItem = isP1Turn ? gameState.p1Selected : gameState.p2Selected;
+      }
+
+      if (!hand || hand.length === 0) return;
+
+      const undrawnCount = hand.filter(i => !i.drawn).length;
+      const isAllDrawn = undrawnCount === 0;
+
+      const dockTitleElem = document.getElementById('dockTitle');
+      const dockHintElem = document.getElementById('dockHint');
+
+      let playerTitle = 'PLAYER 1';
+      if (gameState.mode === 'P2P' && gameState.isP2PConnected) {
+        playerTitle = gameState.isHost ? 'PLAYER 1 (YOU)' : 'PLAYER 2 (YOU)';
+      } else {
+        playerTitle = isP1Turn ? 'PLAYER 1' : 'PLAYER 2';
+      }
+
+      if (!isAllDrawn) {
+        if (dockTitleElem) dockTitleElem.textContent = `${playerTitle}: DRAW YOUR 3 CARDS FROM THE PILE`;
+        if (dockHintElem) dockHintElem.innerHTML = `🎴 <b>DRAW PHASE</b>: DRAG CARDS OFF THE DRAW PILE (LEFT) ONTO THE TABLE (${hand.length - undrawnCount}/${hand.length} DRAWN)`;
+      } else {
+        if (dockTitleElem) dockTitleElem.textContent = `${playerTitle}: ARRANGE & SELECT YOUR CARD`;
+        if (dockHintElem) dockHintElem.innerHTML = `🖐 <b>HAND ARRANGEMENT</b>: DRAG CARDS FREELY ACROSS THE BOARD TO ARRANGE | CLICK 'SELECT' TO LOCK IN CARD`;
+      }
+
+      const deckStackCount = isP1Turn 
+        ? (gameState.p1Deck ? gameState.p1Deck.length : 0) 
+        : (gameState.p2Deck ? gameState.p2Deck.length : 0);
+
+      // Draw Deck Visual Placeholder on the left side of handRow
+      const deckPlaceholderHtml = `
+        <div class="deck-placeholder" style="position: absolute; top: 10px; left: 20px; width: 260px; height: 375px; border: 2px dashed ${undrawnCount > 0 ? 'var(--cyan)' : 'var(--panel-border)'}; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--cyan); background: ${undrawnCount > 0 ? 'rgba(0, 240, 255, 0.04)' : 'rgba(0, 0, 0, 0.2)'}; pointer-events: none; z-index: 1;">
+          <span style="font-size: 2.2rem; filter: drop-shadow(0 0 10px var(--cyan-glow));">${undrawnCount > 0 ? '🎴' : '✨'}</span>
+          <span style="font-family: var(--font-hud); font-size: 0.85rem; letter-spacing: 1px; font-weight: 700;">DRAW DECK</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-stats);">${undrawnCount > 0 ? undrawnCount + ' IN HAND | ' + deckStackCount + ' IN STACK' : 'HAND DRAWN (' + deckStackCount + ' IN STACK)'}</span>
+        </div>
+      `;
+      row.insertAdjacentHTML('beforeend', deckPlaceholderHtml);
+
+      if (cardPositions.length < hand.length) {
+        resetCardPositions();
+      }
+
+      hand.forEach((item, idx) => {
+        const { car, upgrades, drawn } = item;
+        const stats = calcCarStats(car, upgrades);
+        const stars = '★'.repeat(car.tier);
+        const isSelected = selectedItem && selectedItem.car.id === car.id;
+        const underglowClass = stats.neonColor ? `underglow-${stats.neonColor}` : '';
+        const isFoil = car.tier === 5;
+        const isGarage = item.fromGarage || false;
+
+        // Position undrawn cards in stacked draw deck on left, drawn cards on board
+        const pos = drawn 
+          ? (cardPositions[idx] || { x: 300 + idx * 270, y: 10 })
+          : { x: 20 + (2 - idx) * 4, y: 10 + (2 - idx) * 4 };
+
+        const zIndexVal = drawn ? (idx + 10) : (50 + (2 - idx));
+
+        const cardHtml = `
+          <div class="hand-card-wrapper ${drawn ? 'flipped' : 'face-down'} ${isSelected ? 'selected' : ''}" 
+               id="handCard_${idx}"
+               style="transform: translate(${pos.x}px, ${pos.y}px); z-index: ${zIndexVal};"
+               onpointerdown="initFreeformDrag(event, ${idx})">
+            <div class="card-inner">
+              <!-- FACE DOWN DECK BACK -->
+              <div class="card-face card-back" style="border: 2px solid var(--cyan); background: radial-gradient(circle at center, #1a233a 0%, #0a0c10 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px;">
+                <div class="card-back-icon" style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--cyan); display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px var(--cyan-glow); background: rgba(0, 240, 255, 0.05);">
+                  <span style="font-size: 2rem; color: var(--cyan);">🏎️</span>
+                </div>
+                <div class="card-back-text" style="font-family: var(--font-hud); font-size: 1rem; letter-spacing: 2px; color: var(--cyan); text-shadow: 0 0 10px var(--cyan-glow);">APEX SHIFT</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-hud); text-transform: uppercase; letter-spacing: 1px;">🖐 DRAG TO DRAW</div>
+              </div>
+
+              <!-- FACE UP CAR STATS -->
+              <div class="card-face card-front ${underglowClass} ${isFoil ? 'tier-5-foil' : ''}">
+                <div class="card-frame-overlay tier-${car.tier}"></div>
+                ${isGarage ? `
+                  <div class="card-plastic-sleeve">
+                    <div class="plastic-sleeve-seal">GARAGE PROTECTED SLEEVE</div>
+                    <div class="plastic-sleeve-badge" onclick="event.stopPropagation(); toggleSleeve(this)">🛡️ SLEEVED (CLICK TO UNWRAP)</div>
+                  </div>
+                ` : ''}
+                <div class="card-header-badge" style="padding: 6px 12px;">
+                  <div class="car-title">
+                    <span class="car-make" style="font-size: 0.65rem;">${car.make}</span>
+                    <span class="car-model" style="font-size: 0.9rem;">${car.model}</span>
+                  </div>
+                  <span class="tier-stars" style="font-size: 0.8rem;">${stars}</span>
+                </div>
+                <div class="car-img-container" style="height: 140px;">
+                  <span class="drivetrain-tag">${car.drivetrain}</span>
+                  <img src="cars/${car.id}.png" class="car-img" alt="${car.model}" onerror="this.src='${getCarSvgFallback(car.make, car.model, car.tier)}'">
+                  ${getZoomBtnHtml(car.make, car.model, 'cars/' + car.id + '.png', car.id, car.drivetrain, car.tier, stats)}
+                </div>
+                <div class="parts-drawer">
+                  <div class="part-socket ${upgrades.turbos ? 'equipped' : ''}" title="Turbos">
+                    ${upgrades.turbos ? `<img src="${ASSET_ROOT}/parts/turbos/stage${upgrades.turbos.stage}.png" onerror="this.src=''">` : '⚡'}
+                  </div>
+                  <div class="part-socket ${upgrades.tyres ? 'equipped' : ''}" title="Tyres">
+                    ${upgrades.tyres ? `<img src="${ASSET_ROOT}/parts/tyres/stage${upgrades.tyres.stage}.png" onerror="this.src=''">` : '🛞'}
+                  </div>
+                  <div class="part-socket ${upgrades.suspension ? 'equipped' : ''}" title="Suspension">
+                    ${upgrades.suspension ? `<img src="${ASSET_ROOT}/parts/suspension/stage${upgrades.suspension.stage}.png" onerror="this.src=''">` : '🔧'}
+                  </div>
+                  <div class="part-socket ${upgrades.weight ? 'equipped' : ''}" title="Weight">
+                    ${upgrades.weight ? `<img src="${ASSET_ROOT}/parts/weight_reduction/stage${upgrades.weight.stage}.png" onerror="this.src=''">` : '⚖️'}
+                  </div>
+                  <div class="part-socket ${upgrades.ecu ? 'equipped' : ''}" title="ECU">
+                    ${upgrades.ecu ? `<img src="${ASSET_ROOT}/parts/ecu/stage${upgrades.ecu.stage}.png" onerror="this.src=''">` : '💻'}
+                  </div>
+                </div>
+                <div class="stats-grid" style="padding: 8px; font-size: 0.8rem;">
+                  <div class="stat-chip"><span class="stat-lbl">ET</span><span class="stat-val highlight">${stats.et}s</span></div>
+                  <div class="stat-chip"><span class="stat-lbl">HP</span><span class="stat-val">${stats.hp}</span></div>
+                  <div class="stat-chip"><span class="stat-lbl">GRIP</span><span class="stat-val">${stats.grip}G</span></div>
+                  <div class="stat-chip"><span class="stat-lbl">SPD</span><span class="stat-val">${stats.topSpeed}</span></div>
+                </div>
+                <div class="card-actions" style="padding: 10px;">
+                  <button class="btn btn-primary" onclick="event.stopPropagation(); selectHandCard(${idx})" style="flex: 1; font-size: 0.85rem; padding: 6px 12px; font-weight: 800; cursor: pointer;">SELECT</button>
+                  <button class="btn" onclick="event.stopPropagation(); starToGarage('${isP1Turn ? 'p1' : 'p2'}', ${idx})" title="Star to Garage" style="padding: 6px 12px;">★</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        row.insertAdjacentHTML('beforeend', cardHtml);
+      });
+    }
+
+    function initFreeformDrag(e, cardIdx) {
+      if (e.target.closest('button')) return;
+
+      let isP1Turn = gameState.turnState === 'P1_SELECTING';
+      if (gameState.mode === 'P2P' && gameState.isP2PConnected) {
+        isP1Turn = gameState.isHost;
+      }
+      const hand = isP1Turn ? gameState.p1Hand : gameState.p2Hand;
+      const item = hand ? hand[cardIdx] : null;
+      if (!item) return;
+
+      const cardElem = document.getElementById(`handCard_${cardIdx}`);
+      if (!cardElem) return;
+
+      topZIndex++;
+      cardElem.style.zIndex = topZIndex;
+      cardElem.classList.add('dragging');
+
+      const startPointerX = e.clientX;
+      const startPointerY = e.clientY;
+
+      const isInitialDraw = !item.drawn;
+      const initialPos = isInitialDraw
+        ? { x: 20 + (2 - cardIdx) * 4, y: 10 + (2 - cardIdx) * 4 }
+        : (cardPositions[cardIdx] || { x: 300 + cardIdx * 270, y: 10 });
+
+      const initialX = initialPos.x;
+      const initialY = initialPos.y;
+
+      try { cardElem.setPointerCapture(e.pointerId); } catch(err){}
+
+      function onPointerMove(ev) {
+        const dx = ev.clientX - startPointerX;
+        const dy = ev.clientY - startPointerY;
+        const curX = initialX + dx;
+        const curY = initialY + dy;
+
+        cardElem.style.transform = `translate(${curX}px, ${curY}px)`;
+      }
+
+      function onPointerUp(ev) {
+        cardElem.classList.remove('dragging');
+        try { cardElem.releasePointerCapture(ev.pointerId); } catch(err){}
+
+        const dx = ev.clientX - startPointerX;
+        const dy = ev.clientY - startPointerY;
+
+        let finalX = initialX + dx;
+        let finalY = initialY + dy;
+
+        if (isInitialDraw) {
+          item.drawn = true;
+          playSound('click');
+
+          if (Math.hypot(dx, dy) < 20) {
+            finalX = 300 + cardIdx * 270;
+            finalY = 10;
+          }
+          cardPositions[cardIdx] = { x: finalX, y: finalY };
+
+          cardElem.style.transform = `translate(${finalX}px, ${finalY}px)`;
+          cardElem.classList.add('flipped');
+
+          setTimeout(() => renderHandDock(), 450);
+        } else {
+          cardPositions[cardIdx] = { x: finalX, y: finalY };
+        }
+
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerUp);
+        window.removeEventListener('pointercancel', onPointerUp);
+      }
+
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerUp);
+    }
+
+    // --- GAME ACTIONS ---
+    function selectHandCard(idx) {
+      playSound('click');
+
+      if (gameState.mode === 'P2P' && gameState.isP2PConnected) {
+        const myRole = gameState.isHost ? 'P1' : 'P2';
+        const myHand = gameState.isHost ? gameState.p1Hand : gameState.p2Hand;
+        const selectedItem = myHand[idx];
+
+        if (myRole === 'P1') {
+          gameState.p1Selected = selectedItem;
+          renderCardSlot('P1', selectedItem);
+        } else {
+          gameState.p2Selected = selectedItem;
+          renderCardSlot('P2', selectedItem);
+        }
+
+        // Make sure curtain overlay is NOT shown in P2P mode
+        document.getElementById('curtainOverlay').classList.remove('active');
+
+        // Send choice to peer
+        if (gameState.conn && gameState.conn.open) {
+          gameState.conn.send({
+            type: 'CARD_SELECTED',
+            player: myRole,
+            selectedItem: selectedItem
+          });
+        }
+
+        const opponentSelected = myRole === 'P1' ? gameState.p2Selected : gameState.p1Selected;
+        if (!opponentSelected) {
+          document.getElementById('statusText').textContent = 'CARD LOCKED IN! WAITING FOR OPPONENT...';
+        } else {
+          document.getElementById('statusText').textContent = 'BOTH PLAYERS READY! CLICK FLIP & SHOWDOWN';
+        }
+        renderAll();
+      } else {
+        // Hotseat Mode (Pass & Play)
+        if (gameState.turnState === 'P1_SELECTING') {
+          gameState.p1Selected = gameState.p1Hand[idx];
+          renderCardSlot('P1', gameState.p1Selected);
+          document.getElementById('curtainOverlay').classList.add('active');
+          gameState.turnState = 'PASS_CURTAIN';
+        } else if (gameState.turnState === 'P2_SELECTING') {
+          gameState.p2Selected = gameState.p2Hand[idx];
+          renderCardSlot('P2', gameState.p2Selected);
+          gameState.turnState = 'SHOWDOWN';
+          document.getElementById('statusText').textContent = 'READY FOR SHOWDOWN! CLICK FLIP & SHOWDOWN';
+          renderAll();
+        }
+      }
+    }
+
+    document.getElementById('btnCurtainReady').addEventListener('click', () => {
+      playSound('click');
+      document.getElementById('curtainOverlay').classList.remove('active');
+      gameState.turnState = 'P2_SELECTING';
+      resetCardPositions();
+      document.getElementById('statusText').textContent = 'PLAYER 2: ARRANGE & SELECT YOUR CAR FOR THE HEAT';
+      renderAll();
+    });
+
+    const btnResetLayout = document.getElementById('btnResetLayout');
+    if (btnResetLayout) {
+      btnResetLayout.addEventListener('click', () => {
+        playSound('click');
+        let isP1Turn = gameState.turnState === 'P1_SELECTING';
+        if (gameState.mode === 'P2P' && gameState.isP2PConnected) {
+          isP1Turn = gameState.isHost;
+        }
+        const hand = isP1Turn ? gameState.p1Hand : gameState.p2Hand;
+        if (hand) hand.forEach(item => item.drawn = true);
+        resetCardPositions();
+        renderHandDock();
+      });
+    }
+
+    document.getElementById('btnActionHeat').addEventListener('click', () => {
+      if (!gameState.p1Selected || !gameState.p2Selected) {
+        alert('Both players must select a car first!');
+        return;
+      }
+      playSound('engine');
+      playSound('flip');
+      
+      // Flip both cards
+      document.getElementById('slotP1').classList.add('flipped');
+      document.getElementById('slotP2').classList.add('flipped');
+
+      // Calculate Scores
+      const p1Stats = calcCarStats(gameState.p1Selected.car, gameState.p1Selected.upgrades);
+      const p2Stats = calcCarStats(gameState.p2Selected.car, gameState.p2Selected.upgrades);
+
+      const p1Score = calcRaceScore(p1Stats, currentTrack);
+      const p2Score = calcRaceScore(p2Stats, currentTrack);
+
+      document.getElementById('resP1Et').textContent = `${p1Stats.et}s (${p1Stats.trapSpeed} km/h)`;
+      document.getElementById('resP2Et').textContent = `${p2Stats.et}s (${p2Stats.trapSpeed} km/h)`;
+      document.getElementById('resP1Score').textContent = p1Score.toFixed(1);
+      document.getElementById('resP2Score').textContent = p2Score.toFixed(1);
+
+      document.getElementById('resultsPanel').style.display = 'flex';
+      document.getElementById('btnActionHeat').style.display = 'none';
+      document.getElementById('btnNextRound').style.display = 'inline-flex';
+
+      // Determine Winner & Execute Card Transfer / Capture
+      if (p1Score > p2Score) {
+        gameState.p1Score++;
+        gameState.p1Wallet += currentTrack.rewards.baseCash;
+
+        // P1 keeps p1Selected, captures p2Selected into bottom of p1Deck
+        gameState.p1Deck.push(gameState.p1Selected);
+        gameState.p1Deck.push(gameState.p2Selected);
+
+        // Remove p2Selected from P2 active garage if it was a garage car
+        if (gameState.p2Selected.fromGarage && gameState.activeGarages.p2) {
+          gameState.activeGarages.p2 = gameState.activeGarages.p2.filter(g => g.car.id !== gameState.p2Selected.car.id);
+        }
+
+        document.getElementById('statusText').textContent = `PLAYER 1 WINS THE HEAT! (+ $${currentTrack.rewards.baseCash}) & CAPTURES OPPONENT'S CARD!`;
+        playSound('win');
+        triggerVictoryEffects('P1');
+      } else if (p2Score > p1Score) {
+        gameState.p2Score++;
+        gameState.p2Wallet += currentTrack.rewards.baseCash;
+
+        // P2 keeps p2Selected, captures p1Selected into bottom of p2Deck
+        gameState.p2Deck.push(gameState.p2Selected);
+        gameState.p2Deck.push(gameState.p1Selected);
+
+        // Remove p1Selected from P1 active garage if it was a garage car
+        if (gameState.p1Selected.fromGarage && gameState.activeGarages.p1) {
+          gameState.activeGarages.p1 = gameState.activeGarages.p1.filter(g => g.car.id !== gameState.p1Selected.car.id);
+        }
+
+        document.getElementById('statusText').textContent = `PLAYER 2 WINS THE HEAT! (+ $${currentTrack.rewards.baseCash}) & CAPTURES OPPONENT'S CARD!`;
+        playSound('win');
+        triggerVictoryEffects('P2');
+      } else {
+        // Draw Heat: both retain their selected cards into bottom of deck
+        gameState.p1Deck.push(gameState.p1Selected);
+        gameState.p2Deck.push(gameState.p2Selected);
+        document.getElementById('statusText').textContent = `IT'S A DRAW HEAT! BOTH PLAYERS RETAIN THEIR CARDS.`;
+      }
+
+      // Return unplayed hand cards back to bottom of respective decks
+      if (gameState.p1Hand) {
+        gameState.p1Hand.forEach(item => {
+          if (item !== gameState.p1Selected) gameState.p1Deck.push(item);
+        });
+        gameState.p1Hand = [];
+      }
+      if (gameState.p2Hand) {
+        gameState.p2Hand.forEach(item => {
+          if (item !== gameState.p2Selected) gameState.p2Deck.push(item);
+        });
+        gameState.p2Hand = [];
+      }
+
+      saveState();
+      renderAll();
+
+      // Check Win Conditions
+      const p1Cards = gameState.p1Deck.length;
+      const p2Cards = gameState.p2Deck.length;
+
+      let matchWinner = null;
+      let winReason = '';
+
+      if (p1Cards >= 30 || p2Cards <= 0) {
+        matchWinner = 'PLAYER 1';
+        winReason = `TOTAL DECK CONQUEST (${p1Cards} CARDS STACKED)!`;
+      } else if (p2Cards >= 30 || p1Cards <= 0) {
+        matchWinner = 'PLAYER 2';
+        winReason = `TOTAL DECK CONQUEST (${p2Cards} CARDS STACKED)!`;
+      } else if ((gameState.p1Score >= 10 || gameState.p2Score >= 10) && !gameState.winChoiceOffered) {
+        gameState.winChoiceOffered = true;
+        saveState();
+        const leadingPlayer = gameState.p1Score >= 10 ? 'PLAYER 1' : 'PLAYER 2';
+        show10WinChoiceModal(leadingPlayer);
+        return;
+      }
+
+      if (matchWinner) {
+        showMatchVictoryModal(matchWinner, winReason);
+      }
+    });
+
+    function show10WinChoiceModal(winner) {
+      playSound('win');
+      const titleElem = document.getElementById('winChoiceTitle');
+      if (titleElem) titleElem.textContent = `🏆 10 HEATS WON BY ${winner}!`;
+
+      const descElem = document.getElementById('winChoiceDesc');
+      if (descElem) {
+        descElem.innerHTML = `<b>${winner}</b> has reached 10 Heat Wins!<br>You can end the match now and claim victory, or carry on playing for <b>Total Deck Conquest</b> (first to stack 30+ cards / eliminate opponent).`;
+      }
+
+      const modal = document.getElementById('modal10WinChoice');
+      if (modal) {
+        modal.setAttribute('data-winner', winner);
+        modal.classList.add('active');
+      }
+    }
+
+    const btnClaim10Win = document.getElementById('btnClaim10Win');
+    if (btnClaim10Win) {
+      btnClaim10Win.addEventListener('click', () => {
+        playSound('click');
+        const modal = document.getElementById('modal10WinChoice');
+        if (modal) modal.classList.remove('active');
+        const winner = modal ? (modal.getAttribute('data-winner') || 'PLAYER 1') : 'PLAYER 1';
+        showMatchVictoryModal(winner, '10 HEATS VICTORY CLAIMED!');
+      });
+    }
+
+    const btnCarryOn10Win = document.getElementById('btnCarryOn10Win');
+    if (btnCarryOn10Win) {
+      btnCarryOn10Win.addEventListener('click', () => {
+        playSound('click');
+        const modal = document.getElementById('modal10WinChoice');
+        if (modal) modal.classList.remove('active');
+        document.getElementById('statusText').textContent = 'DECK CONQUEST ACTIVE! PLAY UNTIL A PLAYER STACKS 30 CARDS!';
+      });
+    }
+
+    function showMatchVictoryModal(winner, reason = 'FIRST TO 10 HEATS VICTORY!') {
+      playSound('win');
+      playSound('cheer');
+      triggerVictoryEffects(winner === 'PLAYER 1' ? 'P1' : 'P2');
+
+      const titleElem = document.getElementById('matchVictoryTitle');
+      if (titleElem) titleElem.textContent = `🏆 ${winner} IS THE APEX CHAMPION!`;
+
+      const subElem = document.getElementById('matchVictorySub');
+      if (subElem) subElem.textContent = reason;
+
+      const p1Final = document.getElementById('matchP1Final');
+      if (p1Final) p1Final.textContent = `P1 WINS: ${gameState.p1Score}`;
+
+      const p2Final = document.getElementById('matchP2Final');
+      if (p2Final) p2Final.textContent = `P2 WINS: ${gameState.p2Score}`;
+
+      const modal = document.getElementById('modalMatchVictory');
+      if (modal) modal.classList.add('active');
+    }
+
+    function resetMatchScores() {
+      gameState.p1Score = 0;
+      gameState.p2Score = 0;
+      gameState.winChoiceOffered = false;
+      initDecks();
+      const modal = document.getElementById('modalMatchVictory');
+      if (modal) modal.classList.remove('active');
+      saveState();
+
+      if (gameState.mode === 'P2P' && gameState.isP2PConnected) {
+        if (gameState.isHost) {
+          startNewRoundP2P();
+        } else {
+          if (gameState.conn && gameState.conn.open) {
+            gameState.conn.send({ type: 'RESET_MATCH_SCORES' });
+          }
+        }
+      } else {
+        currentTrack = dbTracks[Math.floor(Math.random() * dbTracks.length)];
+        drawHands();
+        renderAll();
+      }
+    }
+
+    const btnPlayAgain = document.getElementById('btnPlayAgain');
+    if (btnPlayAgain) {
+      btnPlayAgain.addEventListener('click', () => {
+        playSound('click');
+        resetMatchScores();
+      });
+    }
+
+    function startNewRoundP2P() {
+      currentTrack = dbTracks[Math.floor(Math.random() * dbTracks.length)];
+      drawHands();
+
+      if (gameState.conn && gameState.conn.open) {
+        gameState.conn.send({
+          type: 'SYNC_ROUND',
+          track: currentTrack,
+          p1Hand: gameState.p1Hand,
+          p2Hand: gameState.p2Hand
+        });
+      }
+
+      document.getElementById('statusText').textContent = gameState.isHost 
+        ? 'PLAYER 1 (YOU): DRAW YOUR 3 CARDS FROM THE PILE' 
+        : 'PLAYER 2 (YOU): DRAW YOUR 3 CARDS FROM THE PILE';
+      renderAll();
+    }
+
+    document.getElementById('btnNextRound').addEventListener('click', () => {
+      playSound('click');
+      if (gameState.mode === 'P2P' && gameState.isP2PConnected) {
+        if (gameState.isHost) {
+          startNewRoundP2P();
+        } else {
+          if (gameState.conn && gameState.conn.open) {
+            gameState.conn.send({ type: 'NEXT_ROUND_REQUEST' });
+            document.getElementById('statusText').textContent = 'REQUESTED NEXT HEAT! WAITING FOR HOST...';
+          }
+        }
+      } else {
+        currentTrack = dbTracks[Math.floor(Math.random() * dbTracks.length)];
+        drawHands();
+        renderAll();
+      }
+    });
+
+    // --- VICTORY EFFECTS & PARTICLE CANVAS ---
+    const vCanvas = document.getElementById('victoryCanvas');
+    const vCtx = vCanvas ? vCanvas.getContext('2d') : null;
+    let particles = [];
+    let animFrameId = null;
+
+    function resizeVictoryCanvas() {
+      if (!vCanvas) return;
+      vCanvas.width = window.innerWidth;
+      vCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeVictoryCanvas);
+    resizeVictoryCanvas();
+
+    function triggerVictoryEffects(playerKey) {
+      document.querySelectorAll('.chequered-flag-overlay').forEach(el => el.remove());
+      playSound('cheer');
+
+      const slotElem = document.getElementById(playerKey === 'P1' ? 'slotP1' : 'slotP2');
+      if (slotElem) {
+        const flagHtml = `
+          <div class="chequered-flag-overlay">
+            <div class="flag-ribbon"></div>
+            <div style="background: rgba(12,13,16,0.9); color: var(--amber); font-family: var(--font-hud); font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 4px; text-align: center; border: 1px solid var(--amber); margin-top: 6px; text-shadow: 0 0 8px var(--amber-glow); box-shadow: 0 4px 12px rgba(0,0,0,0.8);">
+              🏁 HEAT WINNER! 🏁
+            </div>
+          </div>
+        `;
+        slotElem.insertAdjacentHTML('beforeend', flagHtml);
+
+        const rect = slotElem.getBoundingClientRect();
+        spawnFireworksAndConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }
+    }
+
+    function spawnFireworksAndConfetti(originX, originY) {
+      if (!vCtx) return;
+      particles = [];
+      const colors = ['#00f0ff', '#ff0055', '#ffb000', '#00ff66', '#9d00ff', '#ffffff', '#ffd700'];
+
+      // Confetti (160 pieces)
+      for (let i = 0; i < 160; i++) {
+        particles.push({
+          x: originX + (Math.random() * 160 - 80),
+          y: originY,
+          vx: (Math.random() - 0.5) * 14,
+          vy: (Math.random() * -14) - 4,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 12,
+          gravity: 0.22,
+          opacity: 1,
+          type: 'confetti'
+        });
+      }
+
+      // Fireworks Rockets (4 bursts)
+      for (let f = 0; f < 4; f++) {
+        const burstX = Math.random() * (vCanvas.width * 0.7) + (vCanvas.width * 0.15);
+        const burstY = Math.random() * (vCanvas.height * 0.4) + (vCanvas.height * 0.1);
+        const burstColor = colors[Math.floor(Math.random() * colors.length)];
+
+        for (let p = 0; p < 50; p++) {
+          const angle = (Math.PI * 2 / 50) * p;
+          const speed = Math.random() * 8 + 2;
+          particles.push({
+            x: burstX,
+            y: burstY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: Math.random() * 4 + 2,
+            color: burstColor,
+            gravity: 0.08,
+            opacity: 1,
+            decay: Math.random() * 0.015 + 0.01,
+            type: 'spark'
+          });
+        }
+      }
+
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      animateParticles();
+    }
+
+    function animateParticles() {
+      if (!vCtx) return;
+      vCtx.clearRect(0, 0, vCanvas.width, vCanvas.height);
+
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+
+        if (p.type === 'confetti') {
+          p.rotation += p.vRot;
+          p.opacity -= 0.005;
+
+          vCtx.save();
+          vCtx.translate(p.x, p.y);
+          vCtx.rotate((p.rotation * Math.PI) / 180);
+          vCtx.globalAlpha = Math.max(0, p.opacity);
+          vCtx.fillStyle = p.color;
+          vCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          vCtx.restore();
+        } else {
+          p.opacity -= p.decay;
+
+          vCtx.save();
+          vCtx.globalAlpha = Math.max(0, p.opacity);
+          vCtx.fillStyle = p.color;
+          vCtx.beginPath();
+          vCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          vCtx.fill();
+          vCtx.restore();
+        }
+      });
+
+      particles = particles.filter(p => p.opacity > 0 && p.y < vCanvas.height + 50);
+
+      if (particles.length > 0) {
+        animFrameId = requestAnimationFrame(animateParticles);
+      } else {
+        vCtx.clearRect(0, 0, vCanvas.width, vCanvas.height);
+      }
+    }
+
+
+    // --- GARAGE & SCRAP LOGIC ---
+    let pendingStarCar = null;
+
+    function starToGarage(playerKey, idx) {
+      playSound('click');
+      const carItem = playerKey === 'p1' ? gameState.p1Hand[idx] : gameState.p2Hand[idx];
+      if (carItem) carItem.fromGarage = true;
+      const garage = gameState.activeGarages[playerKey];
+
+      if (garage.length < 3) {
+        const itemToSave = JSON.parse(JSON.stringify(carItem));
+        itemToSave.fromGarage = true;
+        garage.push(itemToSave);
+        alert(`Starred ${carItem.car.model} to ${playerKey.toUpperCase()}'s Garage!`);
+        saveState();
+        renderHandDock();
+      } else {
+        // Garage Full -> Open Scrap & Replace Modal
+        const itemToSave = JSON.parse(JSON.stringify(carItem));
+        itemToSave.fromGarage = true;
+        pendingStarCar = { playerKey, item: itemToSave };
+        renderScrapSlots();
+        document.getElementById('modalScrap').classList.add('active');
+      }
+    }
+
+    function renderScrapSlots() {
+      const container = document.getElementById('scrapSlotsContainer');
+      container.innerHTML = '';
+      const { playerKey } = pendingStarCar;
+      const garage = gameState.activeGarages[playerKey];
+
+      garage.forEach((item, slotIdx) => {
+        const stats = calcCarStats(item.car, item.upgrades);
+        const scrapValue = (item.car.tier * 2000);
+
+        const card = `
+          <div class="part-option-card">
+            <div class="part-header">
+              <span>SLOT ${slotIdx + 1}: ${item.car.model}</span>
+              <span style="color: var(--amber);">Tier ${item.car.tier}</span>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">
+              <div>ET: ${stats.et}s | HP: ${stats.hp}</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">
+              <button class="btn btn-primary" onclick="executeScrap(${slotIdx}, 'CASH')" style="font-size: 0.75rem;">QUICK CASH (+$${scrapValue})</button>
+              <button class="btn btn-magenta" onclick="executeScrap(${slotIdx}, 'SALVAGE')" style="font-size: 0.75rem;">SALVAGE TO TOOLBOX</button>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', card);
+      });
+    }
+
+    function executeScrap(slotIdx, mode) {
+      playSound('click');
+      const { playerKey, item } = pendingStarCar;
+      const targetSlot = gameState.activeGarages[playerKey][slotIdx];
+
+      if (mode === 'CASH') {
+        const cashGain = targetSlot.car.tier * 2000;
+        if (playerKey === 'p1') gameState.p1Wallet += cashGain;
+        else gameState.p2Wallet += cashGain;
+        alert(`Scrapped ${targetSlot.car.model} for $${cashGain} cash!`);
+      } else {
+        // Chop shop salvage
+        gameState.toolbox.push({ category: 'turbos', stage: 2, name: `Salvaged Part from ${targetSlot.car.model}` });
+        alert(`Salvaged ${targetSlot.car.model} part into Toolbox!`);
+      }
+
+      // Replace slot
+      gameState.activeGarages[playerKey][slotIdx] = item;
+      pendingStarCar = null;
+      document.getElementById('modalScrap').classList.remove('active');
+      saveState();
+      renderAll();
+    }
+
+    function cancelScrap() {
+      playSound('click');
+      pendingStarCar = null;
+      document.getElementById('modalScrap').classList.remove('active');
+    }
+
+    const closeScrapBtn = document.getElementById('closeScrap');
+    if (closeScrapBtn) closeScrapBtn.addEventListener('click', cancelScrap);
+
+    const btnCancelScrapBtn = document.getElementById('btnCancelScrap');
+    if (btnCancelScrapBtn) btnCancelScrapBtn.addEventListener('click', cancelScrap);
+
+    const modalScrapEl = document.getElementById('modalScrap');
+    if (modalScrapEl) {
+      modalScrapEl.addEventListener('click', (e) => {
+        if (e.target === modalScrapEl) {
+          cancelScrap();
+        }
+      });
+    }
+
+    // --- GARAGE & TUNING SHOP MODAL ---
+    document.getElementById('btnGarage').addEventListener('click', () => {
+      playSound('click');
+      renderGarageModal('p1');
+      document.getElementById('modalGarage').classList.add('active');
+    });
+    document.getElementById('closeGarage').addEventListener('click', () => {
+      document.getElementById('modalGarage').classList.remove('active');
+    });
+
+    document.getElementById('tabP1Garage').addEventListener('click', function() {
+      document.querySelectorAll('.modal-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      renderGarageModal('p1');
+    });
+
+    document.getElementById('tabP2Garage').addEventListener('click', function() {
+      document.querySelectorAll('.modal-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      renderGarageModal('p2');
+    });
+
+    document.getElementById('tabToolbox').addEventListener('click', function() {
+      document.querySelectorAll('.modal-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      renderToolboxModal();
+    });
+
+    function renderGarageModal(playerKey) {
+      const container = document.getElementById('garageContent');
+      const garage = gameState.activeGarages[playerKey];
+
+      if (garage.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 40px;">No vehicles in ${playerKey.toUpperCase()}'s garage yet. Star cards from your hand to save them here!</p>`;
+        return;
+      }
+
+      container.innerHTML = `<div class="garage-grid" id="garageGrid"></div><div id="tuningPanel" style="margin-top: 20px;"></div>`;
+      const grid = document.getElementById('garageGrid');
+
+      garage.forEach((item, idx) => {
+        const stats = calcCarStats(item.car, item.upgrades);
+        const card = `
+          <div class="part-option-card">
+            <div class="part-header">
+              <span>${item.car.make} ${item.car.model}</span>
+              <span style="color: var(--amber);">Tier ${item.car.tier}</span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+              <div>ET: ${stats.et}s | HP: ${stats.hp} | Grip: ${stats.grip}G</div>
+            </div>
+            <button class="btn btn-primary" onclick="openTuningForCar('${playerKey}', ${idx})" style="font-size: 0.75rem; margin-top: 8px;">TUNE VEHICLE</button>
+          </div>
+        `;
+        grid.insertAdjacentHTML('beforeend', card);
+      });
+    }
+
+    function openTuningForCar(playerKey, carIdx) {
+      playSound('click');
+      const item = gameState.activeGarages[playerKey][carIdx];
+      const panel = document.getElementById('tuningPanel');
+      const stats = calcCarStats(item.car, item.upgrades);
+
+      const categories = [
+        {
+          key: 'turbos', name: 'TURBOCHARGER', icon: '⚡',
+          stages: [
+            { stage: 1, desc: '+15% HP', cost: 1000 },
+            { stage: 2, desc: '+35% HP', cost: 2500 },
+            { stage: 3, desc: '+60% HP', cost: 5000 }
+          ]
+        },
+        {
+          key: 'tyres', name: 'RACING TYRES', icon: '🛞',
+          stages: [
+            { stage: 1, desc: '+0.06 Grip G', cost: 1000 },
+            { stage: 2, desc: '+0.14 Grip G', cost: 2500 },
+            { stage: 3, desc: '+0.25 Grip G', cost: 5000 }
+          ]
+        },
+        {
+          key: 'suspension', name: 'SPORT SUSPENSION', icon: '🔧',
+          stages: [
+            { stage: 1, desc: '+0.05 Grip G', cost: 1000 },
+            { stage: 2, desc: '+0.12 Grip G', cost: 2500 },
+            { stage: 3, desc: '+0.22 Grip G', cost: 5000 }
+          ]
+        },
+        {
+          key: 'weight', name: 'WEIGHT REDUCTION', icon: '⚖️',
+          stages: [
+            { stage: 1, desc: '-40 kg', cost: 1000 },
+            { stage: 2, desc: '-90 kg', cost: 2500 },
+            { stage: 3, desc: '-160 kg', cost: 5000 }
+          ]
+        },
+        {
+          key: 'ecu', name: 'ECU TUNING', icon: '💻',
+          stages: [
+            { stage: 1, desc: '+5% HP', cost: 1000 },
+            { stage: 2, desc: '+12% HP', cost: 2500 },
+            { stage: 3, desc: '+20% HP', cost: 5000 }
+          ]
+        }
+      ];
+
+      const neonColors = [
+        { name: 'cyan', label: 'Electric Cyan', hex: '#00f0ff' },
+        { name: 'magenta', label: 'Neon Magenta', hex: '#ff0055' },
+        { name: 'amber', label: 'Sunburst Amber', hex: '#ffb000' },
+        { name: 'green', label: 'Acid Green', hex: '#00ff66' },
+        { name: 'purple', label: 'Deep Purple', hex: '#9d00ff' },
+        { name: 'red', label: 'Crimson Red', hex: '#ff2a2a' }
+      ];
+
+      const playerWallet = playerKey === 'p1' ? gameState.p1Wallet : gameState.p2Wallet;
+      const playerColor = playerKey === 'p1' ? 'var(--cyan)' : 'var(--magenta)';
+
+      let catalogHtml = `
+        <div style="background: var(--panel-header); padding: 14px 18px; border-radius: 8px; border: 1px solid var(--panel-border); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="font-family: var(--font-hud); color: var(--cyan); margin-bottom: 4px;">TUNING BAY: ${item.car.make.toUpperCase()} ${item.car.model.toUpperCase()}</h3>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+              ${playerKey.toUpperCase()} BANK: <strong style="color: ${playerColor}; margin-right: 12px;">$${playerWallet.toLocaleString()}</strong> | Power: <strong style="color: #fff;">${stats.hp} HP</strong> | Weight: <strong style="color: #fff;">${stats.weight} kg</strong> | Grip: <strong style="color: #fff;">${stats.grip} G</strong> | 1/4 Mile ET: <strong style="color: var(--green);">${stats.et}s</strong>
+            </div>
+          </div>
+          <button class="btn" onclick="renderGarageModal('${playerKey}')" style="font-size: 0.75rem;">← BACK TO GARAGE</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+      `;
+
+      categories.forEach(cat => {
+        const currentStage = item.upgrades[cat.key] ? item.upgrades[cat.key].stage : 0;
+        catalogHtml += `
+          <div class="part-option-card ${currentStage > 0 ? 'installed' : ''}" style="padding: 16px;">
+            <div class="part-header" style="margin-bottom: 10px;">
+              <span style="font-family: var(--font-hud); font-size: 1rem; color: #fff;">${cat.icon} ${cat.name}</span>
+              <span style="font-size: 0.8rem; color: ${currentStage > 0 ? 'var(--green)' : 'var(--text-muted)'}; font-weight: 700;">
+                ${currentStage === 0 ? 'STOCK (NO UPGRADE)' : `STAGE ${currentStage} INSTALLED`}
+              </span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+        `;
+
+        cat.stages.forEach(st => {
+          const isInstalled = currentStage >= st.stage;
+          const isNextToBuy = currentStage === st.stage - 1;
+
+          let btnClass = "btn";
+          let btnText = `BUY STAGE ${st.stage} ($${st.cost.toLocaleString()})`;
+          let disabled = false;
+
+          if (isInstalled) {
+            btnClass = "btn";
+            btnText = `✓ STAGE ${st.stage} INSTALLED`;
+            disabled = true;
+          } else if (isNextToBuy) {
+            btnClass = "btn btn-primary";
+            btnText = `EQUIP STAGE ${st.stage} ($${st.cost.toLocaleString()})`;
+          } else {
+            btnClass = "btn";
+            btnText = `🔒 LOCKED (BUY STAGE ${st.stage - 1} FIRST)`;
+            disabled = true;
+          }
+
+          catalogHtml += `
+            <div style="background: rgba(10,12,16,0.6); border: 1px solid ${isInstalled ? 'var(--green)' : isNextToBuy ? 'var(--cyan)' : 'var(--panel-border)'}; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <div>
+                <div style="font-family: var(--font-hud); font-size: 0.85rem; color: #fff;">STAGE ${st.stage}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${st.desc}</div>
+              </div>
+              <button class="${btnClass}" ${disabled ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} 
+                      onclick="buyPart('${playerKey}', ${carIdx}, '${cat.key}', ${st.stage}, ${st.cost})" 
+                      style="font-size: 0.7rem; padding: 6px 8px; font-weight: 700;">
+                ${btnText}
+              </button>
+            </div>
+          `;
+        });
+
+        catalogHtml += `
+            </div>
+          </div>
+        `;
+      });
+
+      // Neon Selector Section
+      const currentNeon = item.upgrades.neon || null;
+      catalogHtml += `
+        <div class="part-option-card ${currentNeon ? 'installed' : ''}" style="padding: 16px;">
+          <div class="part-header" style="margin-bottom: 10px;">
+            <span style="font-family: var(--font-hud); font-size: 1rem; color: #fff;">🌈 NEON UNDERGLOW (+15 STYLE RATING)</span>
+            <span style="font-size: 0.8rem; color: ${currentNeon ? 'var(--cyan)' : 'var(--text-muted)'}; font-weight: 700;">
+              ${currentNeon ? `CURRENT: ${currentNeon.toUpperCase()}` : 'NO NEON INSTALLED'}
+            </span>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+            Select a neon color swatch below to equip custom dynamic underglow to your vehicle ($750):
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+      `;
+
+      neonColors.forEach(nc => {
+        const isEquipped = currentNeon === nc.name;
+        catalogHtml += `
+          <button class="btn" 
+                  onclick="buyPart('${playerKey}', ${carIdx}, 'neon', '${nc.name}', 750)"
+                  style="border-color: ${nc.hex}; color: #fff; background: rgba(20,23,29,0.9); box-shadow: 0 0 10px ${nc.hex}44; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; font-size: 0.75rem;">
+            <span style="width: 14px; height: 14px; border-radius: 50%; background: ${nc.hex}; box-shadow: 0 0 8px ${nc.hex};"></span>
+            ${nc.label} ${isEquipped ? '✓' : ''}
+          </button>
+        `;
+      });
+
+      catalogHtml += `
+          </div>
+        </div>
+      </div>`;
+
+      panel.innerHTML = catalogHtml;
+    }
+
+    function buyPart(playerKey, carIdx, category, stageVal, cost) {
+      playSound('click');
+      const wallet = playerKey === 'p1' ? gameState.p1Wallet : gameState.p2Wallet;
+      const item = gameState.activeGarages[playerKey][carIdx];
+      const currentStage = item.upgrades[category] ? item.upgrades[category].stage : 0;
+
+      if (category !== 'neon') {
+        if (stageVal !== currentStage + 1) {
+          alert(`You must purchase Stage ${currentStage + 1} first! Upgrades must be bought sequentially.`);
+          return;
+        }
+      }
+
+      if (wallet < cost) {
+        alert('Insufficient wallet funds!');
+        return;
+      }
+
+      if (playerKey === 'p1') gameState.p1Wallet -= cost;
+      else gameState.p2Wallet -= cost;
+
+      if (category === 'neon') {
+        item.upgrades.neon = stageVal;
+      } else {
+        item.upgrades[category] = { stage: stageVal };
+      }
+
+      saveState();
+      playSound('win');
+      alert(`Equipped ${category.toUpperCase()} ${category === 'neon' ? stageVal.toUpperCase() : 'STAGE ' + stageVal}!`);
+      openTuningForCar(playerKey, carIdx);
+      renderAll();
+    }
+
+    function renderToolboxModal() {
+      const container = document.getElementById('garageContent');
+      if (gameState.toolbox.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 40px;">Toolbox is empty. Salvage parts from scrapped vehicles to see them here!</p>`;
+        return;
+      }
+
+      let html = `<div class="garage-grid">`;
+      gameState.toolbox.forEach((part, i) => {
+        html += `
+          <div class="part-option-card">
+            <div class="part-header"><span>${part.name}</span></div>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Category: ${part.category}</p>
+          </div>
+        `;
+      });
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    // --- P2P MULTIPLAYER ---
+    function setupP2PDataConnection(conn) {
+      conn.on('data', (data) => {
+        if (data.type === 'CARD_SELECTED') {
+          if (data.player === 'P1') {
+            gameState.p1Selected = data.selectedItem;
+            renderCardSlot('P1', data.selectedItem);
+          } else {
+            gameState.p2Selected = data.selectedItem;
+            renderCardSlot('P2', data.selectedItem);
+          }
+
+          const myRole = gameState.isHost ? 'P1' : 'P2';
+          const mySelected = myRole === 'P1' ? gameState.p1Selected : gameState.p2Selected;
+
+          if (mySelected) {
+            document.getElementById('statusText').textContent = 'BOTH PLAYERS READY! CLICK FLIP & SHOWDOWN';
+          } else {
+            document.getElementById('statusText').textContent = 'OPPONENT HAS LOCKED IN THEIR CARD! CHOOSE YOUR CARD';
+          }
+          renderAll();
+        } else if (data.type === 'SYNC_ROUND') {
+          currentTrack = data.track;
+          gameState.p1Hand = data.p1Hand;
+          gameState.p2Hand = data.p2Hand;
+          gameState.p1Selected = null;
+          gameState.p2Selected = null;
+          resetCardPositions();
+          document.querySelectorAll('.chequered-flag-overlay').forEach(el => el.remove());
+          document.getElementById('slotP1').classList.remove('flipped');
+          document.getElementById('slotP2').classList.remove('flipped');
+          document.getElementById('resultsPanel').style.display = 'none';
+          document.getElementById('btnNextRound').style.display = 'none';
+          document.getElementById('btnActionHeat').style.display = 'inline-flex';
+          document.getElementById('statusText').textContent = gameState.isHost 
+            ? 'PLAYER 1 (YOU): DRAW YOUR 3 CARDS FROM THE PILE' 
+            : 'PLAYER 2 (YOU): DRAW YOUR 3 CARDS FROM THE PILE';
+          renderAll();
+        } else if (data.type === 'NEXT_ROUND_REQUEST' && gameState.isHost) {
+          startNewRoundP2P();
+        }
+      });
+    }
+
+    document.getElementById('btnP2P').addEventListener('click', () => {
+      document.getElementById('modalP2P').classList.add('active');
+    });
+    document.getElementById('closeP2P').addEventListener('click', () => {
+      document.getElementById('modalP2P').classList.remove('active');
+    });
+
+    document.getElementById('btnHostRoom').addEventListener('click', () => {
+      const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+      gameState.peer = new Peer('APEX-' + roomCode);
+      gameState.mode = 'P2P';
+      gameState.isHost = true;
+      gameState.p1Score = 0;
+      gameState.p2Score = 0;
+      saveState();
+
+      gameState.peer.on('open', (id) => {
+        document.getElementById('hostCodeDisplay').style.display = 'block';
+        document.getElementById('hostCodeDisplay').textContent = `ROOM CODE: ${roomCode}`;
+        document.getElementById('modeBadge').textContent = `HOSTING ROOM: ${roomCode}`;
+      });
+
+      gameState.peer.on('connection', (conn) => {
+        gameState.conn = conn;
+        gameState.isP2PConnected = true;
+        setupP2PDataConnection(conn);
+
+        conn.send({
+          type: 'SYNC_ROUND',
+          track: currentTrack,
+          p1Hand: gameState.p1Hand,
+          p2Hand: gameState.p2Hand
+        });
+
+        alert('Player 2 connected! Online P2P mode active.');
+        document.getElementById('modalP2P').classList.remove('active');
+        renderAll();
+      });
+    });
+
+    document.getElementById('btnJoinRoom').addEventListener('click', () => {
+      const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+      if (!code) return;
+
+      gameState.peer = new Peer();
+      gameState.mode = 'P2P';
+      gameState.isHost = false;
+      gameState.p1Score = 0;
+      gameState.p2Score = 0;
+      saveState();
+
+      gameState.peer.on('open', () => {
+        gameState.conn = gameState.peer.connect('APEX-' + code);
+        gameState.conn.on('open', () => {
+          gameState.isP2PConnected = true;
+          setupP2PDataConnection(gameState.conn);
+          alert(`Connected to Room ${code}! Online P2P mode active.`);
+          document.getElementById('modeBadge').textContent = `ONLINE P2P: ${code}`;
+          document.getElementById('modalP2P').classList.remove('active');
+          renderAll();
+        });
+      });
+    });
+
+    // --- SETTINGS & SAVE BACKUP ---
+    document.getElementById('btnSettings').addEventListener('click', () => {
+      document.getElementById('modalSettings').classList.add('active');
+    });
+    document.getElementById('closeSettings').addEventListener('click', () => {
+      document.getElementById('modalSettings').classList.remove('active');
+    });
+
+    document.getElementById('btnExportSave').addEventListener('click', () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(localStorage.getItem('apex_shift_save') || '{}');
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `apex_shift_save_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    });
+
+    document.getElementById('importFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          localStorage.setItem('apex_shift_save', JSON.stringify(parsed));
+          loadSavedState();
+          renderAll();
+          alert('Save profile imported successfully!');
+          document.getElementById('modalSettings').classList.remove('active');
+        } catch (err) { alert('Invalid save file JSON'); }
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('btnResetProfile').addEventListener('click', () => {
+      if (confirm('Are you sure you want to reset all game data?')) {
+        if (confirm('THIS WILL PERMANENTLY ERASE YOUR GARAGE AND WALLET. CONFIRM RESET?')) {
+          localStorage.removeItem('apex_shift_save');
+          gameState.p1Wallet = 10000;
+          gameState.p2Wallet = 10000;
+          gameState.activeGarages = { p1: [], p2: [] };
+          gameState.toolbox = [];
+          gameState.p1Score = 0;
+          gameState.p2Score = 0;
+          drawHands();
+          renderAll();
+          alert('Profile reset to defaults.');
+          document.getElementById('modalSettings').classList.remove('active');
+        }
+      }
+    });
+
+    // --- NEW GAME MODAL ---
+    document.getElementById('btnNewGame').addEventListener('click', () => {
+      playSound('click');
+      document.getElementById('modalNewGame').classList.add('active');
+    });
+    document.getElementById('closeNewGame').addEventListener('click', () => {
+      playSound('click');
+      document.getElementById('modalNewGame').classList.remove('active');
+    });
+    document.getElementById('modalNewGame').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modalNewGame')) {
+        document.getElementById('modalNewGame').classList.remove('active');
+      }
+    });
+
+    document.getElementById('btnResetScoresOnly').addEventListener('click', () => {
+      playSound('click');
+      if (confirm('Clear heat match scores and start a new round? (Your garage, upgrades, and bank balance will be preserved)')) {
+        resetMatchScores();
+        document.getElementById('modalNewGame').classList.remove('active');
+      }
+    });
+
+    document.getElementById('btnResetFull').addEventListener('click', () => {
+      playSound('click');
+      if (confirm('Are you sure you want to completely reset your game profile?')) {
+        if (confirm('THIS WILL PERMANENTLY ERASE YOUR SCORES, MONEY, CARS, AND UPGRADES. CONTINUE?')) {
+          localStorage.removeItem('apex_shift_save');
+          gameState.p1Wallet = 10000;
+          gameState.p2Wallet = 10000;
+          gameState.activeGarages = { p1: [], p2: [] };
+          gameState.toolbox = [];
+          resetMatchScores();
+          document.getElementById('modalNewGame').classList.remove('active');
+        }
+      }
+    });
+
+    // --- CAR MAGNIFIER / ZOOM FUNCTIONS ---
+    function getZoomBtnHtml(make, model, carImgPath, id, drivetrain, tier, stats) {
+      const encStats = stats ? encodeURIComponent(JSON.stringify(stats)) : '';
+      const safeMake = encodeURIComponent(make || '');
+      const safeModel = encodeURIComponent(model || '');
+      const safeImg = encodeURIComponent(carImgPath || '');
+      const safeId = encodeURIComponent(id || '');
+      const safeDrive = encodeURIComponent(drivetrain || '');
+      return `
+        <button class="card-zoom-btn" title="Magnify Car" onclick="event.stopPropagation(); openCarZoom('${safeMake}', '${safeModel}', '${safeImg}', '${safeId}', '${safeDrive}', ${tier || 1}, '${encStats}')">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zm.5-7H9v2H7v1h2v2h1v-2h2V9h-2V7z"/></svg>
+        </button>
+      `;
+    }
+
+    function openCarZoom(encMake, encModel, encImgPath, encId, encDrivetrain, tier, encStats) {
+      if (typeof playSound === 'function') playSound('click');
+      const modal = document.getElementById('modalCarZoom');
+      if (!modal) return;
+
+      const make = decodeURIComponent(encMake || '');
+      const model = decodeURIComponent(encModel || '');
+      const imgPath = decodeURIComponent(encImgPath || '');
+      const drivetrain = decodeURIComponent(encDrivetrain || '');
+
+      document.getElementById('zoomCarTitle').textContent = `${make.toUpperCase()} ${model.toUpperCase()}`;
+      document.getElementById('zoomCarName').textContent = `${make} ${model}`;
+      document.getElementById('zoomCarDrivetrain').textContent = drivetrain || 'RWD';
+      document.getElementById('zoomCarStars').textContent = '★'.repeat(tier || 1) + '☆'.repeat(5 - (tier || 1));
+      document.getElementById('zoomCarSubtitle').textContent = `TIER ${tier || 1} APEX SHIFT VEHICLE`;
+
+      const imgElem = document.getElementById('zoomCarImg');
+      imgElem.src = imgPath;
+      imgElem.onerror = function() {
+        this.src = getCarSvgFallback(make, model, tier || 1);
+      };
+
+      const statsGrid = document.getElementById('zoomCarStatsGrid');
+      if (encStats) {
+        try {
+          const stats = JSON.parse(decodeURIComponent(encStats));
+          statsGrid.innerHTML = `
+            <div class="stat-chip"><span class="stat-lbl">1/4 MILE ET</span><span class="stat-val highlight">${stats.et}s</span></div>
+            <div class="stat-chip"><span class="stat-lbl">TRAP SPEED</span><span class="stat-val">${stats.trapSpeed} km/h</span></div>
+            <div class="stat-chip"><span class="stat-lbl">POWER</span><span class="stat-val">${stats.hp} HP</span></div>
+            <div class="stat-chip"><span class="stat-lbl">WEIGHT</span><span class="stat-val">${stats.weight} kg</span></div>
+            <div class="stat-chip"><span class="stat-lbl">LATERAL GRIP</span><span class="stat-val">${stats.grip} G</span></div>
+            <div class="stat-chip"><span class="stat-lbl">STYLE</span><span class="stat-val">${stats.style}</span></div>
+          `;
+        } catch(e) {
+          statsGrid.innerHTML = '';
+        }
+      } else {
+        statsGrid.innerHTML = '';
+      }
+
+      modal.classList.add('active');
+    }
+
+    function toggleSleeve(badgeElem) {
+      if (typeof playSound === 'function') playSound('flip');
+      const sleeve = badgeElem.closest('.card-plastic-sleeve');
+      if (!sleeve) return;
+      sleeve.classList.toggle('unwrapped');
+      if (sleeve.classList.contains('unwrapped')) {
+        badgeElem.innerHTML = '📂 UNWRAPPED (CLICK TO SLEEVE)';
+        badgeElem.style.borderColor = 'var(--cyan)';
+        badgeElem.style.color = 'var(--cyan)';
+      } else {
+        badgeElem.innerHTML = '🛡️ SLEEVED (CLICK TO UNWRAP)';
+        badgeElem.style.borderColor = 'var(--amber)';
+        badgeElem.style.color = 'var(--amber)';
+      }
+    }
+
+    document.getElementById('closeCarZoom').addEventListener('click', () => {
+      if (typeof playSound === 'function') playSound('click');
+      document.getElementById('modalCarZoom').classList.remove('active');
+    });
+    document.getElementById('modalCarZoom').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modalCarZoom')) {
+        document.getElementById('modalCarZoom').classList.remove('active');
+      }
+    });
+
+    // --- INITIALIZE GAME ---
+    let isAppInitialized = false;
+    async function bootApp() {
+      if (isAppInitialized) return;
+      isAppInitialized = true;
+      try {
+        await initData();
+      } catch(err) {
+        console.error('App Boot Exception:', err);
+      }
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(bootApp, 1);
+    } else {
+      window.addEventListener('DOMContentLoaded', bootApp);
+      window.addEventListener('load', bootApp);
+    }
+  </script>
+</body>
+</html>
