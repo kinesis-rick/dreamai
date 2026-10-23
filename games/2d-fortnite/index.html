@@ -285,12 +285,15 @@ cvs.addEventListener('mousedown',e=>{
  if(e.button===0&&state==='menu'&&modeOpen&&!menuSettings){
   const R=modeSelRects();
   const inR=(r)=>mouse.x>=r.x&&mouse.x<=r.x+r.w&&mouse.y>=r.y&&mouse.y<=r.y+r.h;
-  if(inR(R.fill)){
-   gameFill=!gameFill;
-   try{localStorage.setItem('fn2d_fill',gameFill?'1':'0');}catch(err){}
-   sfx('swap');
-  }
-  else{
+   if(inR(R.fill)){
+    gameFill=!gameFill;
+    try{localStorage.setItem('fn2d_fill',gameFill?'1':'0');}catch(err){}
+    sfx('swap');
+   }
+   else if(inR(R.fp)){
+    selectedMode='freeplay';modeOpen=false;sfx('swap');
+   }
+   else{
    for(const row of R.rows){
     if(inR(row)){selectedMode=row.k;modeOpen=false;sfx('swap');break;}
    }
@@ -3058,13 +3061,14 @@ function rrPath(x,y,w,h,r){
 function modeSelRects(){
  const rows=[];
  const y0=Math.floor(SH*0.2);
- ['solo','duos','trios','squads','freeplay'].forEach((k,i)=>{
+ ['solo','duos','trios','squads'].forEach((k,i)=>{
   rows.push({k,x:SW/2-180,y:y0+i*70,w:360,h:60});
  });
- const yFill=y0+5*70+12;
- return {panel:{x:SW/2-210,y:y0-70,w:420,h:56+5*70+12+50+22},
-
-  fill:{x:SW/2-180,y:yFill,w:360,h:46},rows};
+ const yFill=y0+4*70+12;
+ const panel={x:SW/2-210,y:y0-70,w:420,h:56+4*70+12+50+22};
+ const fpPanel={x:SW/2-210,y:panel.y+panel.h+18,w:420,h:64};
+ const fp={x:SW/2-180,y:fpPanel.y+30,w:360,h:24};
+ return {panel,fill:{x:SW/2-180,y:yFill,w:360,h:46},rows,fpPanel,fp};
 }
 function drawModeSel(){
  ctx.fillStyle='rgba(6,10,16,0.7)';
@@ -3073,23 +3077,40 @@ function drawModeSel(){
  ctx.fillStyle='rgba(13,22,36,0.96)';ctx.strokeStyle='rgba(255,255,255,0.25)';
  rrPath(R.panel.x,R.panel.y,R.panel.w,R.panel.h,14);ctx.fill();ctx.stroke();
  ctx.textAlign='center';
- ctx.fillStyle='#fff';ctx.font='bold 26px monospace';
- ctx.fillText('SELECT GAME MODE',SW/2,R.panel.y+40);
- for(const r of R.rows){
-  const m=MODES[r.k];
-  const hov=mouse.x>=r.x&&mouse.x<=r.x+r.w&&mouse.y>=r.y&&mouse.y<=r.y+r.h;
-  const sel=selectedMode===r.k;
-  const g2=ctx.createLinearGradient(r.x,r.y,r.x+r.w,r.y+r.h);
-  if(sel){g2.addColorStop(0,'#4a4418');g2.addColorStop(1,'#2c2a10');}
-  else if(hov){g2.addColorStop(0,'#2f4d7d');g2.addColorStop(1,'#1a2c46');}
-  else{g2.addColorStop(0,'#18283f');g2.addColorStop(1,'#101c2c');}
-  ctx.fillStyle=g2;ctx.strokeStyle=sel?'#ffd54f':(hov?'#9fb4c9':'rgba(255,255,255,0.25)');
-  rrPath(r.x,r.y,r.w,r.h,10);ctx.fill();ctx.stroke();
-  ctx.fillStyle=sel?'#ffd54f':'#fff';ctx.font='bold 24px monospace';
-  ctx.fillText(m.name,r.x+r.w/2,r.y+26);
-  ctx.fillStyle='#9fb4c9';ctx.font='11px monospace';
-  ctx.fillText(m.sub,r.x+r.w/2,r.y+47);
- }
+  ctx.fillStyle='#fff';ctx.font='bold 26px monospace';
+  ctx.fillText('SELECT GAME MODE',SW/2,R.panel.y+40);
+  ctx.globalAlpha=0.85;ctx.fillStyle='#9fb4c9';ctx.font='10px monospace';
+  ctx.fillText('BATTLE ROYALE',SW/2,R.panel.y+52);ctx.globalAlpha=1;
+  for(const r of R.rows){
+   const m=MODES[r.k];
+   const hov=mouse.x>=r.x&&mouse.x<=r.x+r.w&&mouse.y>=r.y&&mouse.y<=r.y+r.h;
+   const sel=selectedMode===r.k;
+   const g2=ctx.createLinearGradient(r.x,r.y,r.x+r.w,r.y+r.h);
+   if(sel){g2.addColorStop(0,'#4a4418');g2.addColorStop(1,'#2c2a10');}
+   else if(hov){g2.addColorStop(0,'#2f4d7d');g2.addColorStop(1,'#1a2c46');}
+   else{g2.addColorStop(0,'#18283f');g2.addColorStop(1,'#101c2c');}
+   ctx.fillStyle=g2;ctx.strokeStyle=sel?'#ffd54f':(hov?'#9fb4c9':'rgba(255,255,255,0.25)');
+   rrPath(r.x,r.y,r.w,r.h,10);ctx.fill();ctx.stroke();
+   ctx.fillStyle=sel?'#ffd54f':'#fff';ctx.font='bold 24px monospace';
+   ctx.fillText(m.name,r.x+r.w/2,r.y+26);
+   ctx.fillStyle='#9fb4c9';ctx.font='11px monospace';
+   ctx.fillText(m.sub,r.x+r.w/2,r.y+47);
+  }
+
+  const fp={x:SW/2-180,y:R.fpPanel.y+34,w:360,h:26};
+  const fhov2=mouse.x>=fp.x&&mouse.x<=fp.x+fp.w&&mouse.y>=fp.y&&mouse.y<=fp.y+fp.h;
+  const fsel=selectedMode==='freeplay';
+  ctx.fillStyle='rgba(13,22,36,0.96)';ctx.strokeStyle=fsel?'#66ff99':'rgba(255,255,255,0.25)';
+  rrPath(R.fpPanel.x,R.fpPanel.y,R.fpPanel.w,R.fpPanel.h,14);ctx.fill();ctx.stroke();
+  ctx.globalAlpha=0.85;ctx.fillStyle=fsel?'#66ff99':'#9fb4c9';ctx.font='10px monospace';
+  ctx.fillText('SANDBOX \u2022 PRACTICE',SW/2,R.fpPanel.y+17);ctx.globalAlpha=1;
+  if(fsel){ctx.fillStyle='rgba(40,196,110,0.22)';rrPath(fp.x,fp.y,fp.w,fp.h,9);ctx.fill();}
+  else if(fhov2){ctx.fillStyle='rgba(255,255,255,0.08)';rrPath(fp.x,fp.y,fp.w,fp.h,9);ctx.fill();}
+  ctx.strokeStyle=fsel?'#8dff8d':(fhov2?'#66ff99':'rgba(255,255,255,0.3)');
+  rrPath(fp.x,fp.y,fp.w,fp.h,9);ctx.stroke();
+  ctx.textAlign='center';
+  ctx.fillStyle=fsel?'#8dff8d':(fhov2?'#fff':'#c3d3e3');ctx.font='bold 15px monospace';
+  ctx.fillText('FREEPLAY  \u2022  NO STORM \u2022 MAX MATERIALS \u2022 NO BOTS',fp.x+fp.w/2,fp.y+18);
 
  const f=modeSelRects().fill;
  const fhov=mouse.x>=f.x&&mouse.x<=f.x+f.w&&mouse.y>=f.y&&mouse.y<=f.y+f.h;
