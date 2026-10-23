@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dream Cars: Realistic Racing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="game-viewport">
+    <!-- Main 1920x1080 Game Canvas -->
+    <canvas id="gameCanvas" width="1920" height="1080"></canvas>
+
+    <!-- IN-GAME HUD OVERLAY -->
+    <div id="hud-overlay" class="hidden">
+      <!-- Top-Left: Position & Lap -->
+      <div class="hud-top-left">
+        <div class="hud-card pos-card">
+          <span class="hud-label">POSITION</span>
+          <div class="hud-value-group">
+            <span id="hud-pos">1</span><span class="hud-sub">/16</span>
+          </div>
+        </div>
+        <div class="hud-card lap-card">
+          <span class="hud-label">LAP</span>
+          <div class="hud-value-group">
+            <span id="hud-lap">1</span><span class="hud-sub" id="hud-total-laps">/3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top-Center: Race Notifications / Lap Split -->
+      <div id="hud-notification" class="hud-notification hidden">LAP COMPLETED!</div>
+
+      <!-- Top-Right: High-Precision Race Timer & Pause Button -->
+      <div class="hud-top-right">
+        <div class="hud-card timer-card">
+          <span class="hud-label">RACE TIME</span>
+          <span id="hud-timer" class="hud-timer-val">00:00.00</span>
+        </div>
+        <button id="btn-hud-pause" class="hud-icon-btn" title="Pause Race (ESC)">⏸</button>
+      </div>
+
+      <!-- Bottom-Left: Telemetry Box -->
+      <div class="hud-bottom-left">
+        <div class="telemetry-panel">
+          <div class="telemetry-top">
+            <div class="speed-readout">
+              <span id="hud-speed">0</span>
+              <span class="speed-unit">KM/H</span>
+            </div>
+            <div class="gear-badges">
+              <div id="hud-gear" class="gear-badge">GEAR 1</div>
+              <div id="hud-surface" class="surface-badge asphalt">ASPHALT</div>
+            </div>
+          </div>
+          <div class="rpm-bar-track">
+            <div id="hud-speed-bar" class="rpm-bar-fill"></div>
+          </div>
+          <div class="telemetry-car-name" id="hud-car-name">VALKYRIE GTR</div>
+        </div>
+      </div>
+
+      <!-- Bottom-Right: Real-time Minimap Radar -->
+      <div class="hud-bottom-right">
+        <div class="minimap-container">
+          <div class="minimap-header">RADAR TELEMETRY</div>
+          <canvas id="minimapCanvas" width="288" height="162"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRE-RACE TABBED MENU -->
+    <div id="main-menu" class="menu-overlay">
+      <div class="menu-shell">
+        <!-- Header -->
+        <header class="menu-header">
+          <div class="brand-title">
+            <span class="brand-badge">PRO MOTORSPORT SIMULATOR</span>
+            <h1>DREAM CARS <span class="accent-cyan">REALISTIC RACING</span></h1>
+          </div>
+          <nav class="menu-tabs" role="tablist">
+            <button class="tab-btn active" data-tab="tab-garage">GARAGE</button>
+            <button class="tab-btn" data-tab="tab-opponents">OPPONENTS</button>
+            <button class="tab-btn" data-tab="tab-tracks">TRACKS</button>
+            <button class="tab-btn" data-tab="tab-mode">MODE</button>
+            <button class="tab-btn" data-tab="tab-settings">SETTINGS</button>
+            <button class="tab-btn tab-editor-btn" id="btn-open-editor">🛠 TRACK EDITOR</button>
+          </nav>
+        </header>
+
+        <!-- Tab Panels -->
+        <main class="menu-body">
+          <!-- TAB 1: GARAGE -->
+          <section id="tab-garage" class="tab-panel active">
+            <div class="garage-layout">
+              <!-- Player Slot Selector (for 1-4P) -->
+              <div class="garage-left">
+                <div class="panel-box">
+                  <div class="panel-header-row">
+                    <h3>DRIVER SELECTION</h3>
+                    <div class="player-slot-tabs" id="garage-player-tabs">
+                      <button class="p-slot-btn active" data-player="0">P1</button>
+                      <button class="p-slot-btn" data-player="1">P2</button>
+                      <button class="p-slot-btn" data-player="2">P3</button>
+                      <button class="p-slot-btn" data-player="3">P4</button>
+                    </div>
+                  </div>
+
+                  <!-- Car Carousel -->
+                  <div class="car-showcase">
+                    <button id="btn-prev-car" class="carousel-arrow" aria-label="Previous Car">◀</button>
+                    <div class="car-preview-stage">
+                      <div class="car-cat-pill" id="garage-car-category">EXOTIC HYPERCAR</div>
+                      <canvas id="garagePreviewCanvas" width="380" height="190"></canvas>
+                      <h2 id="garage-car-name">Valkyrie GTR</h2>
+                      <div class="car-id-tag" id="garage-car-id">CAR #01 / 50</div>
+                    </div>
+                    <button id="btn-next-car" class="carousel-arrow" aria-label="Next Car">▶</button>
+                  </div>
+
+                  <div class="garage-actions-row">
+                    <button id="btn-open-50-modal" class="btn-secondary-glow">VIEW ALL 50 CARS GRID</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Car Telemetry Specs & Livery Shader Picker -->
+              <div class="garage-right">
+                <div class="panel-box">
+                  <h3>PERFORMANCE TELEMETRY</h3>
+                  <div class="stat-rows">
+                    <div class="stat-row">
+                      <div class="stat-label-line">
+                        <span>TOP SPEED</span>
+                        <strong id="stat-val-speed">395 KM/H</strong>
+                      </div>
+                      <div class="stat-bar"><div id="stat-fill-speed" class="stat-fill cyan"></div></div>
+                    </div>
+                    <div class="stat-row">
+                      <div class="stat-label-line">
+                        <span>ACCELERATION (TORQUE)</span>
+                        <strong id="stat-val-accel">9.4</strong>
+                      </div>
+                      <div class="stat-bar"><div id="stat-fill-accel" class="stat-fill gold"></div></div>
+                    </div>
+                    <div class="stat-row">
+                      <div class="stat-label-line">
+                        <span>CORNERING GRIP</span>
+                        <strong id="stat-val-grip">94%</strong>
+                      </div>
+                      <div class="stat-bar"><div id="stat-fill-grip" class="stat-fill magenta"></div></div>
+                    </div>
+                    <div class="stat-row">
+                      <div class="stat-label-line">
+                        <span>ACKERMANN HANDLING</span>
+                        <strong id="stat-val-turn">8.8</strong>
+                      </div>
+                      <div class="stat-bar"><div id="stat-fill-turn" class="stat-fill cyan"></div></div>
+                    </div>
+                  </div>
+
+                  <div class="livery-section">
+                    <div class="livery-header">
+                      <h3>CUSTOM LIVERY SHADER</h3>
+                      <button id="btn-reset-livery" class="btn-mini">FACTORY PAINT</button>
+                    </div>
+                    <div class="color-swatches" id="livery-swatches">
+                      <!-- Populated dynamically + custom input -->
+                    </div>
+                    <div class="custom-color-row">
+                      <label for="custom-paint-input">CUSTOM METALLIC HUE:</label>
+                      <input type="color" id="custom-paint-input" value="#00f0ff">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 2: OPPONENTS -->
+          <section id="tab-opponents" class="tab-panel">
+            <div class="panel-box full-height">
+              <h3>AI OPPONENT DIVISION CONFIGURATION (15 AI RACERS)</h3>
+              <p class="panel-desc">Configure how the 15 intelligent AI competitors select their vehicles and liveries.</p>
+              <div class="cards-grid-4" id="opponent-mode-cards">
+                <div class="select-card" data-opp="same_car">
+                  <div class="card-badge">SPEC SERIES</div>
+                  <h4>SAME CAR</h4>
+                  <p>All 15 AI drive Player 1's exact car model finished in 15 bespoke custom color liveries.</p>
+                </div>
+                <div class="select-card active" data-opp="same_class">
+                  <div class="card-badge">DIVISIONAL</div>
+                  <h4>SAME CLASS</h4>
+                  <p>AI drivers compete exclusively using cars from Player 1's selected motorsport category.</p>
+                </div>
+                <div class="select-card" data-opp="multi_class">
+                  <div class="card-badge">ENDURANCE</div>
+                  <h4>MULTI-CLASS</h4>
+                  <p>Select up to 3 motorsport divisions to race simultaneously on track in multi-class traffic.</p>
+                </div>
+                <div class="select-card" data-opp="ffa">
+                  <div class="card-badge">UNRESTRICTED</div>
+                  <h4>FREE-FOR-ALL</h4>
+                  <p>Open grid across all 50 motorsport machines from Hot Hatches to Formula 1.</p>
+                </div>
+              </div>
+
+              <!-- Multi-class selector sub-panel -->
+              <div id="multiclass-selector" class="multiclass-panel hidden">
+                <h4>SELECT UP TO 3 MOTORSPORT DIVISIONS (<span id="mc-count">3</span>/3 SELECTED)</h4>
+                <div class="mc-chips" id="mc-category-chips"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 3: TRACKS -->
+          <section id="tab-tracks" class="tab-panel">
+            <div class="panel-box full-height">
+              <div class="panel-header-row">
+                <div>
+                  <h3>SELECT GRAND PRIX CIRCUIT</h3>
+                  <p class="panel-desc">Features 4-layer 3D overpass/underpass bridge crossovers and pixel-sampled surface physics.</p>
+                </div>
+                <div class="lap-selector-group">
+                  <label>RACE LAPS:</label>
+                  <div class="pill-group" id="lap-count-pills">
+                    <button class="pill-btn" data-laps="2">2</button>
+                    <button class="pill-btn active" data-laps="3">3</button>
+                    <button class="pill-btn" data-laps="5">5</button>
+                    <button class="pill-btn" data-laps="10">10</button>
+                  </div>
+                </div>
+              </div>
+              <div class="tracks-grid" id="tracks-grid-container">
+                <!-- Populated dynamically with track cards & preview canvas -->
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 4: MODE (1-4 PLAYERS) -->
+          <section id="tab-mode" class="tab-panel">
+            <div class="panel-box full-height">
+              <h3>GAME MODE & LOCAL MULTIPLAYER</h3>
+              <p class="panel-desc">1P mode uses a dynamic 2.8x chase camera. 2P–4P Local modes use a 1.0x full-circuit broadcast view.</p>
+              <div class="cards-grid-4" id="game-mode-cards">
+                <div class="select-card active" data-players="1">
+                  <div class="card-badge">2.8x CHASE CAM</div>
+                  <h4>1P vs 15 AI</h4>
+                  <p>Single player career race with smooth interpolated 2.8x zoom camera tracking Player 1.</p>
+                  <div class="keybind-tag">CONTROLS: WASD</div>
+                </div>
+                <div class="select-card" data-players="2">
+                  <div class="card-badge">1.0x FULL VIEW</div>
+                  <h4>2P LOCAL + 14 AI</h4>
+                  <p>Head-to-head local multiplayer against 14 AI competitors on the full 1920x1080 circuit.</p>
+                  <div class="keybind-tag">P1: WASD | P2: ARROWS</div>
+                </div>
+                <div class="select-card" data-players="3">
+                  <div class="card-badge">1.0x FULL VIEW</div>
+                  <h4>3P LOCAL + 13 AI</h4>
+                  <p>Three local human players battling 13 AI racers simultaneously.</p>
+                  <div class="keybind-tag">P3: I J K L</div>
+                </div>
+                <div class="select-card" data-players="4">
+                  <div class="card-badge">1.0x FULL VIEW</div>
+                  <h4>4P LOCAL + 12 AI</h4>
+                  <p>Four-player local party showdown with a full 16-car grid.</p>
+                  <div class="keybind-tag">P4: T F G H</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 5: SETTINGS -->
+          <section id="tab-settings" class="tab-panel">
+            <div class="panel-box full-height">
+              <h3>SIMULATOR & AUDIO TELEMETRY SETTINGS</h3>
+              <div class="settings-grid">
+                <div class="setting-item">
+                  <div>
+                    <h4>PROCEDURAL WEB AUDIO SYNTHESIZER</h4>
+                    <p>Dual-oscillator engine synthesis, 7-speed gearbox shifts, and metallic crash acoustics.</p>
+                  </div>
+                  <button id="toggle-audio" class="toggle-btn active">ENABLED</button>
+                </div>
+                <div class="setting-item">
+                  <div>
+                    <h4>AI DIFFICULTY SCALING</h4>
+                    <p>Adjust AI cornering speed, lookahead braking aggression, and overtaking frequency.</p>
+                  </div>
+                  <div class="pill-group" id="ai-diff-pills">
+                    <button class="pill-btn" data-diff="0.92">ROOKIE</button>
+                    <button class="pill-btn active" data-diff="1.0">PRO</button>
+                    <button class="pill-btn" data-diff="1.06">ALIEN</button>
+                  </div>
+                </div>
+                <div class="setting-item">
+                  <div>
+                    <h4>1P CAMERA ZOOM MODE</h4>
+                    <p>Switch between dynamic 2.8x follow camera or 1.0x full-circuit overview in 1P mode.</p>
+                  </div>
+                  <div class="pill-group" id="cam-zoom-pills">
+                    <button class="pill-btn active" data-zoom="2.8">2.8x CHASE</button>
+                    <button class="pill-btn" data-zoom="1.0">1.0x OVERVIEW</button>
+                  </div>
+                </div>
+                <div class="setting-item">
+                  <div>
+                    <h4>AI WAYPOINT & PROBE DEBUG</h4>
+                    <p>Render racing line splines, AI lookahead targets, and surface sensor probes on track.</p>
+                  </div>
+                  <button id="toggle-debug" class="toggle-btn">OFF</button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <!-- Live Summary Footer Bar -->
+        <footer class="menu-footer">
+          <div class="summary-strip">
+            <div class="sum-block">
+              <span class="sum-label">VEHICLE</span>
+              <strong id="sum-car">Valkyrie GTR</strong>
+            </div>
+            <div class="sum-divider"></div>
+            <div class="sum-block">
+              <span class="sum-label">DIVISION</span>
+              <strong id="sum-opp">Same Class</strong>
+            </div>
+            <div class="sum-divider"></div>
+            <div class="sum-block">
+              <span class="sum-label">CIRCUIT</span>
+              <strong id="sum-track">Grand Prix Paddock (3 Laps)</strong>
+            </div>
+            <div class="sum-divider"></div>
+            <div class="sum-block">
+              <span class="sum-label">MODE</span>
+              <strong id="sum-mode">1P vs 15 AI</strong>
+            </div>
+          </div>
+          <button id="btn-start-race" class="btn-launch-race">🏁 START RACE</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- 50-CAR GARAGE GRID MODAL -->
+    <div id="modal-50-cars" class="modal-backdrop hidden">
+      <div class="modal-window garage-modal-window">
+        <div class="modal-header">
+          <div>
+            <span class="brand-badge">50-CAR MOTORSPORT DATABASE</span>
+            <h2>COMPLETE VEHICLE ROSTER</h2>
+          </div>
+          <div class="modal-filter-bar" id="modal-cat-filters">
+            <!-- Category filter buttons -->
+          </div>
+          <button id="btn-close-50-modal" class="btn-close-modal">✕</button>
+        </div>
+        <div class="cars-50-grid" id="cars-50-grid-container">
+          <!-- 50 car cards populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- IN-GAME 1920x1080 PRO TRACK EDITOR MODAL -->
+    <div id="modal-track-editor" class="modal-backdrop hidden">
+      <div class="editor-shell">
+        <!-- Top Toolbar -->
+        <header class="editor-header">
+          <div class="editor-title-block">
+            <span class="brand-badge">CATMULL-ROM SPLINE STUDIO</span>
+            <h2>1920×1080 PRO TRACK EDITOR</h2>
+          </div>
+
+          <div class="editor-tools-group" id="editor-tool-buttons">
+            <button class="ed-tool-btn active" data-tool="add" title="Click canvas to append waypoints">➕ Add Point</button>
+            <button class="ed-tool-btn" data-tool="move" title="Drag existing waypoints">✥ Move Node</button>
+            <button class="ed-tool-btn" data-tool="insert" title="Click segment to split & insert point">insert Insert Point</button>
+            <button class="ed-tool-btn" data-tool="delete" title="Click waypoint to remove">🗑 Delete Node</button>
+            <button class="ed-tool-btn" data-tool="startPos" title="Drag start grid anchor & rotate heading">🚩 Start Pos</button>
+            <button class="ed-tool-btn" data-tool="startLine" title="Drag start/finish sensor line">🏁 Start Line</button>
+          </div>
+
+          <div class="editor-actions-group">
+            <button id="ed-btn-smooth" class="ed-action-btn cyan" title="Subdivide & smooth with Catmull-Rom spline">✨ Auto-Smooth</button>
+            <button id="ed-btn-reverse" class="ed-action-btn" title="Invert CW/CCW track direction">⇄ Reverse Dir</button>
+            <button id="ed-btn-undo" class="ed-action-btn" title="Undo last operation">↶ Undo</button>
+            <button id="ed-btn-redo" class="ed-action-btn" title="Redo operation">↷ Redo</button>
+            <button id="ed-btn-clear" class="ed-action-btn danger" title="Clear all waypoints">✕ Clear</button>
+            <button id="ed-btn-test" class="btn-launch-race mini-launch">🏁 TEST TRACK LIVE</button>
+            <button id="ed-btn-close" class="btn-close-modal">✕</button>
+          </div>
+        </header>
+
+        <div class="editor-main">
+          <!-- Interactive Pan/Zoom Canvas Viewport -->
+          <div class="editor-canvas-wrap" id="editor-canvas-wrap">
+            <canvas id="editorCanvas" width="1920" height="1080"></canvas>
+            <div class="editor-canvas-hud">
+              <span>SCROLL: Zoom | SPACE + DRAG: Pan | CLICK: Apply Tool</span>
+              <button id="ed-btn-reset-view" class="btn-mini">RESET VIEW (100%)</button>
+            </div>
+          </div>
+
+          <!-- Right Sidebar: Telemetry, Sliders, & Code Export -->
+          <aside class="editor-sidebar">
+            <div class="ed-panel">
+              <h4>BASE CIRCUIT & OVERLAYS</h4>
+              <label class="ed-field">
+                <span>Track Background Image</span>
+                <select id="ed-track-base-select">
+                  <option value="classic">Grand Prix Paddock (Classic HD)</option>
+                  <option value="industrial">Industrial Dockyard (HD)</option>
+                  <option value="custom_grand_prix_paddock_custom">Grand Prix Paddock Custom</option>
+                </select>
+              </label>
+              <div class="ed-checkbox-row">
+                <label><input type="checkbox" id="ed-chk-grid" checked> Show 1920×1080 Grid</label>
+                <label><input type="checkbox" id="ed-chk-slots" checked> Show 16-Car Grid Slots</label>
+              </div>
+            </div>
+
+            <div class="ed-panel">
+              <h4>START / FINISH PARAMETERS</h4>
+              <label class="ed-field">
+                <span>Start Heading Angle: <strong id="ed-val-start-angle">180°</strong></span>
+                <input type="range" id="ed-slider-start-angle" min="-180" max="180" value="180" step="1">
+              </label>
+              <label class="ed-field">
+                <span>Start Line Angle: <strong id="ed-val-line-angle">90°</strong></span>
+                <input type="range" id="ed-slider-line-angle" min="-180" max="180" value="90" step="1">
+              </label>
+              <label class="ed-field">
+                <span>Start Line Width: <strong id="ed-val-line-width">100px</strong></span>
+                <input type="range" id="ed-slider-line-width" min="40" max="240" value="100" step="2">
+              </label>
+            </div>
+
+            <div class="ed-panel">
+              <h4>LIVE CIRCUIT TELEMETRY</h4>
+              <div class="ed-telemetry-grid">
+                <div class="ed-stat"><span>WAYPOINTS</span><strong id="ed-stat-wp">0</strong></div>
+                <div class="ed-stat"><span>MIDPOINT IDX</span><strong id="ed-stat-mid">0</strong></div>
+                <div class="ed-stat"><span>LENGTH</span><strong id="ed-stat-len">0 px</strong></div>
+                <div class="ed-stat"><span>CURSOR</span><strong id="ed-stat-cursor">0, 0</strong></div>
+              </div>
+            </div>
+
+            <div class="ed-panel ed-export-panel">
+              <div class="ed-export-header">
+                <h4>JS / JSON CIRCUIT DATA</h4>
+                <div class="ed-export-btns">
+                  <button id="ed-btn-copy" class="btn-mini">COPY CODE</button>
+                  <button id="ed-btn-download" class="btn-mini">⬇ JSON</button>
+                  <label class="btn-mini file-label">⬆ IMPORT<input type="file" id="ed-file-import" accept=".json" hidden></label>
+                </div>
+              </div>
+              <textarea id="ed-code-output" readonly spellcheck="false"></textarea>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAUSE MENU OVERLAY -->
+    <div id="pause-overlay" class="modal-backdrop hidden">
+      <div class="dialog-box">
+        <span class="brand-badge">RACE SUSPENDED</span>
+        <h2>TELEMETRY PAUSED</h2>
+        <div class="dialog-buttons">
+          <button id="btn-pause-resume" class="btn-launch-race">▶ RESUME RACE</button>
+          <button id="btn-pause-restart" class="btn-secondary-glow">↻ RESTART SESSION</button>
+          <button id="btn-pause-audio" class="btn-secondary-glow">🔊 AUDIO: ON</button>
+          <button id="btn-pause-menu" class="btn-danger-outline">⬅ RETURN TO PADDOCK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST-RACE FINISH OVERLAY -->
+    <div id="finish-overlay" class="modal-backdrop hidden">
+      <div class="dialog-box finish-box">
+        <span class="brand-badge">CHECKERED FLAG</span>
+        <h2 id="finish-headline">1ST PLACE FINISH!</h2>
+        <div class="finish-stats">
+          <div class="finish-stat-row">
+            <span>FINAL CLASSIFICATION</span>
+            <strong id="finish-pos" class="accent-gold">P1 / 16</strong>
+          </div>
+          <div class="finish-stat-row">
+            <span>OFFICIAL RACE TIME</span>
+            <strong id="finish-time" class="accent-cyan">01:24.52</strong>
+          </div>
+          <div class="finish-stat-row">
+            <span>VEHICLE DRIVEN</span>
+            <strong id="finish-car">Valkyrie GTR</strong>
+          </div>
+        </div>
+        <div class="leaderboard-mini" id="finish-leaderboard"></div>
+        <div class="dialog-buttons">
+          <button id="btn-finish-restart" class="btn-launch-race">🏁 RACE AGAIN</button>
+          <button id="btn-finish-menu" class="btn-secondary-glow">⬅ PADDOCK MENU</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
