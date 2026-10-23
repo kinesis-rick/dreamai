@@ -229,7 +229,7 @@ addEventListener('keydown',e=>{
   e.preventDefault();
   return;
  }
- if(e.code==='Escape'){
+ if(e.code==='Escape'||(Array.isArray(BINDS.pause)&&BINDS.pause.includes(e.code))){
    if(state==='menu'){
     if(menuSettings){
      if(rebindA){rebindA=null;rebindSlot=-1;}
@@ -1167,14 +1167,15 @@ const DEFAULT_BINDS={
  slot1:['Digit1'],slot2:['Digit2'],slot3:['Digit3'],slot4:['Digit4'],slot5:['Digit5'],
  pickaxe:['KeyF'],reload:['KeyR'],drop:['KeyQ'],
  wall:['KeyZ'],floor:['KeyX'],ramp:['KeyC'],cone:['KeyV'],
- potion:[],med:[],swap:['KeyE'],mat:['KeyG'],map:['KeyM']
+ potion:[],med:[],swap:['KeyE'],mat:['KeyG'],map:['KeyM'],pause:['Escape']
 };
 const BIND_LABELS={
  left:'Move Left',right:'Move Right',up:'Jump / Bus Drop',fast:'Slow Walk',
  slot1:'Slot 1',slot2:'Slot 2',slot3:'Slot 3',slot4:'Slot 4',slot5:'Slot 5',
  pickaxe:'Pickaxe',reload:'Reload',drop:'Drop Item',
  wall:'Build Wall',floor:'Build Floor',ramp:'Build Ramp',cone:'Build Cone',
- potion:'Shield Potion',med:'Medkit',swap:'Swap Weapon',mat:'Cycle Build Material',map:'Toggle Map'
+ potion:'Shield Potion',med:'Medkit',swap:'Swap Weapon',mat:'Cycle Build Material',map:'Toggle Map',
+ pause:'Pause / Back (Menus)'
 };
 let BINDS=JSON.parse(JSON.stringify(DEFAULT_BINDS));
 try{const s=localStorage.getItem('fn2d_keys');if(s){const o=JSON.parse(s);for(const k in DEFAULT_BINDS)if(Array.isArray(o[k])&&o[k].length<=2&&o[k].every(c=>c===null||typeof c==='string'))BINDS[k]=o[k];}}catch(e){}
