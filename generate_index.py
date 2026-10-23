@@ -80,6 +80,9 @@ def get_file_metadata(filepath, filename, category_dir, rel_path):
         elif "typing" in path_lower or "siege" in path_lower:
             icon = "fa-keyboard"
             if not description: description = "Defend your base with fast typing skills."
+        elif "dream" in path_lower or "racing" in path_lower:
+            icon = "fa-car-burst"
+            if not description: description = "Realistic 2D motorsport simulator with custom physics, audio synthesis, 50-car database & track editor."
         elif "wheel" in path_lower or "motor" in path_lower:
             icon = "fa-car-side"
             if not description: description = "High-speed open wheel motorsports racing."
